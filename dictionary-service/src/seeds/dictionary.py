@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import Any, cast
 
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -28,10 +29,11 @@ logger = logging.getLogger(__name__)
 SEEDS_DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
-def _load_json(name: str) -> list | dict:
+def _load_json(name: str) -> list[dict[str, Any]] | dict[str, Any]:
     path = SEEDS_DATA_DIR / name
     with path.open(encoding="utf-8") as fh:
-        return json.load(fh)
+        data: list[dict[str, Any]] | dict[str, Any] = json.load(fh)
+        return data
 
 
 async def _ensure_schema(session: AsyncSession) -> None:
@@ -46,7 +48,7 @@ async def seed_dictionary_entries(session: AsyncSession) -> int:
     The JSON file is a dict keyed by dictionary type; each value is a list of
     entries with ``code`` and ``data`` fields.
     """
-    raw: dict = _load_json("dictionaries.json")
+    raw = cast("dict[str, Any]", _load_json("dictionaries.json"))
     count = 0
     for type_name, entries in raw.items():
         for entry in entries:
@@ -74,7 +76,7 @@ async def seed_timezones(session: AsyncSession) -> int:
 
     Uses the unique ``iana_name`` column as the conflict target.
     """
-    raw: list[dict] = _load_json("timezones.json")
+    raw = cast("list[dict[str, Any]]", _load_json("timezones.json"))
     count = 0
     for row in raw:
         stmt = (
@@ -106,7 +108,7 @@ async def seed_error_templates(session: AsyncSession) -> int:
 
     Uses the unique ``(code, locale)`` composite index as the conflict target.
     """
-    raw: list[dict] = _load_json("error_templates.json")
+    raw = cast("list[dict[str, Any]]", _load_json("error_templates.json"))
     count = 0
     for row in raw:
         stmt = (

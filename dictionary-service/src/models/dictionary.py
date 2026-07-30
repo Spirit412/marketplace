@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from sqlalchemy import JSON, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -29,7 +30,7 @@ class DictionaryEntry(TimestampMixin, SoftDeleteMixin, Base):
     code: Mapped[str] = mapped_column(
         String(255), nullable=False, comment="Код записи в рамках типа справочника"
     )
-    data: Mapped[dict] = mapped_column(
+    data: Mapped[dict[str, Any]] = mapped_column(
         JSON,
         nullable=False,
         default=dict,

@@ -4,8 +4,7 @@ from sqlalchemy import Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.datatype import uuid7
-from src.models.base import SoftDeleteMixin, TimestampMixin
-from src.models.dictionary import Base
+from src.models.base import Base, SoftDeleteMixin, TimestampMixin
 
 
 class ErrorTemplate(TimestampMixin, SoftDeleteMixin, Base):

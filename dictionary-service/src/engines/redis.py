@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Any
 
 import redis.asyncio as redis_asyncio
 from sqlalchemy import select
@@ -24,26 +25,30 @@ async def check_redis() -> None:
 
 class RedisDictCache:
     def __init__(self, redis_client: redis_asyncio.Redis | None = None) -> None:
+        self._settings = settings
         self._redis = redis_client or get_redis_client()
 
     async def get(
         self, type_: str, code: str | None = None
-    ) -> list[dict] | dict | None:
+    ) -> list[dict[str, Any]] | dict[str, Any] | None:
         import json
 
         if code is not None:
             key = f"dict:{type_}:{code}"
             data = await self._redis.get(key)
-            return json.loads(data) if data else None
+            result: dict[str, Any] | None = json.loads(data) if data else None
+            return result
         keys = await self._redis.keys(f"dict:{type_}:*")
-        items: list[dict] = []
-        for key in keys:
-            data = await self._redis.get(key)
+        items: list[dict[str, Any]] = []
+        for redis_key in keys:
+            data = await self._redis.get(redis_key)
             if data:
                 items.append(json.loads(data))
         return items
 
-    async def set(self, type_: str, data: list[dict], ttl: int | None = None) -> None:
+    async def set(
+        self, type_: str, data: list[dict[str, Any]], ttl: int | None = None
+    ) -> None:
         import json
 
         if ttl is None:

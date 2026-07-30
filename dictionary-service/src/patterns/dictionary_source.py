@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,14 +15,16 @@ class DictionarySource(ABC):
     @abstractmethod
     async def fetch(
         self, session: AsyncSession, type_: DictionaryType
-    ) -> list[dict]: ...
+    ) -> list[dict[str, Any]]: ...
 
 
 class DBDictionarySource(DictionarySource):
     def __init__(self, repository: DictionaryRepository) -> None:
         self._repository = repository
 
-    async def fetch(self, session: AsyncSession, type_: DictionaryType) -> list[dict]:
+    async def fetch(
+        self, session: AsyncSession, type_: DictionaryType
+    ) -> list[dict[str, Any]]:
         entries = await self._repository.get_all_by_type(session, type_)
         return [
             {
@@ -45,7 +48,9 @@ class ExternalAPISource(DictionarySource):
         self._http_client = http_client
         self._api_url = api_url
 
-    async def fetch(self, session: AsyncSession, type_: DictionaryType) -> list[dict]:
+    async def fetch(
+        self, session: AsyncSession, type_: DictionaryType
+    ) -> list[dict[str, Any]]:
         if type_ != DictionaryType.currencies:
             return []
         if not self._api_url:
@@ -59,9 +64,9 @@ class ExternalAPISource(DictionarySource):
             return []
 
     @staticmethod
-    def _parse_exchange_rates(raw: dict) -> list[dict]:
+    def _parse_exchange_rates(raw: dict[str, Any]) -> list[dict[str, Any]]:
         rates = raw.get("rates", {})
-        items: list[dict] = []
+        items: list[dict[str, Any]] = []
         for currency_code, rate in rates.items():
             items.append(
                 {

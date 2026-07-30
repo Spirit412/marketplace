@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -10,7 +11,7 @@ class DictionaryEntryResponse(BaseModel):
     id: UUID
     type: DictionaryType
     code: str
-    data: dict
+    data: dict[str, Any]
     created_at: datetime
     updated_at: datetime
 

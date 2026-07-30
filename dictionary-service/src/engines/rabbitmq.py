@@ -1,6 +1,9 @@
 import json
 import logging
 from functools import lru_cache
+from typing import Any
+
+from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +20,10 @@ class DictionaryPublisher:
     ROUTING_KEY = "dictionary.updated"
 
     def __init__(self) -> None:
+        self._settings = settings
         self._connection: aio_pika.RobustConnection | None = None
-        self._channel: aio_pika.Channel | None = None
-        self._exchange: aio_pika.Exchange | None = None
+        self._channel: aio_pika.abc.AbstractChannel | None = None
+        self._exchange: aio_pika.abc.AbstractExchange | None = None
 
     async def connect(self) -> None:
         if not _AIO_PIKA_AVAILABLE:
@@ -39,7 +43,7 @@ class DictionaryPublisher:
         if self._connection and _AIO_PIKA_AVAILABLE:
             await self._connection.close()
 
-    async def publish_dictionary_updated(self, payload: dict) -> None:
+    async def publish_dictionary_updated(self, payload: dict[str, Any]) -> None:
         if not _AIO_PIKA_AVAILABLE or self._exchange is None:
             logger.debug("RabbitMQ not available; skipping publish: %s", payload)
             return

@@ -1,5 +1,6 @@
 import logging
 from datetime import UTC, datetime
+from typing import Any, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,11 +31,11 @@ class DictionaryService:
         *,
         session: AsyncSession,
         type_: DictionaryType,
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         cached = await self._redis_cache.get(type_.value)
         if cached:
             logger.debug("Cache hit for type %s", type_)
-            return cached
+            return cast("list[dict[str, Any]]", cached)
 
         logger.debug("Cache miss for type %s, resolving from sources", type_)
         items = await self._registry.resolve(session, type_)
@@ -48,7 +49,7 @@ class DictionaryService:
         session: AsyncSession,
         type_: DictionaryType,
         code: str,
-        data: dict,
+        data: dict[str, Any],
     ) -> DictionaryEntry:
         entry = await self._repo.upsert(session, type_, code, data)
 

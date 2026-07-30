@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +55,7 @@ class DictionaryRepository:
         session: AsyncSession,
         type_: DictionaryType,
         code: str,
-        data: dict,
+        data: dict[str, Any],
     ) -> DictionaryEntry:
         stmt = (
             insert(DictionaryEntry)

@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,9 +39,11 @@ class DictionaryRegistry:
             sources.append(db_source)
             self._registry[dict_type] = sources
 
-    async def resolve(self, session: AsyncSession, type_: DictionaryType) -> list[dict]:
+    async def resolve(
+        self, session: AsyncSession, type_: DictionaryType
+    ) -> list[dict[str, Any]]:
         sources = self._registry.get(type_, [])
-        merged: dict[str, dict] = {}
+        merged: dict[str, dict[str, Any]] = {}
         for source in sources:
             try:
                 items = await source.fetch(session, type_)
