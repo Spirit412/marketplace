@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,9 @@ from src.models.import_task import ImportTask
 class ImportTaskRepository:
     """Repository for ImportTask; soft-deleted rows are hidden unless asked for."""
 
-    async def create_task(self, session: AsyncSession, task_data: dict) -> ImportTask:
+    async def create_task(
+        self, session: AsyncSession, task_data: dict[str, Any]
+    ) -> ImportTask:
         task = ImportTask(**task_data)
         session.add(task)
         await session.flush()
@@ -76,7 +79,9 @@ class ImportTaskRepository:
 
 
 class ImportRowRepository:
-    async def bulk_insert_rows(self, session: AsyncSession, rows: list[dict]) -> None:
+    async def bulk_insert_rows(
+        self, session: AsyncSession, rows: list[dict[str, Any]]
+    ) -> None:
         if rows:
             session.add_all([ImportRow(**row) for row in rows])
             await session.flush()

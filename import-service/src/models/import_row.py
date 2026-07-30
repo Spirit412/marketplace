@@ -1,11 +1,12 @@
 import uuid
+from typing import Any
 
 from sqlalchemy import Boolean, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.datatype import uuid7
-from src.models.import_task import Base
+from src.models.base import Base
 
 
 class ImportRow(Base):
@@ -30,10 +31,10 @@ class ImportRow(Base):
     row_number: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="Номер строки в исходном файле"
     )
-    row_data: Mapped[dict] = mapped_column(
+    row_data: Mapped[dict[str, Any]] = mapped_column(
         JSON, nullable=False, comment="Сырые данные строки из файла"
     )
-    error_description: Mapped[dict | None] = mapped_column(
+    error_description: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, nullable=True, comment="Описание ошибок валидации строки"
     )
     is_valid: Mapped[bool] = mapped_column(

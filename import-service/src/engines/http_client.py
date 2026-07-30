@@ -1,3 +1,5 @@
+from typing import Any
+
 import httpx
 
 from src.config.settings import settings
@@ -14,7 +16,9 @@ class CatalogClient:
             "Content-Type": "application/json",
         }
 
-    async def create_products(self, products: list[dict]) -> dict:
+    async def create_products(
+        self, products: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 f"{self._base_url}/products/bulk",
@@ -22,7 +26,19 @@ class CatalogClient:
                 headers=self._headers(),
             )
             response.raise_for_status()
-            return response.json()
+            data: dict[str, Any] = response.json()
+            return data
+
+    async def get_categories(self) -> dict[str, Any]:
+        """Fetch the category tree — used as a lightweight connectivity probe."""
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"{self._base_url}/categories/",
+                headers=self._headers(),
+            )
+            response.raise_for_status()
+            data: dict[str, Any] = response.json()
+            return data
 
 
 class DictionaryClient:
@@ -36,29 +52,13 @@ class DictionaryClient:
             "Content-Type": "application/json",
         }
 
-    async def get_categories(self) -> list[dict]:
+    async def get_units(self) -> dict[str, Any]:
+        """Fetch the units dictionary — used as a lightweight connectivity probe."""
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
-                f"{self._base_url}/categories",
+                f"{self._base_url}/dictionaries/units",
                 headers=self._headers(),
             )
             response.raise_for_status()
-            return response.json()
-
-    async def get_brands(self) -> list[dict]:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                f"{self._base_url}/brands",
-                headers=self._headers(),
-            )
-            response.raise_for_status()
-            return response.json()
-
-    async def get_units(self) -> list[dict]:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                f"{self._base_url}/units",
-                headers=self._headers(),
-            )
-            response.raise_for_status()
-            return response.json()
+            data: dict[str, Any] = response.json()
+            return data

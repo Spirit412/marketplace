@@ -2,12 +2,14 @@ import csv
 import io
 import logging
 import uuid
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.engines.http_client import CatalogClient, DictionaryClient
 from src.engines.rabbitmq import ImportPublisher
 from src.enums.import_status import IMPORT_STATE_MACHINE, ImportStatus
+from src.enums.import_type import ImportType
 from src.exceptions import NotFoundError
 from src.models.import_row import ImportRow
 from src.models.import_task import ImportTask
@@ -103,16 +105,16 @@ class ImportService:
 
         await self._transition_status(session, task_id, ImportStatus.VALIDATING)
 
-        strategy = self._strategy_registry.get(task.import_type)
+        strategy = self._strategy_registry.get(ImportType(task.import_type))
 
         content = await self._file_storage.backend.read(task.file_path)
         text = content.decode("utf-8-sig")
         reader = csv.DictReader(io.StringIO(text))
 
-        headers = reader.fieldnames or []
+        headers = list(reader.fieldnames or [])
         mapping = MappingService.auto_map(headers, task.import_type)
 
-        rows: list[dict] = []
+        rows: list[dict[str, Any]] = []
         row_number = 0
         for row in reader:
             row_number += 1
@@ -124,7 +126,7 @@ class ImportService:
             rows, task.import_type, strategy
         )
 
-        row_records: list[dict] = []
+        row_records: list[dict[str, Any]] = []
         for item in valid_rows:
             row_records.append(
                 {
@@ -176,8 +178,8 @@ class ImportService:
         rows = await self._row_repo.get_rows_by_task(session, task_id)
         valid_rows = [r for r in rows if r.is_valid]
 
-        products: list[dict] = []
-        errors: list[dict] = []
+        products: list[dict[str, Any]] = []
+        errors: list[dict[str, Any]] = []
 
         for row in valid_rows:
             try:

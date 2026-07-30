@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -20,7 +21,7 @@ class ImportTaskResponse(BaseModel):
 
 
 class ImportErrorResponse(BaseModel):
-    rows: list[dict]
+    rows: list[dict[str, Any]]
 
 
 class ErrorTemplateResponse(BaseModel):

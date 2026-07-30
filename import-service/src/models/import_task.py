@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import JSON, UUID
@@ -49,7 +50,7 @@ class ImportTask(CreatedAtMixin, SoftDeleteMixin, Base):
     error_rows: Mapped[int] = mapped_column(
         Integer, default=0, comment="Строк с ошибками"
     )
-    error_details: Mapped[dict | None] = mapped_column(
+    error_details: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, nullable=True, comment="Детали ошибок импорта"
     )
     completed_at: Mapped[datetime | None] = mapped_column(

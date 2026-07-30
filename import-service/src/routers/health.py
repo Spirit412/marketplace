@@ -29,7 +29,7 @@ async def _check_catalog() -> None:
 async def _check_dictionary() -> None:
     """Check dictionary-service connectivity."""
     client = DictionaryClient()
-    await client.get_brands()
+    await client.get_units()
 
 
 @router.get("/health", response_model=HealthStatus, summary="Health check")

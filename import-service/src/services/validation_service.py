@@ -1,13 +1,18 @@
+from typing import Any
+
+from src.patterns.import_strategy import BaseImportStrategy
+
+
 class RowValidator:
     def validate_rows(
         self,
-        rows: list[dict],
+        rows: list[dict[str, Any]],
         import_type: str,
-        strategy: object,
-    ) -> tuple[list[dict], list[dict]]:
+        strategy: BaseImportStrategy,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         required = strategy.get_required_columns()
-        valid: list[dict] = []
-        errors: list[dict] = []
+        valid: list[dict[str, Any]] = []
+        errors: list[dict[str, Any]] = []
 
         for row_item in rows:
             row_data = row_item["data"]
@@ -34,7 +39,7 @@ class RowValidator:
         return valid, errors
 
     @staticmethod
-    def validate_field(field: str, value: object, rules: dict) -> str | None:
+    def validate_field(field: str, value: object, rules: dict[str, Any]) -> str | None:
         required = rules.get("required", False)
         if required and (
             value is None or (isinstance(value, str) and not value.strip())

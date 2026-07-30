@@ -1,8 +1,11 @@
+from typing import Any
+
+
 class ProductFromRowBuilder:
     @staticmethod
-    def build(row_data: dict) -> dict:
+    def build(row_data: dict[str, Any]) -> dict[str, Any]:
         """Build a ProductCreateRequest-compatible dict from row data."""
-        product: dict = {
+        product: dict[str, Any] = {
             "name": str(row_data["name"]).strip(),
             "price": float(row_data["price"]),
             "category_id": str(row_data["category_id"]).strip(),

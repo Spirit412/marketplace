@@ -1,3 +1,6 @@
+from typing import Any
+
+from src.enums.import_type import ImportType
 from src.patterns.import_registry import ImportStrategyRegistry
 
 
@@ -38,18 +41,20 @@ class MappingService:
         return mapping
 
     @staticmethod
-    def apply_mapping(row: dict, mapping: dict) -> dict:
+    def apply_mapping(
+        row: dict[str, Any], mapping: dict[str, str]
+    ) -> dict[str, Any]:
         """Apply column mapping to a raw CSV row."""
-        result: dict = {}
+        result: dict[str, Any] = {}
         for target_field, source_header in mapping.items():
             if source_header in row:
                 result[target_field] = row[source_header]
         return result
 
     @staticmethod
-    def validate_mapping(mapping: dict, import_type: str) -> list[str]:
+    def validate_mapping(mapping: dict[str, str], import_type: str) -> list[str]:
         """Return list of missing required fields."""
         registry = ImportStrategyRegistry()
-        strategy = registry.get(import_type)
+        strategy = registry.get(ImportType(import_type))
         required = strategy.get_required_columns()
         return [field_name for field_name in required if field_name not in mapping]
