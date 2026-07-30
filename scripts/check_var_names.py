@@ -14,21 +14,56 @@ from pathlib import Path
 MIN_LENGTH = 4
 ALLOWED: set[str] = {
     # Loop / iteration
-    "_", "i", "j", "k", "v",
+    "_",
+    "i",
+    "j",
+    "k",
+    "v",
     # Exception handling
-    "e", "ex", "err", "exc",
+    "e",
+    "ex",
+    "err",
+    "exc",
     # Type parameters / classmethod
-    "T", "cls",
+    "T",
+    "cls",
     # Universal DB/API field
     "id",
     # Common abbreviations
-    "app", "key", "url", "row", "now", "msg", "raw",
-    "sku", "tax", "lft", "rgt", "ttl", "dsn", "fmt",
-    "uid", "ws", "doc", "job", "qs", "tpl", "img",
+    "app",
+    "key",
+    "url",
+    "row",
+    "now",
+    "msg",
+    "raw",
+    "sku",
+    "tax",
+    "lft",
+    "rgt",
+    "ttl",
+    "dsn",
+    "fmt",
+    "uid",
+    "ws",
+    "doc",
+    "job",
+    "qs",
+    "tpl",
+    "img",
     # JWT claims
-    "jti", "iat", "exp",
+    "jti",
+    "iat",
+    "exp",
     # Enum members (uppercase short names are intentional)
-    "ALL", "INT", "CSV", "PDF", "RU", "US", "EU", "sms",
+    "ALL",
+    "INT",
+    "CSV",
+    "PDF",
+    "RU",
+    "US",
+    "EU",
+    "sms",
     # Domain-specific
     "wb",  # openpyxl workbook
 }

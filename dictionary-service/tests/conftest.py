@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import uuid
 from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.config.settings import get_settings
 from src.core.datatype import uuid7
 from src.models.dictionary import Base, DictionaryEntry
 
@@ -49,10 +46,9 @@ async def db_session(
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    async with session_factory() as session:
-        async with session.begin():
-            yield session
-            await session.rollback()
+    async with session_factory() as session, session.begin():
+        yield session
+        await session.rollback()
 
 
 @pytest_asyncio.fixture
@@ -61,14 +57,11 @@ async def test_client(
 ) -> AsyncGenerator[AsyncClient, None]:
     """Create async HTTP test client."""
     from src.main import app
-    from src.repositories.dictionary_repo import DictionaryRepository
 
     async def override_session() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
 
-    app.dependency_overrides[
-        "get_async_session"
-    ] = override_session
+    app.dependency_overrides["get_async_session"] = override_session
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

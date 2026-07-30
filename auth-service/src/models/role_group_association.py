@@ -20,4 +20,3 @@ class RoleGroupAssociation(TimestampMixin, Base):
     group_uuid: Mapped[UUID] = mapped_column(
         ForeignKey("auth.groups.uuid", ondelete="CASCADE"), comment="fk группы"
     )
-

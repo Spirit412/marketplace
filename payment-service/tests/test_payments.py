@@ -12,13 +12,17 @@ from httpx import AsyncClient
 @pytest.mark.anyio
 async def test_create_payment_success(test_app: AsyncClient, auth_headers: dict):
     """Test successful payment creation."""
-    with mock.patch(
-        "src.routers.payments.get_token_payload",
-        return_value=mock.MagicMock(
-            type="access", user_uuid=str(uuid.uuid4()), permissions={}, jti="test",
+    with (
+        mock.patch(
+            "src.routers.payments.get_token_payload",
+            return_value=mock.MagicMock(
+                type="access",
+                user_uuid=str(uuid.uuid4()),
+                permissions={},
+                jti="test",
+            ),
         ),
-    ), mock.patch(
-        "src.services.payment_service.check_idempotency", return_value=True
+        mock.patch("src.services.payment_service.check_idempotency", return_value=True),
     ):
         payload = {
             "order_id": str(uuid.uuid4()),
@@ -28,9 +32,7 @@ async def test_create_payment_success(test_app: AsyncClient, auth_headers: dict)
             "payment_method": "MOCK",
             "idempotency_key": f"test-{uuid.uuid4().hex[:12]}",
         }
-        response = await test_app.post(
-            "/payments", json=payload, headers=auth_headers
-        )
+        response = await test_app.post("/payments", json=payload, headers=auth_headers)
         assert response.status_code == 201
         data = response.json()
         assert data["order_id"] == payload["order_id"]
@@ -40,25 +42,31 @@ async def test_create_payment_success(test_app: AsyncClient, auth_headers: dict)
 
 
 @pytest.mark.anyio
-async def test_create_payment_idempotency(
-    test_app: AsyncClient, auth_headers: dict
-):
+async def test_create_payment_idempotency(test_app: AsyncClient, auth_headers: dict):
     """Test payment idempotency: duplicate request returns existing payment."""
     order_id = str(uuid.uuid4())
     user_id = str(uuid.uuid4())
     idemp_key = f"test-idemp-{uuid.uuid4().hex[:12]}"
 
-    with mock.patch(
-        "src.routers.payments.get_token_payload",
-        return_value=mock.MagicMock(
-            type="access", user_uuid=user_id, permissions={}, jti="test",
+    with (
+        mock.patch(
+            "src.routers.payments.get_token_payload",
+            return_value=mock.MagicMock(
+                type="access",
+                user_uuid=user_id,
+                permissions={},
+                jti="test",
+            ),
         ),
-    ), mock.patch(
-        "src.services.payment_service.check_idempotency", side_effect=[True, False]
-    ), mock.patch(
-        "src.repositories.payment_repo.PaymentRepo.get_by_idempotency_key"
-    ) as mock_get:
+        mock.patch(
+            "src.services.payment_service.check_idempotency", side_effect=[True, False]
+        ),
+        mock.patch(
+            "src.repositories.payment_repo.PaymentRepo.get_by_idempotency_key"
+        ) as mock_get,
+    ):
         from src.models.payment import Payment
+
         existing = Payment(
             id=uuid.uuid4(),
             order_id=order_id,
@@ -81,12 +89,8 @@ async def test_create_payment_idempotency(
             "payment_method": "MOCK",
             "idempotency_key": idemp_key,
         }
-        resp1 = await test_app.post(
-            "/payments", json=payload, headers=auth_headers
-        )
-        resp2 = await test_app.post(
-            "/payments", json=payload, headers=auth_headers
-        )
+        resp1 = await test_app.post("/payments", json=payload, headers=auth_headers)
+        resp2 = await test_app.post("/payments", json=payload, headers=auth_headers)
         assert resp2.status_code == 200
 
 
@@ -110,18 +114,22 @@ async def test_get_payment_by_uuid(test_app: AsyncClient, auth_headers: dict):
     mock_payment.created_at = "2024-01-01T00:00:00Z"
     mock_payment.updated_at = "2024-01-01T00:00:00Z"
 
-    with mock.patch(
-        "src.routers.payments.get_token_payload",
-        return_value=mock.MagicMock(
-            type="access", user_uuid=str(uuid.uuid4()), permissions={}, jti="test",
+    with (
+        mock.patch(
+            "src.routers.payments.get_token_payload",
+            return_value=mock.MagicMock(
+                type="access",
+                user_uuid=str(uuid.uuid4()),
+                permissions={},
+                jti="test",
+            ),
         ),
-    ), mock.patch(
-        "src.repositories.payment_repo.PaymentRepo.get_by_uuid",
-        return_value=mock_payment,
+        mock.patch(
+            "src.repositories.payment_repo.PaymentRepo.get_by_uuid",
+            return_value=mock_payment,
+        ),
     ):
-        response = await test_app.get(
-            f"/payments/{payment_id}", headers=auth_headers
-        )
+        response = await test_app.get(f"/payments/{payment_id}", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == payment_id
@@ -131,18 +139,22 @@ async def test_get_payment_by_uuid(test_app: AsyncClient, auth_headers: dict):
 @pytest.mark.anyio
 async def test_get_payment_not_found(test_app: AsyncClient, auth_headers: dict):
     """Test 404 when payment not found."""
-    with mock.patch(
-        "src.routers.payments.get_token_payload",
-        return_value=mock.MagicMock(
-            type="access", user_uuid=str(uuid.uuid4()), permissions={}, jti="test",
+    with (
+        mock.patch(
+            "src.routers.payments.get_token_payload",
+            return_value=mock.MagicMock(
+                type="access",
+                user_uuid=str(uuid.uuid4()),
+                permissions={},
+                jti="test",
+            ),
         ),
-    ), mock.patch(
-        "src.repositories.payment_repo.PaymentRepo.get_by_uuid",
-        return_value=None,
+        mock.patch(
+            "src.repositories.payment_repo.PaymentRepo.get_by_uuid",
+            return_value=None,
+        ),
     ):
-        response = await test_app.get(
-            f"/payments/{uuid.uuid4()}", headers=auth_headers
-        )
+        response = await test_app.get(f"/payments/{uuid.uuid4()}", headers=auth_headers)
         assert response.status_code == 404
 
 
@@ -166,14 +178,20 @@ async def test_refund_payment(test_app: AsyncClient, auth_headers: dict):
     mock_payment.created_at = "2024-01-01T00:00:00Z"
     mock_payment.updated_at = "2024-01-01T00:00:00Z"
 
-    with mock.patch(
-        "src.routers.payments.get_token_payload",
-        return_value=mock.MagicMock(
-            type="access", user_uuid=str(uuid.uuid4()), permissions={}, jti="test",
+    with (
+        mock.patch(
+            "src.routers.payments.get_token_payload",
+            return_value=mock.MagicMock(
+                type="access",
+                user_uuid=str(uuid.uuid4()),
+                permissions={},
+                jti="test",
+            ),
         ),
-    ), mock.patch(
-        "src.services.payment_service.PaymentService.refund",
-        return_value=mock_payment,
+        mock.patch(
+            "src.services.payment_service.PaymentService.refund",
+            return_value=mock_payment,
+        ),
     ):
         response = await test_app.post(
             f"/payments/{payment_id}/refund",
@@ -190,14 +208,20 @@ async def test_refund_not_succeeded(test_app: AsyncClient, auth_headers: dict):
     """Test refund conflict when payment is not in SUCCEEDED state."""
     payment_id = str(uuid.uuid4())
 
-    with mock.patch(
-        "src.routers.payments.get_token_payload",
-        return_value=mock.MagicMock(
-            type="access", user_uuid=str(uuid.uuid4()), permissions={}, jti="test",
+    with (
+        mock.patch(
+            "src.routers.payments.get_token_payload",
+            return_value=mock.MagicMock(
+                type="access",
+                user_uuid=str(uuid.uuid4()),
+                permissions={},
+                jti="test",
+            ),
         ),
-    ), mock.patch(
-        "src.services.payment_service.PaymentService.refund",
-        side_effect=ValueError("Cannot refund payment with status PENDING"),
+        mock.patch(
+            "src.services.payment_service.PaymentService.refund",
+            side_effect=ValueError("Cannot refund payment with status PENDING"),
+        ),
     ):
         response = await test_app.post(
             f"/payments/{payment_id}/refund",

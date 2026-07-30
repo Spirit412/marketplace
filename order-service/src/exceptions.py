@@ -26,7 +26,9 @@ class ValidationError(DomainError):
     """
 
     def __init__(self, message: str = "", *, errors: list[str] | None = None) -> None:
-        self.errors: list[str] = errors if errors is not None else ([message] if message else [])
+        self.errors: list[str] = (
+            errors if errors is not None else ([message] if message else [])
+        )
         super().__init__(message or "; ".join(self.errors))
 
 

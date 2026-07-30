@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import Settings, settings
+from src.config.settings import Settings
 from src.engines.redis import get_redis_client
 from src.models.category import Category
 from src.repositories.category_repo import CategoryRepo
@@ -74,9 +74,7 @@ class CategoryService:
     ) -> Category | None:
         return await self._repo.get_by_id(session, category_id)
 
-    async def get_by_slug(
-        self, session: AsyncSession, slug: str
-    ) -> Category | None:
+    async def get_by_slug(self, session: AsyncSession, slug: str) -> Category | None:
         return await self._repo.get_by_slug(session, slug)
 
     async def update(
@@ -200,7 +198,9 @@ class CategoryService:
                 name=item["name"],
                 slug=item["slug"],
                 description=item.get("description"),
-                parent_id=uuid.UUID(item["parent_id"]) if item.get("parent_id") else None,
+                parent_id=uuid.UUID(item["parent_id"])
+                if item.get("parent_id")
+                else None,
                 lft=item.get("lft", 0),
                 rgt=item.get("rgt", 0),
                 tree_id=item.get("tree_id", 0),

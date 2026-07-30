@@ -1,3 +1,3 @@
 from . import job
 
-__all__ = ['job']
+__all__ = ["job"]

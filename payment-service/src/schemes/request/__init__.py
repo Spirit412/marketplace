@@ -1,4 +1,3 @@
-from . import payment
-from . import webhook
+from . import payment, webhook
 
-__all__ = ['payment', 'webhook']
+__all__ = ["payment", "webhook"]

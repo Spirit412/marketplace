@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
+from src.core.database import _get_session_factory
 from src.core.health import HealthStatus
 from src.services.health_service import HealthService
-from src.core.database import _get_session_factory
 
 router = APIRouter(tags=["health"])
 

@@ -8,10 +8,10 @@ class Inject[T]:
     """FastAPI dependency that resolves a service from the rodi container."""
 
     def __init__(self, service: type[T]) -> None:
-       self._service: type[T] = service
+        self._service: type[T] = service
 
     def __call__(self) -> T:
-       return container.resolve(self._service)
+        return container.resolve(self._service)
 
 
 def init_container() -> None:

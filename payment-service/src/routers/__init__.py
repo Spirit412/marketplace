@@ -4,4 +4,4 @@ from src.routers.webhooks import router as webhooks_router
 
 routers = [health_router, payments_router, webhooks_router]
 
-__all__ = ['webhooks', 'health', 'payments']
+__all__ = ["health", "payments", "webhooks"]

@@ -28,9 +28,7 @@ class RoleService:
         )
         result = await self._repo.create(session, role)
         if body.group_uuids:
-            await self._repo.assign_groups(
-                session, result.uuid, set(body.group_uuids)
-            )
+            await self._repo.assign_groups(session, result.uuid, set(body.group_uuids))
         return RoleResponse.model_validate(result)
 
     async def get_by(self, session: AsyncSession, uuid: UUID) -> RoleResponse:
@@ -86,9 +84,7 @@ class RoleService:
             await self._repo.update(session, role, **update_data)
 
         if body.group_uuids is not None:
-            await self._repo.assign_groups(
-                session, uuid, set(body.group_uuids)
-            )
+            await self._repo.assign_groups(session, uuid, set(body.group_uuids))
 
         return await self.get_by(session, uuid)
 

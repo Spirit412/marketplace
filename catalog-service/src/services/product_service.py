@@ -2,14 +2,14 @@ import json
 import uuid
 from datetime import datetime
 
-from src.config.settings import Settings, settings
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.config.settings import Settings
 from src.engines.rabbitmq import RabbitMQEngine
 from src.engines.redis import get_redis_client
 from src.models.product import Product
 from src.patterns.query_constructor import ProductQueryConstructor
 from src.patterns.sort_strategy import get_sort_strategy
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.repositories.product_repo import ProductRepo
 
 
@@ -55,7 +55,9 @@ class ProductService:
         await self._publish_event("product.created", product)
         return product
 
-    async def get_by_id(self, session: AsyncSession, product_id: uuid.UUID) -> Product | None:
+    async def get_by_id(
+        self, session: AsyncSession, product_id: uuid.UUID
+    ) -> Product | None:
         cached = await self._redis.get(f"product:{product_id}")
         if cached:
             return self._deserialize_product(cached)
@@ -193,7 +195,9 @@ class ProductService:
             return Product(
                 id=uuid.UUID(parsed["id"]),
                 seller_id=uuid.UUID(parsed["seller_id"]),
-                category_id=uuid.UUID(parsed["category_id"]) if parsed.get("category_id") else None,
+                category_id=uuid.UUID(parsed["category_id"])
+                if parsed.get("category_id")
+                else None,
                 name=parsed["name"],
                 description=parsed.get("description"),
                 price=parsed["price"],

@@ -19,9 +19,7 @@ async def test_add_to_cart(
 
     with patch("src.routers.cart._get_cart_service") as mock_get_svc:
         mock_svc = MagicMock()
-        mock_svc.add_item = AsyncMock(
-            return_value={product_id: 2}
-        )
+        mock_svc.add_item = AsyncMock(return_value={product_id: 2})
         mock_get_svc.return_value = mock_svc
 
         response = await async_client.post(
@@ -48,9 +46,7 @@ async def test_get_cart_empty(
         mock_svc.get_cart = AsyncMock(return_value={})
         mock_get_svc.return_value = mock_svc
 
-        response = await async_client.get(
-            "/cart", headers=auth_headers
-        )
+        response = await async_client.get("/cart", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -67,14 +63,10 @@ async def test_get_cart_with_items(
 
     with patch("src.routers.cart._get_cart_service") as mock_get_svc:
         mock_svc = MagicMock()
-        mock_svc.get_cart = AsyncMock(
-            return_value={product_id: 3}
-        )
+        mock_svc.get_cart = AsyncMock(return_value={product_id: 3})
         mock_get_svc.return_value = mock_svc
 
-        response = await async_client.get(
-            "/cart", headers=auth_headers
-        )
+        response = await async_client.get("/cart", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -115,9 +107,7 @@ async def test_clear_cart(
         mock_svc.clear_cart = AsyncMock()
         mock_get_svc.return_value = mock_svc
 
-        response = await async_client.delete(
-            "/cart", headers=auth_headers
-        )
+        response = await async_client.delete("/cart", headers=auth_headers)
 
     assert response.status_code == 204
 

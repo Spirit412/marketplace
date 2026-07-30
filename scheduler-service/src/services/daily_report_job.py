@@ -14,11 +14,14 @@ async def daily_report_job() -> None:
     report = await client.generate_daily_report()
     if report is not None:
         report_id = report.get("id", "unknown")
-        await publish_event("report.generated", {
-            "report_id": report_id,
-            "report_type": "daily",
-            "timestamp": report.get("timestamp", ""),
-        })
+        await publish_event(
+            "report.generated",
+            {
+                "report_id": report_id,
+                "report_type": "daily",
+                "timestamp": report.get("timestamp", ""),
+            },
+        )
         logger.info("Daily report generated: %s", report_id)
     else:
         logger.warning("Daily report generation failed")

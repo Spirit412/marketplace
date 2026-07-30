@@ -5,7 +5,9 @@ from src.config.settings import settings
 
 
 def setup_middlewares(app: FastAPI) -> None:
-    origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+    origins = [
+        origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
+    ]
 
     app.add_middleware(
         CORSMiddleware,

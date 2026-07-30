@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import csv
-import io
-import uuid
-
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.datatype import uuid7
 from src.enums.import_status import ImportStatus
 from src.enums.import_type import ImportType
-from src.models.import_row import ImportRow
 from src.models.import_task import ImportTask
 from src.repositories.import_repo import ImportRowRepository, ImportTaskRepository
 from src.services.mapping_service import MappingService
@@ -66,12 +61,14 @@ async def test_get_task_errors_empty(
 async def test_repository_create_task(db_session: AsyncSession) -> None:
     """ImportTaskRepository.create_task should create and return a task."""
     repo = ImportTaskRepository(db_session)
-    task = await repo.create_task({
-        "seller_id": uuid7(),
-        "import_type": ImportType.PRODUCTS,
-        "file_name": "products.csv",
-        "file_path": "/tmp/products.csv",
-    })
+    task = await repo.create_task(
+        {
+            "seller_id": uuid7(),
+            "import_type": ImportType.PRODUCTS,
+            "file_name": "products.csv",
+            "file_path": "/tmp/products.csv",
+        }
+    )
     assert task.status == ImportStatus.PENDING.value
     assert task.file_name == "products.csv"
 
@@ -80,12 +77,14 @@ async def test_repository_create_task(db_session: AsyncSession) -> None:
 async def test_repository_get_task(db_session: AsyncSession) -> None:
     """ImportTaskRepository.get_task should retrieve a task by ID."""
     repo = ImportTaskRepository(db_session)
-    task = await repo.create_task({
-        "seller_id": uuid7(),
-        "import_type": ImportType.PRICES,
-        "file_name": "prices.csv",
-        "file_path": "/tmp/prices.csv",
-    })
+    task = await repo.create_task(
+        {
+            "seller_id": uuid7(),
+            "import_type": ImportType.PRICES,
+            "file_name": "prices.csv",
+            "file_path": "/tmp/prices.csv",
+        }
+    )
     retrieved = await repo.get_task(task.id)
     assert retrieved is not None
     assert retrieved.id == task.id
@@ -95,12 +94,14 @@ async def test_repository_get_task(db_session: AsyncSession) -> None:
 async def test_repository_update_status(db_session: AsyncSession) -> None:
     """ImportTaskRepository.update_status should change status."""
     repo = ImportTaskRepository(db_session)
-    task = await repo.create_task({
-        "seller_id": uuid7(),
-        "import_type": ImportType.INVENTORY,
-        "file_name": "stock.csv",
-        "file_path": "/tmp/stock.csv",
-    })
+    task = await repo.create_task(
+        {
+            "seller_id": uuid7(),
+            "import_type": ImportType.INVENTORY,
+            "file_name": "stock.csv",
+            "file_path": "/tmp/stock.csv",
+        }
+    )
     updated = await repo.update_status(task.id, ImportStatus.VALIDATING)
     assert updated is not None
     assert updated.status == ImportStatus.VALIDATING.value
@@ -110,12 +111,14 @@ async def test_repository_update_status(db_session: AsyncSession) -> None:
 async def test_repository_update_progress(db_session: AsyncSession) -> None:
     """ImportTaskRepository.update_progress should update counters."""
     repo = ImportTaskRepository(db_session)
-    task = await repo.create_task({
-        "seller_id": uuid7(),
-        "import_type": ImportType.PRODUCTS,
-        "file_name": "items.csv",
-        "file_path": "/tmp/items.csv",
-    })
+    task = await repo.create_task(
+        {
+            "seller_id": uuid7(),
+            "import_type": ImportType.PRODUCTS,
+            "file_name": "items.csv",
+            "file_path": "/tmp/items.csv",
+        }
+    )
     await repo.update_progress(task.id, processed=42, total=100, errors=3)
     updated = await repo.get_task(task.id)
     assert updated is not None
@@ -128,12 +131,14 @@ async def test_repository_update_progress(db_session: AsyncSession) -> None:
 async def test_row_repository_bulk_insert(db_session: AsyncSession) -> None:
     """ImportRowRepository.bulk_insert_rows should insert multiple rows."""
     task_repo = ImportTaskRepository(db_session)
-    task = await task_repo.create_task({
-        "seller_id": uuid7(),
-        "import_type": ImportType.PRODUCTS,
-        "file_name": "bulk.csv",
-        "file_path": "/tmp/bulk.csv",
-    })
+    task = await task_repo.create_task(
+        {
+            "seller_id": uuid7(),
+            "import_type": ImportType.PRODUCTS,
+            "file_name": "bulk.csv",
+            "file_path": "/tmp/bulk.csv",
+        }
+    )
 
     row_repo = ImportRowRepository(db_session)
     rows = [
@@ -183,6 +188,7 @@ async def test_validation_service_rejects_invalid_rows() -> None:
         {"name": "OK", "price": "not-a-number", "category_id": str(uuid7())},
     ]
     from src.patterns.import_strategy import ProductsImport
+
     strategy = ProductsImport()
     valid, errors = validator.validate_rows(rows, ImportType.PRODUCTS, strategy)
     assert len(errors) == 2

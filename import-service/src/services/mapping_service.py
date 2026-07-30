@@ -5,7 +5,10 @@ class MappingService:
     @staticmethod
     def auto_map(headers: list[str], import_type: str) -> dict[str, str]:
         """Auto-map CSV headers to expected column names (case-insensitive)."""
-        normalized = {header.strip().lower().replace(" ", "_"): header.strip() for header in headers}
+        normalized = {
+            header.strip().lower().replace(" ", "_"): header.strip()
+            for header in headers
+        }
         mapping: dict[str, str] = {}
 
         if import_type == "products":
@@ -46,7 +49,6 @@ class MappingService:
     @staticmethod
     def validate_mapping(mapping: dict, import_type: str) -> list[str]:
         """Return list of missing required fields."""
-
         registry = ImportStrategyRegistry()
         strategy = registry.get(import_type)
         required = strategy.get_required_columns()

@@ -10,7 +10,6 @@ from src.schemes.response.inventory import StockMovementResponse
 
 
 class MovementService:
-
     async def record(
         self,
         *,
@@ -43,7 +42,8 @@ class MovementService:
         limit: int = 100,
     ) -> list[StockMovementResponse]:
         movement_repo = MovementRepo()
-        movements = await movement_repo.list_by_stock_item(session, 
+        movements = await movement_repo.list_by_stock_item(
+            session,
             stock_item_id=stock_item_id,
             movement_type=movement_type,
             date_from=date_from,
@@ -62,7 +62,8 @@ class MovementService:
         limit: int = 100,
     ) -> list[StockMovementResponse]:
         movement_repo = MovementRepo()
-        movements = await movement_repo.list_by_warehouse(session, 
+        movements = await movement_repo.list_by_warehouse(
+            session,
             warehouse_id=warehouse_id,
             offset=offset,
             limit=limit,

@@ -1,3 +1,3 @@
 from . import payment
 
-__all__ = ['payment']
+__all__ = ["payment"]

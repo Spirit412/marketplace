@@ -54,7 +54,8 @@ class ReportBuilder:
     def _quoted_table(self) -> str:
         """Quote each dotted segment — `order` is a reserved SQL keyword, and
         report_registry.py's schema-qualified names (`order.orders`) would
-        otherwise fail to parse."""
+        otherwise fail to parse.
+        """
         return ".".join(f'"{part}"' for part in self._table.split("."))
 
     def with_columns(self, columns: list[str]) -> "ReportBuilder":

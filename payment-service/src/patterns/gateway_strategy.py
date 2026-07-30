@@ -173,9 +173,7 @@ class YooKassaGateway(BasePaymentGateway):
 
     _base_url = "https://api.yookassa.ru/v3/"
 
-    def __init__(
-        self, shop_id: str, secret_key: str, webhook_secret: str
-    ) -> None:
+    def __init__(self, shop_id: str, secret_key: str, webhook_secret: str) -> None:
         self._shop_id = shop_id
         self._secret_key = secret_key
         self._webhook_secret = webhook_secret
@@ -188,7 +186,9 @@ class YooKassaGateway(BasePaymentGateway):
         ).decode()
         return f"Basic {credentials}"
 
-    async def _request(self, method: str, path: str, json_data: dict | None = None) -> dict:
+    async def _request(
+        self, method: str, path: str, json_data: dict | None = None
+    ) -> dict:
         import aiohttp
 
         headers = {
@@ -197,9 +197,10 @@ class YooKassaGateway(BasePaymentGateway):
             "Idempotence-Key": secrets.token_hex(16),
         }
         url = f"{self._base_url}{path}"
-        async with aiohttp.ClientSession() as session, session.request(
-            method, url, json=json_data, headers=headers
-        ) as response:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.request(method, url, json=json_data, headers=headers) as response,
+        ):
             response.raise_for_status()
             return await response.json()
 

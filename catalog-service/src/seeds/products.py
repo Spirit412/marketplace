@@ -57,9 +57,10 @@ async def _resolve_seller_id(session: AsyncSession, email: str) -> UUID:
     return row[0]
 
 
-async def seed_products(session: AsyncSession, *, seller_email: str = DEFAULT_SELLER_EMAIL) -> None:
+async def seed_products(
+    session: AsyncSession, *, seller_email: str = DEFAULT_SELLER_EMAIL
+) -> None:
     """Populate catalog.products from products.json. Idempotent by `sku`."""
-
     seller_id = await _resolve_seller_id(session, seller_email)
 
     products_data = _load_json("products.json")
@@ -100,14 +101,16 @@ async def seed_products(session: AsyncSession, *, seller_email: str = DEFAULT_SE
         created += 1
 
     await session.commit()
-    print(f"Products: {created} created, {skipped} already existed (seller={seller_email})")
-
-
+    print(
+        f"Products: {created} created, {skipped} already existed (seller={seller_email})"
+    )
 
 
 async def _main(seller_email: str) -> None:
     engine = create_async_engine(settings.postgres.dsn, echo=False)
-    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    session_factory = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with session_factory() as session:
         try:
             await seed_products(session, seller_email=seller_email)

@@ -4,7 +4,6 @@ Ensures data consistency: outermost context commits, inner contexts flush.
 On exception: rollback entire transaction.
 """
 
-
 import logging
 from types import TracebackType
 

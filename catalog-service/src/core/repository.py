@@ -12,7 +12,9 @@ def supports_soft_delete(model: type) -> bool:
     return isinstance(model, type) and issubclass(model, SoftDeleteMixin)
 
 
-def exclude_deleted[S: Select](stmt: S, model: type, include_deleted: bool = False) -> S:
+def exclude_deleted[S: Select](
+    stmt: S, model: type, include_deleted: bool = False
+) -> S:
     """Filter soft-deleted rows out of a statement.
 
     A no-op when the model has no soft-delete support or when deleted rows were
@@ -45,7 +47,7 @@ def mark_deleted(instance: object, deleted: bool = True) -> None:
         raise NotImplementedError(
             f"{type(instance).__name__} does not support soft delete"
         )
-    cast(SoftDeleteMixin, instance).is_delete = deleted
+    cast("SoftDeleteMixin", instance).is_delete = deleted
 
 
 class BaseRepository[T: Base]:
@@ -76,7 +78,7 @@ class BaseRepository[T: Base]:
     @property
     def _soft_delete_column(self) -> Any:
         """The model's is_delete column; only valid when soft delete is supported."""
-        return cast(type[SoftDeleteMixin], self._model).is_delete
+        return cast("type[SoftDeleteMixin]", self._model).is_delete
 
     def _apply_soft_delete_filter(
         self, stmt: Select[tuple[T]], include_deleted: bool
@@ -105,7 +107,7 @@ class BaseRepository[T: Base]:
         *,
         include_deleted: bool = False,
     ) -> T | None:
-        pk_col = getattr(self._model, "id", None) or getattr(self._model, "uuid")
+        pk_col = getattr(self._model, "id", None) or self._model.uuid
         stmt = select(self._model).where(pk_col == entity_id)
         stmt = self._apply_soft_delete_filter(stmt, include_deleted)
         result = await session.execute(stmt)
@@ -116,9 +118,7 @@ class BaseRepository[T: Base]:
         await session.flush()
         return instance
 
-    async def update(
-        self, session: AsyncSession, instance: T, **values: Any
-    ) -> T:
+    async def update(self, session: AsyncSession, instance: T, **values: Any) -> T:
         for key, value in values.items():
             setattr(instance, key, value)
         await session.flush()
@@ -127,7 +127,7 @@ class BaseRepository[T: Base]:
     async def delete(self, session: AsyncSession, instance: T) -> T:
         """Soft-delete when supported, otherwise remove the row."""
         if self.supports_soft_delete:
-            cast(SoftDeleteMixin, instance).is_delete = True
+            cast("SoftDeleteMixin", instance).is_delete = True
         else:
             await session.delete(instance)
         await session.flush()
@@ -143,7 +143,7 @@ class BaseRepository[T: Base]:
             raise NotImplementedError(
                 f"{self._model.__name__} does not support soft delete"
             )
-        cast(SoftDeleteMixin, instance).is_delete = False
+        cast("SoftDeleteMixin", instance).is_delete = False
         await session.flush()
         return instance
 

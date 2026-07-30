@@ -3,10 +3,10 @@ from fastapi import APIRouter
 from src.config.settings import settings
 from src.core.database import get_async_session
 from src.core.health import HealthManager, HealthStatus
+from src.core.http_client import CircuitBreakerClient
 from src.engines.http_client import InventoryClient
 from src.engines.postgres import check_postgres
 from src.engines.redis import check_redis
-from src.core.http_client import CircuitBreakerClient
 
 router = APIRouter(tags=["health"])
 
@@ -29,8 +29,6 @@ async def _check_inventory() -> None:
 @router.get("/health", response_model=HealthStatus, summary="Health check")
 async def health_check() -> HealthStatus:
     """Perform health check for order service."""
-    from sqlalchemy.ext.asyncio import AsyncSession
-
     manager = HealthManager(service_name="order-service")
     session_factory = get_async_session()
 

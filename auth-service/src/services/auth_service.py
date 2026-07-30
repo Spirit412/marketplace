@@ -1,6 +1,5 @@
 import uuid
 from datetime import UTC, datetime
-from collections.abc import Mapping
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +8,8 @@ from src.config.settings import Settings
 from src.core.access import ResolvedAccess
 from src.core.auth import (
     Permission as AccessLevel,
+)
+from src.core.auth import (
     TokenPayload,
     create_access_token,
     create_refresh_token,
@@ -30,8 +31,6 @@ from src.repositories.role_repository import RoleRepository
 from src.repositories.session_repository import SessionRepository
 from src.repositories.user_access_repository import UserAccessRepository
 from src.repositories.user_repository import UserRepository
-
-
 
 
 class AuthService:
@@ -80,7 +79,10 @@ class AuthService:
     def _token_ttl_seconds(self) -> int:
         """Refresh token TTL in seconds."""
         from datetime import timedelta
-        return int(timedelta(days=self._settings.jwt.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds())
+
+        return int(
+            timedelta(days=self._settings.jwt.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()
+        )
 
     async def register(
         self,
@@ -111,7 +113,6 @@ class AuthService:
 
         result = await self._user_repo.get_with_access(session, created.id)
         return result if result is not None else created
-
 
     async def login(
         self,
@@ -172,7 +173,9 @@ class AuthService:
             "1",
         )
         await self._redis.sadd(self._user_tokens_key(str(user.id)), refresh_payload.jti)
-        await self._redis.expire(self._user_tokens_key(str(user.id)), self._token_ttl_seconds)
+        await self._redis.expire(
+            self._user_tokens_key(str(user.id)), self._token_ttl_seconds
+        )
 
         return user, access_token, refresh_token
 
@@ -197,9 +200,7 @@ class AuthService:
             self._redis_key("token_invalidated_at", payload.user_uuid)
         )
         if invalidated_at and payload.iat:
-            invalidated_dt = datetime.fromisoformat(invalidated_at).replace(
-                tzinfo=UTC
-            )
+            invalidated_dt = datetime.fromisoformat(invalidated_at).replace(tzinfo=UTC)
             token_iat = datetime.fromtimestamp(payload.iat, tz=UTC)
             if token_iat < invalidated_dt:
                 raise ForbiddenError("Token revoked (logout-all)")
@@ -210,9 +211,7 @@ class AuthService:
         if not stored:
             raise UnauthorizedError("Refresh token revoked")
 
-        user = await self._user_repo.get_by_id(
-            session, uuid.UUID(payload.user_uuid)
-        )
+        user = await self._user_repo.get_by_id(session, uuid.UUID(payload.user_uuid))
         if not user or user.is_blocked:
             raise ForbiddenError("User blocked or not found")
 
@@ -251,7 +250,9 @@ class AuthService:
             "1",
         )
         await self._redis.sadd(self._user_tokens_key(str(user.id)), new_payload.jti)
-        await self._redis.expire(self._user_tokens_key(str(user.id)), self._token_ttl_seconds)
+        await self._redis.expire(
+            self._user_tokens_key(str(user.id)), self._token_ttl_seconds
+        )
 
         session_log = await self._session_repo.get_by_jti(session, payload.jti)
         if session_log is not None:
@@ -260,9 +261,7 @@ class AuthService:
 
         return new_access, new_refresh
 
-    async def logout(
-        self, session: AsyncSession, refresh_token: str
-    ) -> None:
+    async def logout(self, session: AsyncSession, refresh_token: str) -> None:
         try:
             payload = decode_jwt(
                 refresh_token,
@@ -278,9 +277,7 @@ class AuthService:
         await self._redis.srem(self._user_tokens_key(payload.user_uuid), payload.jti)
         await self._session_repo.close_session(session, payload.jti)
 
-    async def logout_all(
-        self, session: AsyncSession, user_uuid: uuid.UUID
-    ) -> None:
+    async def logout_all(self, session: AsyncSession, user_uuid: uuid.UUID) -> None:
         await self._session_repo.close_all_for_user(session, user_uuid)
 
         tokens_key = self._user_tokens_key(str(user_uuid))
@@ -304,7 +301,6 @@ class AuthService:
     ) -> list[SessionLog]:
         return await self._session_repo.get_active_for_user(session, user_uuid)
 
-
     async def block_user(
         self,
         session: AsyncSession,
@@ -316,23 +312,18 @@ class AuthService:
         if not user:
             raise NotFoundError("User not found")
 
-        blocked = await self._user_repo.block(
-            session, user_id, blocked_by, reason
-        )
+        blocked = await self._user_repo.block(session, user_id, blocked_by, reason)
         if not blocked:
             raise NotFoundError("User not found")
 
         await self.logout_all(session, user_id)
         return blocked
 
-    async def unblock_user(
-        self, session: AsyncSession, user_id: uuid.UUID
-    ) -> User:
+    async def unblock_user(self, session: AsyncSession, user_id: uuid.UUID) -> User:
         user = await self._user_repo.unblock(session, user_id)
         if not user:
             raise NotFoundError("User not found")
         return user
-
 
     async def check_credentials(self, token: str) -> TokenPayload:
         return decode_jwt(
@@ -340,7 +331,6 @@ class AuthService:
             self._settings.jwt.SECRET_KEY,
             self._settings.jwt.ALGORITHM,
         )
-
 
     async def _resolve_permissions(
         self, session: AsyncSession, user_id: uuid.UUID
@@ -367,10 +357,7 @@ class AuthService:
                 role_name = user_access.role.name
                 is_admin = user_access.role.is_admin
 
-        if (
-            user_access is not None
-            and user_access.additional_permissions
-        ):
+        if user_access is not None and user_access.additional_permissions:
             from src.repositories.permission_repository import PermissionRepository
 
             perm_repo = PermissionRepository()
@@ -433,8 +420,6 @@ class AuthService:
             levels[app_id] = max(granted) if granted else int(AccessLevel.READ)
         return levels
 
-
-
     async def check_access(
         self,
         session: AsyncSession,
@@ -458,6 +443,7 @@ class AuthService:
         allowed = any(fnmatch.fnmatch(path, p) for p in patterns)
 
         return allowed, payload.user_uuid, access.role_name, access.is_admin
+
     async def assign_role(
         self,
         session: AsyncSession,

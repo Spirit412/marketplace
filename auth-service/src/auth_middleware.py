@@ -21,7 +21,6 @@ Usage in any service:
         ...
 """
 
-import fnmatch
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -39,7 +38,9 @@ _APP_ID: str | None = None
 oauth2_scheme = HTTPBearer()
 
 
-def init_auth(*, jwt_secret: str, jwt_algorithm: str, auth_service_url: str, app_id: str) -> None:
+def init_auth(
+    *, jwt_secret: str, jwt_algorithm: str, auth_service_url: str, app_id: str
+) -> None:
     """Initialize auth config for this service. Call once at startup."""
     global _JWT_SECRET, _JWT_ALGORITHM, _AUTH_SERVICE_URL, _APP_ID
     _JWT_SECRET = jwt_secret
@@ -52,8 +53,6 @@ def _get_secret_and_algo() -> tuple[str, str]:
     if _JWT_SECRET is None or _JWT_ALGORITHM is None:
         raise RuntimeError("Auth not initialized. Call init_auth() at startup.")
     return _JWT_SECRET, _JWT_ALGORITHM
-
-
 
 
 def get_current_user(
@@ -120,8 +119,6 @@ def check_access(
     return dependency
 
 
-
-
 class AuthMiddleware(BaseHTTPMiddleware):
     """Global middleware: validates JWT on every request.
 
@@ -136,7 +133,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         exclude_paths: list[str] | None = None,
     ) -> None:
         super().__init__(app)
-        self._exclude = set(exclude_paths or ["/health", "/docs", "/openapi.json", "/redoc"])
+        self._exclude = set(
+            exclude_paths or ["/health", "/docs", "/openapi.json", "/redoc"]
+        )
 
     async def dispatch(self, request: Request, call_next: "Callable") -> JSONResponse:
         if request.url.path in self._exclude:

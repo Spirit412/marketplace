@@ -5,11 +5,9 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, require_permission
 from src.config.settings import settings
-from src.depends import _require_admin
-from src.depends import get_service_session
-from src.depends import Inject
+from src.core.auth import Permission, require_permission
+from src.depends import Inject, _require_admin, get_service_session
 from src.schemes.rbac import (
     GroupCreateRequest,
     GroupListResponse,
@@ -26,7 +24,10 @@ router = APIRouter(
 )
 
 
-@router.get("/groups", response_model=GroupListResponse, summary="List groups",
+@router.get(
+    "/groups",
+    response_model=GroupListResponse,
+    summary="List groups",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_groups(
@@ -38,7 +39,11 @@ async def list_groups(
     return await service.list_all(session, params)
 
 
-@router.post("/groups", response_model=GroupResponse, status_code=201, summary="Create group",
+@router.post(
+    "/groups",
+    response_model=GroupResponse,
+    status_code=201,
+    summary="Create group",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_group(
@@ -50,7 +55,10 @@ async def create_group(
     return await service.create(session, body)
 
 
-@router.get("/groups/{group_uuid}", response_model=GroupResponse, summary="Get group",
+@router.get(
+    "/groups/{group_uuid}",
+    response_model=GroupResponse,
+    summary="Get group",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_group(
@@ -62,7 +70,10 @@ async def get_group(
     return await service.get_by(session, group_uuid)
 
 
-@router.put("/groups/{group_uuid}", response_model=GroupResponse, summary="Update group",
+@router.put(
+    "/groups/{group_uuid}",
+    response_model=GroupResponse,
+    summary="Update group",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def update_group(
@@ -75,7 +86,11 @@ async def update_group(
     return await service.update(session, group_uuid, body)
 
 
-@router.delete("/groups/{group_uuid}", status_code=204, response_class=Response, summary="Delete group",
+@router.delete(
+    "/groups/{group_uuid}",
+    status_code=204,
+    response_class=Response,
+    summary="Delete group",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def delete_group(

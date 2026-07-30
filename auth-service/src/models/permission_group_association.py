@@ -18,6 +18,6 @@ class PermissionGroupAssociation(TimestampMixin, Base):
         ForeignKey("auth.groups.uuid", ondelete="CASCADE"), comment="fk на группу"
     )
     permission_uuid: Mapped[UUID] = mapped_column(
-        ForeignKey("auth.permissions.uuid", ondelete="CASCADE"), comment="fk на разрешение"
+        ForeignKey("auth.permissions.uuid", ondelete="CASCADE"),
+        comment="fk на разрешение",
     )
-

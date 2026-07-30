@@ -18,7 +18,9 @@ class PropertyRepo:
         include_deleted: bool = False,
     ) -> Property | None:
         stmt = exclude_deleted(
-            select(Property).where(Property.id == property_id), Property, include_deleted
+            select(Property).where(Property.id == property_id),
+            Property,
+            include_deleted,
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -66,7 +68,9 @@ class PropertyRepo:
         self, session: AsyncSession, *, include_deleted: bool = False
     ) -> list[Property]:
         stmt = exclude_deleted(
-            select(Property).order_by(Property.frontend_label), Property, include_deleted
+            select(Property).order_by(Property.frontend_label),
+            Property,
+            include_deleted,
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())

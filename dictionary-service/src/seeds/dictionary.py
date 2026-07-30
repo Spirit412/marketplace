@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import AsyncGenerator
 from pathlib import Path
 
 from sqlalchemy import text
@@ -29,8 +28,6 @@ logger = logging.getLogger(__name__)
 SEEDS_DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
-
-
 def _load_json(name: str) -> list | dict:
     path = SEEDS_DATA_DIR / name
     with path.open(encoding="utf-8") as fh:
@@ -41,8 +38,6 @@ async def _ensure_schema(session: AsyncSession) -> None:
     """Create the ``dictionary`` schema if it does not exist."""
     await session.execute(text("CREATE SCHEMA IF NOT EXISTS dictionary"))
     await session.commit()
-
-
 
 
 async def seed_dictionary_entries(session: AsyncSession) -> int:
@@ -135,8 +130,6 @@ async def seed_error_templates(session: AsyncSession) -> int:
     await session.commit()
     logger.info("Seeded %d error templates", count)
     return count
-
-
 
 
 async def run_all() -> dict[str, int]:

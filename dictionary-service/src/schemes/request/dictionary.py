@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 
 from src.enums.dictionary_type import DictionaryType

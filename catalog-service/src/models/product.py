@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import uuid
 from decimal import Decimal
 
@@ -46,21 +47,35 @@ class Product(TimestampMixin, SoftDeleteMixin, Base):
         {"schema": "catalog", "comment": "Товар продавца"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7, comment="Первичный ключ товара")
-    seller_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True, comment="Продавец-владелец товара")
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid7, comment="Первичный ключ товара"
+    )
+    seller_id: Mapped[uuid.UUID] = mapped_column(
+        nullable=False, index=True, comment="Продавец-владелец товара"
+    )
     category_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("catalog.categories.id", ondelete="SET NULL"),
         nullable=True,
         comment="Категория товара (fk на categories.id)",
     )
-    name: Mapped[str] = mapped_column(String(255), nullable=False, comment="Название товара")
-    description: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Описание товара")
+    name: Mapped[str] = mapped_column(
+        String(255), nullable=False, comment="Название товара"
+    )
+    description: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="Описание товара"
+    )
     price: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0.00"), comment="Цена товара"
     )
-    sku: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True, comment="Артикул (SKU)")
-    stock: Mapped[int] = mapped_column(Integer, nullable=False, default=0, comment="Остаток на складе (денормализация)")
-    rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0, comment="Средний рейтинг товара")
+    sku: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, unique=True, comment="Артикул (SKU)"
+    )
+    stock: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, comment="Остаток на складе (денормализация)"
+    )
+    rating: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0, comment="Средний рейтинг товара"
+    )
 
     custom_properties_config: Mapped[dict] = mapped_column(
         JSONB,
@@ -83,11 +98,19 @@ class Product(TimestampMixin, SoftDeleteMixin, Base):
         server_default=text("'{}'::jsonb"),
         comment="Список изображений товара",
     )
-    search_vector: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True, comment="Полнотекстовый поисковый индекс")
+    search_vector: Mapped[str | None] = mapped_column(
+        TSVECTOR, nullable=True, comment="Полнотекстовый поисковый индекс"
+    )
 
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, comment="Признак активности товара")
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="active", comment="Статус товара (active/draft/archived)")
-
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, comment="Признак активности товара"
+    )
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="active",
+        comment="Статус товара (active/draft/archived)",
+    )
 
     category: Mapped[Category | None] = relationship(
         back_populates="products",

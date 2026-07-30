@@ -5,11 +5,9 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, require_permission
 from src.config.settings import settings
-from src.depends import _require_admin
-from src.depends import get_service_session
-from src.depends import Inject
+from src.core.auth import Permission, require_permission
+from src.depends import Inject, _require_admin, get_service_session
 from src.schemes.rbac import (
     PaginationParams,
     PermissionCreateRequest,
@@ -26,7 +24,10 @@ router = APIRouter(
 )
 
 
-@router.get("/permissions", response_model=PermissionListResponse, summary="List permissions",
+@router.get(
+    "/permissions",
+    response_model=PermissionListResponse,
+    summary="List permissions",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_permissions(
@@ -39,7 +40,10 @@ async def list_permissions(
 
 
 @router.post(
-    "/permissions", response_model=PermissionResponse, status_code=201, summary="Create permission",
+    "/permissions",
+    response_model=PermissionResponse,
+    status_code=201,
+    summary="Create permission",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_permission(
@@ -52,7 +56,9 @@ async def create_permission(
 
 
 @router.get(
-    "/permissions/{perm_uuid}", response_model=PermissionResponse, summary="Get permission",
+    "/permissions/{perm_uuid}",
+    response_model=PermissionResponse,
+    summary="Get permission",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_permission(
@@ -65,7 +71,9 @@ async def get_permission(
 
 
 @router.put(
-    "/permissions/{perm_uuid}", response_model=PermissionResponse, summary="Update permission",
+    "/permissions/{perm_uuid}",
+    response_model=PermissionResponse,
+    summary="Update permission",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def update_permission(
@@ -79,7 +87,10 @@ async def update_permission(
 
 
 @router.delete(
-    "/permissions/{perm_uuid}", status_code=204, response_class=Response, summary="Delete permission",
+    "/permissions/{perm_uuid}",
+    status_code=204,
+    response_class=Response,
+    summary="Delete permission",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def delete_permission(

@@ -35,9 +35,7 @@ async def test_create_order_success(
     mock_order.updated_at = __import__("datetime").datetime(2024, 1, 1)
 
     with (
-        patch(
-            "src.routers.orders._get_order_service"
-        ) as mock_get_svc,
+        patch("src.routers.orders._get_order_service") as mock_get_svc,
     ):
         mock_svc = MagicMock()
         mock_svc.create_order = AsyncMock(return_value=mock_order)
@@ -173,14 +171,10 @@ async def test_get_orders_with_items(
 
     with patch("src.routers.orders._get_order_service") as mock_get_svc:
         mock_svc = MagicMock()
-        mock_svc.get_user_orders = AsyncMock(
-            return_value=([mock_order], 1)
-        )
+        mock_svc.get_user_orders = AsyncMock(return_value=([mock_order], 1))
         mock_get_svc.return_value = mock_svc
 
-        response = await async_client.get(
-            "/orders", headers=auth_headers
-        )
+        response = await async_client.get("/orders", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()

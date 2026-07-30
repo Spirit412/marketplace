@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -26,13 +26,9 @@ class GroupRepository(BaseRepository[Group]):
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_roles(
-        self, session: AsyncSession, uuid: UUID
-    ) -> Group | None:
+    async def get_with_roles(self, session: AsyncSession, uuid: UUID) -> Group | None:
         stmt = (
-            select(Group)
-            .where(Group.uuid == uuid)
-            .options(selectinload(Group.roles))
+            select(Group).where(Group.uuid == uuid).options(selectinload(Group.roles))
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -45,10 +41,7 @@ class GroupRepository(BaseRepository[Group]):
         page_size: int = 20,
         search_value: str | None = None,
     ) -> tuple[Sequence[Group], int, int]:
-        stmt = (
-            select(Group)
-            .options(selectinload(Group.permissions))
-        )
+        stmt = select(Group).options(selectinload(Group.permissions))
 
         if search_value:
             stmt = stmt.where(
@@ -110,7 +103,6 @@ class GroupRepository(BaseRepository[Group]):
         self, session: AsyncSession, role_uuid: UUID
     ) -> list[Permission]:
         """Get all permissions for a role through its groups."""
-        from src.models.role import Role
         from src.models.role_group_association import RoleGroupAssociation
 
         stmt = (

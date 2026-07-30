@@ -8,16 +8,13 @@ import pytest
 from httpx import AsyncClient
 
 from src.enums.report import ReportFormat, ReportType
-from src.schemes.request.report import GenerateReportRequest, DateRange
-
+from src.schemes.request.report import DateRange, GenerateReportRequest
 
 pytestmark = pytest.mark.anyio
 
 
 class TestReportGeneration:
-    async def test_generate_report_returns_202(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def test_generate_report_returns_202(self, async_client: AsyncClient) -> None:
         request = GenerateReportRequest(
             report_type=ReportType.SALES,
             date_range=DateRange(from_date="2026-01-01", to_date="2026-07-25"),

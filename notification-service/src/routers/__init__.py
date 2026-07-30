@@ -4,4 +4,4 @@ from src.routers.ws import router as ws_router
 
 routers = [health_router, notifications_router, ws_router]
 
-__all__ = ['ws', 'notifications', 'health']
+__all__ = ["health", "notifications", "ws"]

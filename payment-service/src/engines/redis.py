@@ -9,7 +9,7 @@ IDEMPOTENCY_TTL = 86400
 
 @lru_cache
 def get_redis_client() -> redis_asyncio.Redis:
-        return redis_asyncio.from_url(
+    return redis_asyncio.from_url(
         settings.redis.url,
         decode_responses=True,
     )
@@ -20,9 +20,7 @@ async def check_redis() -> None:
     await client.ping()
 
 
-async def check_idempotency(
-    client: redis_asyncio.Redis, key: str
-) -> bool:
+async def check_idempotency(client: redis_asyncio.Redis, key: str) -> bool:
     """Returns True if the key was set (first request), False if duplicate."""
     result = await client.setnx(f"idempotency:{key}", "1")
     if result:
@@ -31,7 +29,5 @@ async def check_idempotency(
     return False
 
 
-async def delete_idempotency(
-    client: redis_asyncio.Redis, key: str
-) -> None:
+async def delete_idempotency(client: redis_asyncio.Redis, key: str) -> None:
     await client.delete(f"idempotency:{key}")

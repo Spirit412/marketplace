@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
 from httpx import AsyncClient
 
-from src.services.cancel_unpaid_orders_job import cancel_unpaid_orders_job
-from src.services.daily_report_job import daily_report_job
+from src.schemes.response.job import JobList, JobStatus, TriggerResponse
 from src.services.cache_warmup_job import cache_warmup_job
+from src.services.cancel_unpaid_orders_job import cancel_unpaid_orders_job
 from src.services.cart_cleanup_job import cart_cleanup_job
+from src.services.daily_report_job import daily_report_job
 from src.services.inventory_alert_job import inventory_alert_job
-from src.schemes.response.job import JobStatus, JobList, TriggerResponse
 
 
 class TestHealthEndpoint:

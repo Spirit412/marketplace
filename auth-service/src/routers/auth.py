@@ -4,16 +4,20 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.engines.redis_client import get_redis_client
 from src.config.settings import settings
 from src.core.auth import (
     Permission,
-    require_permission,
     TokenPayload,
     get_token_payload,
+    require_permission,
 )
-from src.depends import _require_admin, _user_role_name, get_auth_service, get_service_session
-from src.services.auth_service import AuthService
+from src.depends import (
+    _require_admin,
+    _user_role_name,
+    get_auth_service,
+    get_service_session,
+)
+from src.engines.redis_client import get_redis_client
 from src.schemes.request.auth import (
     BlockUserRequest,
     CheckAccessRequest,
@@ -28,11 +32,14 @@ from src.schemes.response.auth import (
     TokenResponse,
     UserResponse,
 )
+from src.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=201, summary="Register user")
+@router.post(
+    "/register", response_model=UserResponse, status_code=201, summary="Register user"
+)
 async def register(
     request: RegisterRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -90,7 +97,11 @@ async def refresh(
     )
 
 
-@router.post("/logout", status_code=204, response_model=None, summary="Logout",
+@router.post(
+    "/logout",
+    status_code=204,
+    response_model=None,
+    summary="Logout",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def logout(
@@ -109,7 +120,10 @@ async def logout(
     "/logout-all",
     status_code=204,
     response_model=None,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE)), Depends(get_token_payload)],
+    dependencies=[
+        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
+        Depends(get_token_payload),
+    ],
     summary="Logout from all sessions",
 )
 async def logout_all(
@@ -124,7 +138,10 @@ async def logout_all(
     )
 
 
-@router.get("/sessions", response_model=list[SessionResponse], summary="List active sessions",
+@router.get(
+    "/sessions",
+    response_model=list[SessionResponse],
+    summary="List active sessions",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_sessions(
@@ -140,7 +157,10 @@ async def get_sessions(
     return [SessionResponse.model_validate(s) for s in sessions]
 
 
-@router.post("/check_credentials", response_model=CheckCredentialsResponse, summary="Check credentials",
+@router.post(
+    "/check_credentials",
+    response_model=CheckCredentialsResponse,
+    summary="Check credentials",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def check_credentials(
@@ -155,7 +175,10 @@ async def check_credentials(
     )
 
 
-@router.post("/check-access", response_model=CheckAccessResponse, summary="Check access",
+@router.post(
+    "/check-access",
+    response_model=CheckAccessResponse,
+    summary="Check access",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def check_access(
@@ -182,7 +205,10 @@ async def check_access(
 @router.post(
     "/users/{user_id}/block",
     response_model=UserResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE)), Depends(_require_admin)],
+    dependencies=[
+        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
+        Depends(_require_admin),
+    ],
     summary="Block user",
 )
 async def block_user(
@@ -205,7 +231,10 @@ async def block_user(
 @router.post(
     "/users/{user_id}/unblock",
     response_model=UserResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE)), Depends(_require_admin)],
+    dependencies=[
+        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
+        Depends(_require_admin),
+    ],
     summary="Unblock user",
 )
 async def unblock_user(

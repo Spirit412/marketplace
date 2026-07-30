@@ -12,7 +12,7 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 def _get_engine():
     global _engine
     if _engine is None:
-                _engine = create_async_engine(
+        _engine = create_async_engine(
             settings.postgres.dsn,
             echo=False,
             pool_size=10,

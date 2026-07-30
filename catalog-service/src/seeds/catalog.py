@@ -26,8 +26,6 @@ from src.models.property import CategoryProperty, Property
 DATA_DIR = Path(__file__).parent / "data"
 
 
-
-
 def _load_json(name: str) -> list | dict:
     with open(DATA_DIR / name, encoding="utf-8") as fh:
         return json.load(fh)
@@ -39,7 +37,14 @@ def _compute_mptt(nodes: list[dict], tree_id_start: int = 0) -> list[dict]:
     Each node receives ``tree_id``, ``level``, ``lft``, ``rgt``.
     Returns the same list for convenience.
     """
-    def _walk(node: dict, tree_id: int, level: int, counter: list[int], parent_slug: str | None = None) -> None:
+
+    def _walk(
+        node: dict,
+        tree_id: int,
+        level: int,
+        counter: list[int],
+        parent_slug: str | None = None,
+    ) -> None:
         node["tree_id"] = tree_id
         node["level"] = level
         node["lft"] = counter[0]
@@ -70,11 +75,8 @@ def _flatten(nodes: list[dict]) -> list[dict]:
     return result
 
 
-
-
 async def seed_catalog(session: AsyncSession) -> None:
     """Populate DB from JSON data files. Idempotent."""
-
     print("[1/2] Categories...")
     categories_data: list[dict] = _load_json("categories.json")
     _compute_mptt(categories_data)
@@ -173,8 +175,6 @@ async def seed_catalog(session: AsyncSession) -> None:
 
     await session.commit()
     print("Seed complete.")
-
-
 
 
 async def _main() -> None:

@@ -1,3 +1,3 @@
 from . import product
 
-__all__ = ['product']
+__all__ = ["product"]

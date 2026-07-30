@@ -1,6 +1,3 @@
-from . import channel
-from . import notification_type
-from . import event_type
-from . import notification_status
+from . import channel, event_type, notification_status, notification_type
 
-__all__ = ['channel', 'notification_type', 'event_type', 'notification_status']
+__all__ = ["channel", "event_type", "notification_status", "notification_type"]

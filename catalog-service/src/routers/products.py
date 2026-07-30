@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
@@ -21,7 +21,6 @@ from src.schemes.request.product import (
 )
 from src.schemes.response.product import ProductListResponse, ProductResponse
 from src.services.product_service import ProductService
-
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -98,7 +97,8 @@ async def update_product(
 
 @router.delete(
     "/{product_id}",
-    status_code=204, response_model=None,
+    status_code=204,
+    response_model=None,
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Delete product",
 )

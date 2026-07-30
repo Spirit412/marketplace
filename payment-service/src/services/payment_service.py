@@ -93,7 +93,9 @@ class PaymentService:
             if result["status"] in ("succeeded", "pending"):
                 if result["status"] == "succeeded":
                     payment = await self._transition_status(
-                        session=session, payment=payment, new_status=PaymentStatus.SUCCEEDED
+                        session=session,
+                        payment=payment,
+                        new_status=PaymentStatus.SUCCEEDED,
                     )
                     await self._publish_event(
                         "succeeded",
@@ -101,7 +103,9 @@ class PaymentService:
                     )
                 else:
                     payment = await self._repo.update_status(
-                        session=session, payment=payment, new_status=PaymentStatus.PROCESSING
+                        session=session,
+                        payment=payment,
+                        new_status=PaymentStatus.PROCESSING,
                     )
             else:
                 payment = await self._transition_status(
@@ -166,9 +170,7 @@ class PaymentService:
             raise NotFoundError(f"Payment not found: {payment_uuid}")
 
         if payment.status != PaymentStatus.SUCCEEDED:
-            raise ConflictError(
-                f"Cannot refund payment with status {payment.status}"
-            )
+            raise ConflictError(f"Cannot refund payment with status {payment.status}")
 
         gateway: BasePaymentGateway = self._registry.get_gateway(
             PaymentMethod(payment.payment_method)
@@ -222,7 +224,9 @@ class PaymentService:
                 )
                 if payment and payment.status != PaymentStatus.SUCCEEDED:
                     await self._transition_status(
-                        session=session, payment=payment, new_status=PaymentStatus.SUCCEEDED
+                        session=session,
+                        payment=payment,
+                        new_status=PaymentStatus.SUCCEEDED,
                     )
                     await self._publish_event(
                         "succeeded",
@@ -240,7 +244,9 @@ class PaymentService:
                         "message", "Payment failed"
                     )
                     await self._transition_status(
-                        session=session, payment=payment, new_status=PaymentStatus.FAILED
+                        session=session,
+                        payment=payment,
+                        new_status=PaymentStatus.FAILED,
                     )
                     await self._publish_event(
                         "failed",
@@ -265,7 +271,9 @@ class PaymentService:
                 )
                 if payment and payment.status != PaymentStatus.SUCCEEDED:
                     await self._transition_status(
-                        session=session, payment=payment, new_status=PaymentStatus.SUCCEEDED
+                        session=session,
+                        payment=payment,
+                        new_status=PaymentStatus.SUCCEEDED,
                     )
                     await self._publish_event(
                         "succeeded",
@@ -283,7 +291,9 @@ class PaymentService:
                         "reason", "Payment cancelled"
                     )
                     await self._transition_status(
-                        session=session, payment=payment, new_status=PaymentStatus.CANCELLED
+                        session=session,
+                        payment=payment,
+                        new_status=PaymentStatus.CANCELLED,
                     )
                     await self._publish_event(
                         "failed",

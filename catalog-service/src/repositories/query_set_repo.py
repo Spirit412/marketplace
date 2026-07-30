@@ -18,7 +18,9 @@ class QuerySetRepo:
         include_deleted: bool = False,
     ) -> QuerySet | None:
         stmt = exclude_deleted(
-            select(QuerySet).where(QuerySet.id == query_set_id), QuerySet, include_deleted
+            select(QuerySet).where(QuerySet.id == query_set_id),
+            QuerySet,
+            include_deleted,
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -79,7 +81,9 @@ class QuerySetRepo:
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_favorites(self, session: AsyncSession, seller_id: uuid.UUID) -> list[QuerySet]:
+    async def get_favorites(
+        self, session: AsyncSession, seller_id: uuid.UUID
+    ) -> list[QuerySet]:
         stmt = exclude_deleted(
             select(QuerySet).where(
                 QuerySet.seller_id == seller_id,
@@ -90,7 +94,9 @@ class QuerySetRepo:
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
-    async def toggle_favorite(self, session: AsyncSession, query_set_id: uuid.UUID) -> QuerySet | None:
+    async def toggle_favorite(
+        self, session: AsyncSession, query_set_id: uuid.UUID
+    ) -> QuerySet | None:
         qs = await self.get_by_id(session, query_set_id)
         if qs is None:
             return None

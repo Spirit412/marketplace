@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, field_validator
 
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -40,6 +41,7 @@ class SessionResponse(BaseModel):
         return str(v)
 
     model_config = {"from_attributes": True}
+
 
 class CheckAccessResponse(BaseModel):
     allowed: bool

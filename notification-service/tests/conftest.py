@@ -10,9 +10,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.config.settings import Settings, get_settings
+from src.core.datatype import uuid7
 from src.main import app
 from src.models.notification import Base, Notification, Template
-from src.core.datatype import uuid7
 
 
 @pytest.fixture

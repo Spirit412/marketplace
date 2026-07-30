@@ -2,7 +2,6 @@
 
 import httpx
 import pytest
-
 from conftest import assert_ok
 
 SERVICE = "catalog"
@@ -98,9 +97,7 @@ def test_query_set_listing(api: httpx.Client, auth_headers: dict) -> None:
 
 
 @pytest.mark.writes
-def test_category_lifecycle(
-    api: httpx.Client, auth_headers: dict, unique: str
-) -> None:
+def test_category_lifecycle(api: httpx.Client, auth_headers: dict, unique: str) -> None:
     """A category can be created, read back, updated, and soft-deleted."""
     created = assert_ok(
         api.post(

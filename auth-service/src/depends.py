@@ -1,9 +1,8 @@
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from rodi import Container
-
 from fastapi import Depends
+from rodi import Container
 
 from src.config.settings import Settings, settings
 from src.core.auth import TokenPayload, get_token_payload
@@ -39,7 +38,6 @@ class Inject[T]:
 
 def init_container() -> None:
     """Register all dependencies in the rodi container."""
-
     container.add_instance(settings, Settings)
     container.add_instance(get_redis_client())
     container.add_instance(

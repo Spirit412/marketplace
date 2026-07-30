@@ -1,6 +1,5 @@
 """Application settings via pydantic-settings."""
 
-from pydantic import PositiveInt
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -64,6 +63,7 @@ class JWTSettings(BaseSettings):
 
 class UpstreamSettings(BaseSettings):
     """API Gateway upstream service hostnames."""
+
     model_config = SettingsConfigDict(env_prefix="UPSTREAM_")
 
     CATALOG_HOST: str = "mp-catalog-service"

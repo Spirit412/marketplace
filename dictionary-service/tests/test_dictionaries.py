@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import uuid
-
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.datatype import uuid7
 from src.enums.dictionary_type import DictionaryType
 from src.models.dictionary import DictionaryEntry
 from src.repositories.dictionary_repo import DictionaryRepository

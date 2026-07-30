@@ -1,17 +1,25 @@
-from src.config.settings import settings
 import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.dependencies import get_scheduler
 from src.schemes.response.job import JobList, JobStatus, TriggerResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
-@router.get("/", response_model=JobList, summary="List scheduled jobs",
+@router.get(
+    "/",
+    response_model=JobList,
+    summary="List scheduled jobs",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_jobs(
@@ -34,7 +42,11 @@ async def list_jobs(
     return JobList(jobs=jobs, total=len(jobs))
 
 
-@router.post("/{job_id}/trigger", response_model=TriggerResponse, status_code=202, summary="Trigger job",
+@router.post(
+    "/{job_id}/trigger",
+    response_model=TriggerResponse,
+    status_code=202,
+    summary="Trigger job",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def trigger_job(

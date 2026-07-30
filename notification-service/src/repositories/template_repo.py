@@ -10,8 +10,9 @@ from src.models.notification import Template
 class TemplateRepository:
     """Repository for Template; soft-deleted rows are hidden unless asked for."""
 
-
-    async def get_by_code_and_locale(self, session: AsyncSession, code: str, locale: str) -> Template | None:
+    async def get_by_code_and_locale(
+        self, session: AsyncSession, code: str, locale: str
+    ) -> Template | None:
         stmt = exclude_deleted(
             select(Template).where(
                 Template.code == code,
@@ -23,7 +24,9 @@ class TemplateRepository:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_all(self, session: AsyncSession, locale: str | None = None) -> list[Template]:
+    async def get_all(
+        self, session: AsyncSession, locale: str | None = None
+    ) -> list[Template]:
         stmt = exclude_deleted(
             select(Template).where(Template.is_active.is_(True)), Template
         )

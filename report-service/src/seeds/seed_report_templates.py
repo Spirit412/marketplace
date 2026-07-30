@@ -59,8 +59,6 @@ async def seed_report_templates(session: AsyncSession) -> None:
     print(f"\nSeed complete: {count_created} created, {count_updated} updated.")
 
 
-
-
 async def _main() -> None:
     engine = create_async_engine(settings.postgres.dsn)
     session_factory = async_sessionmaker(engine, class_=AsyncSession)

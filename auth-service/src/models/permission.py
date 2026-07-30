@@ -14,7 +14,10 @@ if TYPE_CHECKING:
 
 class Permission(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "permissions"
-    __table_args__ = {"schema": "auth", "comment": "Разрешение — доступ к конкретному методу и пути одного микросервиса"}
+    __table_args__ = {
+        "schema": "auth",
+        "comment": "Разрешение — доступ к конкретному методу и пути одного микросервиса",
+    }
 
     uuid: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="pk разрешения"
@@ -23,7 +26,6 @@ class Permission(TimestampMixin, SoftDeleteMixin, Base):
     app_id: Mapped[str] = mapped_column(comment="идентификатор микросервиса")
     method: Mapped[str] = mapped_column(comment="HTTP-метод")
     path: Mapped[str] = mapped_column(comment="путь для доступа")
-
 
     groups: Mapped[list[Group]] = relationship(
         secondary="auth.permission_group_association", back_populates="permissions"

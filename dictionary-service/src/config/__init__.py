@@ -1,4 +1,3 @@
-from . import middlewares
-from . import settings
+from . import middlewares, settings
 
-__all__ = ['middlewares', 'settings']
+__all__ = ["middlewares", "settings"]

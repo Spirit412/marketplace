@@ -8,9 +8,9 @@ from src.core.datatype import uuid7
 from src.core.event import EventManager
 from src.engines.http_client import InsufficientStockError, InventoryClient
 from src.enums.order_status import ORDER_STATE_MACHINE, OrderStatus
-from src.patterns.state_machine import InvalidTransitionError
 from src.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from src.patterns.builder import OrderBuilder
+from src.patterns.state_machine import InvalidTransitionError
 from src.repositories.order_repo import OrderRepo
 from src.services.cart_service import CartService
 from src.services.order_validators import (
@@ -98,7 +98,9 @@ class OrderService:
         order.notes = notes
         for item in order.items:
             warehouse_id_str = warehouse_by_product.get(str(item.product_id))
-            item.warehouse_id = uuid.UUID(warehouse_id_str) if warehouse_id_str else None
+            item.warehouse_id = (
+                uuid.UUID(warehouse_id_str) if warehouse_id_str else None
+            )
 
         order = await self._order_repo.create(session, order)
 
@@ -226,13 +228,9 @@ class OrderService:
         self, *, session: AsyncSession, expiration_minutes: int
     ) -> list[object]:
         """Get orders that have expired."""
-        return await self._order_repo.get_expired_orders(
-            session, expiration_minutes
-        )
+        return await self._order_repo.get_expired_orders(session, expiration_minutes)
 
     @staticmethod
-    def can_transition(
-        current_status: OrderStatus, new_status: OrderStatus
-    ) -> bool:
+    def can_transition(current_status: OrderStatus, new_status: OrderStatus) -> bool:
         """Check if a status transition is allowed."""
         return ORDER_STATE_MACHINE.can_transition(current_status, new_status)

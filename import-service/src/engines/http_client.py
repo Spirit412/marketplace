@@ -17,9 +17,9 @@ class CatalogClient:
     async def create_products(self, products: list[dict]) -> dict:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-        f"{self._base_url}/products/bulk",
-        json={"products": products},
-        headers=self._headers(),
+                f"{self._base_url}/products/bulk",
+                json={"products": products},
+                headers=self._headers(),
             )
             response.raise_for_status()
             return response.json()
@@ -39,8 +39,8 @@ class DictionaryClient:
     async def get_categories(self) -> list[dict]:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
-        f"{self._base_url}/categories",
-        headers=self._headers(),
+                f"{self._base_url}/categories",
+                headers=self._headers(),
             )
             response.raise_for_status()
             return response.json()
@@ -48,8 +48,8 @@ class DictionaryClient:
     async def get_brands(self) -> list[dict]:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
-        f"{self._base_url}/brands",
-        headers=self._headers(),
+                f"{self._base_url}/brands",
+                headers=self._headers(),
             )
             response.raise_for_status()
             return response.json()
@@ -57,8 +57,8 @@ class DictionaryClient:
     async def get_units(self) -> list[dict]:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
-        f"{self._base_url}/units",
-        headers=self._headers(),
+                f"{self._base_url}/units",
+                headers=self._headers(),
             )
             response.raise_for_status()
             return response.json()

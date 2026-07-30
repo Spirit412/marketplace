@@ -4,7 +4,6 @@ Request-scoped dependencies (repositories with DB session) use FastAPI Depends()
 Singleton infrastructure (settings, engines) uses rodi container.
 """
 
-
 from rodi import Container
 
 from src.config.settings import Settings, settings
@@ -30,7 +29,6 @@ class Inject[T]:
 
 def init_container() -> None:
     """Register singleton dependencies in the rodi container."""
-    
     container.add_instance(settings, Settings)
 
     container.add_scoped(CatalogClient)

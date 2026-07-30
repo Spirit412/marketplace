@@ -26,7 +26,10 @@ class DictionaryService:
         self._publisher = publisher
 
     async def get_all(
-        self, *, session: AsyncSession, type_: DictionaryType,
+        self,
+        *,
+        session: AsyncSession,
+        type_: DictionaryType,
     ) -> list[dict]:
         cached = await self._redis_cache.get(type_.value)
         if cached:
@@ -40,8 +43,12 @@ class DictionaryService:
         return items
 
     async def create_or_update(
-        self, *, session: AsyncSession, type_: DictionaryType,
-        code: str, data: dict,
+        self,
+        *,
+        session: AsyncSession,
+        type_: DictionaryType,
+        code: str,
+        data: dict,
     ) -> DictionaryEntry:
         entry = await self._repo.upsert(session, type_, code, data)
 
@@ -58,7 +65,11 @@ class DictionaryService:
         return entry
 
     async def delete(
-        self, *, session: AsyncSession, type_: DictionaryType, code: str,
+        self,
+        *,
+        session: AsyncSession,
+        type_: DictionaryType,
+        code: str,
     ) -> bool:
         result = await self._repo.delete(session, type_, code)
         if result:

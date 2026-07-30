@@ -14,7 +14,6 @@ class UserRepository(BaseRepository[User]):
     async def get_by_email(self, session: AsyncSession, email: str) -> User | None:
         return await self.get_by(session, email=email)
 
-
     async def get_with_access(
         self, session: AsyncSession, user_id: uuid.UUID
     ) -> User | None:
@@ -31,8 +30,7 @@ class UserRepository(BaseRepository[User]):
                 selectinload(User.user_accesses)
                 .selectinload(UserAccess.role)
                 .selectinload(Role.groups),
-                selectinload(User.user_accesses)
-                .selectinload(UserAccess.permissions),
+                selectinload(User.user_accesses).selectinload(UserAccess.permissions),
             )
         )
         result = await session.execute(stmt)

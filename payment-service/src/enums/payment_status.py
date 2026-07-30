@@ -14,16 +14,29 @@ class PaymentStatus(StrEnum):
 
 
 PAYMENT_VALID_TRANSITIONS: dict[PaymentStatus, set[PaymentStatus]] = {
-    PaymentStatus.PENDING: {PaymentStatus.PROCESSING, PaymentStatus.FAILED, PaymentStatus.CANCELLED},
-    PaymentStatus.PROCESSING: {PaymentStatus.SUCCEEDED, PaymentStatus.FAILED, PaymentStatus.CANCELLED},
+    PaymentStatus.PENDING: {
+        PaymentStatus.PROCESSING,
+        PaymentStatus.FAILED,
+        PaymentStatus.CANCELLED,
+    },
+    PaymentStatus.PROCESSING: {
+        PaymentStatus.SUCCEEDED,
+        PaymentStatus.FAILED,
+        PaymentStatus.CANCELLED,
+    },
     PaymentStatus.SUCCEEDED: {PaymentStatus.REFUNDED, PaymentStatus.PARTIALLY_REFUNDED},
-    PaymentStatus.PARTIALLY_REFUNDED: {PaymentStatus.REFUNDED, PaymentStatus.PARTIALLY_REFUNDED},
+    PaymentStatus.PARTIALLY_REFUNDED: {
+        PaymentStatus.REFUNDED,
+        PaymentStatus.PARTIALLY_REFUNDED,
+    },
     PaymentStatus.FAILED: set(),
     PaymentStatus.CANCELLED: set(),
     PaymentStatus.REFUNDED: set(),
 }
 
-PAYMENT_STATE_MACHINE: StateMachine[PaymentStatus] = StateMachine(PAYMENT_VALID_TRANSITIONS)
+PAYMENT_STATE_MACHINE: StateMachine[PaymentStatus] = StateMachine(
+    PAYMENT_VALID_TRANSITIONS
+)
 
 
 class PaymentMethod(StrEnum):

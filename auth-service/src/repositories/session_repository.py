@@ -11,9 +11,7 @@ class SessionRepository(BaseRepository[SessionLog]):
     def __init__(self) -> None:
         super().__init__(SessionLog)
 
-    async def get_by_jti(
-        self, session: AsyncSession, jti: str
-    ) -> SessionLog | None:
+    async def get_by_jti(self, session: AsyncSession, jti: str) -> SessionLog | None:
         return await self.get_by(session, session_jti=jti)
 
     async def get_active_for_user(
@@ -30,9 +28,7 @@ class SessionRepository(BaseRepository[SessionLog]):
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
-    async def close_session(
-        self, session: AsyncSession, jti: str
-    ) -> None:
+    async def close_session(self, session: AsyncSession, jti: str) -> None:
         from datetime import UTC, datetime
 
         stmt = (

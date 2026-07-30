@@ -1,11 +1,16 @@
-from src.config.settings import settings
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.core.database import get_async_session
 from src.depends import Inject
 from src.schemes.request.inventory import WarehouseCreateRequest, WarehouseUpdateRequest
@@ -15,7 +20,11 @@ from src.services.warehouse_service import WarehouseService
 router = APIRouter(prefix="/warehouses", tags=["warehouses"])
 
 
-@router.post("/", response_model=WarehouseResponse, status_code=201, summary="Create warehouse",
+@router.post(
+    "/",
+    response_model=WarehouseResponse,
+    status_code=201,
+    summary="Create warehouse",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_warehouse(
@@ -32,7 +41,10 @@ async def create_warehouse(
     )
 
 
-@router.get("/", response_model=list[WarehouseResponse], summary="List warehouses",
+@router.get(
+    "/",
+    response_model=list[WarehouseResponse],
+    summary="List warehouses",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_warehouses(
@@ -51,7 +63,10 @@ async def list_warehouses(
     )
 
 
-@router.get("/{warehouse_id}", response_model=WarehouseResponse, summary="Get warehouse by ID",
+@router.get(
+    "/{warehouse_id}",
+    response_model=WarehouseResponse,
+    summary="Get warehouse by ID",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_warehouse(
@@ -68,7 +83,10 @@ async def get_warehouse(
     )
 
 
-@router.patch("/{warehouse_id}", response_model=WarehouseResponse, summary="Update warehouse",
+@router.patch(
+    "/{warehouse_id}",
+    response_model=WarehouseResponse,
+    summary="Update warehouse",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def update_warehouse(
@@ -87,7 +105,11 @@ async def update_warehouse(
     )
 
 
-@router.delete("/{warehouse_id}", status_code=204, response_model=None, summary="Delete warehouse",
+@router.delete(
+    "/{warehouse_id}",
+    status_code=204,
+    response_model=None,
+    summary="Delete warehouse",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def delete_warehouse(

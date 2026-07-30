@@ -1,4 +1,3 @@
-
 import uuid as _uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator

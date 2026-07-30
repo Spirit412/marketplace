@@ -28,17 +28,17 @@ class DictionaryRegistry:
                     http_client = CircuitBreakerClient(
                         base_url=settings.EXCHANGE_RATES_API_URL,
                     )
-                    sources.append(ExternalAPISource(
-                        http_client=http_client,
-                        api_url=settings.EXCHANGE_RATES_API_URL,
-                    ))
+                    sources.append(
+                        ExternalAPISource(
+                            http_client=http_client,
+                            api_url=settings.EXCHANGE_RATES_API_URL,
+                        )
+                    )
 
             sources.append(db_source)
             self._registry[dict_type] = sources
 
-    async def resolve(
-        self, session: AsyncSession, type_: DictionaryType
-    ) -> list[dict]:
+    async def resolve(self, session: AsyncSession, type_: DictionaryType) -> list[dict]:
         sources = self._registry.get(type_, [])
         merged: dict[str, dict] = {}
         for source in sources:

@@ -1,5 +1,3 @@
-from . import redis
-from . import postgres
-from . import http_client
+from . import http_client, postgres, redis
 
-__all__ = ['redis', 'postgres', 'http_client']
+__all__ = ["http_client", "postgres", "redis"]

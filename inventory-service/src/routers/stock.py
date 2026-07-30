@@ -1,11 +1,16 @@
-from src.config.settings import settings
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.core.database import get_async_session
 from src.depends import Inject
 from src.exceptions import NotFoundError
@@ -26,7 +31,10 @@ from src.services.movement_service import MovementService
 router = APIRouter(prefix="/stock", tags=["stock"])
 
 
-@router.get("/", response_model=StockResponse, summary="Check stock levels",
+@router.get(
+    "/",
+    response_model=StockResponse,
+    summary="Check stock levels",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def check_stock(
@@ -93,7 +101,10 @@ async def reserve_stock_by_product(
     return await service.reserve_by_product(session=session, request=request)
 
 
-@router.post("/reserve", response_model=StockResponse, summary="Reserve stock",
+@router.post(
+    "/reserve",
+    response_model=StockResponse,
+    summary="Reserve stock",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def reserve_stock(
@@ -106,7 +117,10 @@ async def reserve_stock(
     return await service.reserve(session=session, request=request)
 
 
-@router.post("/release", response_model=StockResponse, summary="Release stock",
+@router.post(
+    "/release",
+    response_model=StockResponse,
+    summary="Release stock",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def release_stock(
@@ -119,7 +133,10 @@ async def release_stock(
     return await service.release(session=session, request=request)
 
 
-@router.post("/receive", response_model=StockResponse, summary="Receive stock",
+@router.post(
+    "/receive",
+    response_model=StockResponse,
+    summary="Receive stock",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def receive_stock(
@@ -132,7 +149,10 @@ async def receive_stock(
     return await service.receive(session=session, request=request)
 
 
-@router.post("/ship", response_model=StockResponse, summary="Ship stock",
+@router.post(
+    "/ship",
+    response_model=StockResponse,
+    summary="Ship stock",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def ship_stock(
@@ -145,7 +165,10 @@ async def ship_stock(
     return await service.ship(session=session, request=request)
 
 
-@router.post("/adjust", response_model=StockResponse, summary="Adjust stock",
+@router.post(
+    "/adjust",
+    response_model=StockResponse,
+    summary="Adjust stock",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def adjust_stock(
@@ -158,7 +181,10 @@ async def adjust_stock(
     return await service.adjust(session=session, request=request)
 
 
-@router.post("/return", response_model=StockResponse, summary="Return stock",
+@router.post(
+    "/return",
+    response_model=StockResponse,
+    summary="Return stock",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def return_stock(
@@ -171,7 +197,10 @@ async def return_stock(
     return await service.return_stock(session=session, request=request)
 
 
-@router.get("/movements", response_model=list[StockMovementResponse], summary="List stock movements",
+@router.get(
+    "/movements",
+    response_model=list[StockMovementResponse],
+    summary="List stock movements",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_movements(

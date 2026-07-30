@@ -10,13 +10,14 @@ from src.models.models import Warehouse
 class WarehouseRepo:
     """Repository for Warehouse; soft-deleted rows are hidden unless asked for."""
 
-
     async def create(self, session: AsyncSession, warehouse: Warehouse) -> Warehouse:
         session.add(warehouse)
         await session.flush()
         return warehouse
 
-    async def get_by_id(self, session: AsyncSession, warehouse_id: uuid.UUID) -> Warehouse | None:
+    async def get_by_id(
+        self, session: AsyncSession, warehouse_id: uuid.UUID
+    ) -> Warehouse | None:
         stmt = exclude_deleted(
             select(Warehouse).where(
                 Warehouse.id == warehouse_id, Warehouse.is_active.is_(True)
@@ -26,7 +27,13 @@ class WarehouseRepo:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def list_by_seller(self, session: AsyncSession, seller_id: uuid.UUID, offset: int = 0, limit: int = 50) -> tuple[list[Warehouse], int]:
+    async def list_by_seller(
+        self,
+        session: AsyncSession,
+        seller_id: uuid.UUID,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> tuple[list[Warehouse], int]:
         stmt = exclude_deleted(
             select(Warehouse)
             .where(Warehouse.seller_id == seller_id, Warehouse.is_active.is_(True))
@@ -45,7 +52,9 @@ class WarehouseRepo:
         await session.flush()
         return warehouse
 
-    async def deactivate(self, session: AsyncSession, warehouse_id: uuid.UUID) -> Warehouse | None:
+    async def deactivate(
+        self, session: AsyncSession, warehouse_id: uuid.UUID
+    ) -> Warehouse | None:
         from datetime import UTC, datetime
 
         stmt = (
@@ -57,7 +66,9 @@ class WarehouseRepo:
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_by_name_and_seller(self, session: AsyncSession, name: str, seller_id: uuid.UUID) -> Warehouse | None:
+    async def get_by_name_and_seller(
+        self, session: AsyncSession, name: str, seller_id: uuid.UUID
+    ) -> Warehouse | None:
         stmt = select(Warehouse).where(
             Warehouse.name == name,
             Warehouse.seller_id == seller_id,

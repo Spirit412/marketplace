@@ -7,7 +7,6 @@ lacks an application's permission must be refused.
 
 import httpx
 import pytest
-
 from conftest import ADMIN_PASSWORD, TIMEOUT, TRUST_ENV, base_url
 
 # A seeded low-privilege account and the applications it must NOT reach.

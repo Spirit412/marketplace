@@ -1,11 +1,10 @@
 """Dependency injection — rodi container setup and FastAPI integration."""
 
-
 from src.config.settings import Settings, settings
 from src.dependencies import container
-from src.repositories.dictionary_repo import DictionaryRepository
 from src.engines.rabbitmq import DictionaryPublisher, get_publisher
 from src.engines.redis import RedisDictCache
+from src.repositories.dictionary_repo import DictionaryRepository
 from src.services.dictionary_service import DictionaryService
 
 
@@ -21,7 +20,6 @@ class Inject[T]:
 
 def init_container() -> None:
     """Register all dependencies in the rodi container."""
-    
     container.add_instance(settings, Settings)
     container.add_instance(RedisDictCache(), RedisDictCache)
     container.add_instance(get_publisher(), DictionaryPublisher)

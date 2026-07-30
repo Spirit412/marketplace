@@ -30,4 +30,6 @@ REPORT_VALID_TRANSITIONS: dict[ReportStatus, set[ReportStatus]] = {
     ReportStatus.FAILED: set(),
 }
 
-REPORT_STATE_MACHINE: StateMachine[ReportStatus] = StateMachine(REPORT_VALID_TRANSITIONS)
+REPORT_STATE_MACHINE: StateMachine[ReportStatus] = StateMachine(
+    REPORT_VALID_TRANSITIONS
+)

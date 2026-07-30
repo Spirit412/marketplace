@@ -14,17 +14,14 @@ class DictionarySource(ABC):
     @abstractmethod
     async def fetch(
         self, session: AsyncSession, type_: DictionaryType
-    ) -> list[dict]:
-        ...
+    ) -> list[dict]: ...
 
 
 class DBDictionarySource(DictionarySource):
     def __init__(self, repository: DictionaryRepository) -> None:
         self._repository = repository
 
-    async def fetch(
-        self, session: AsyncSession, type_: DictionaryType
-    ) -> list[dict]:
+    async def fetch(self, session: AsyncSession, type_: DictionaryType) -> list[dict]:
         entries = await self._repository.get_all_by_type(session, type_)
         return [
             {
@@ -48,9 +45,7 @@ class ExternalAPISource(DictionarySource):
         self._http_client = http_client
         self._api_url = api_url
 
-    async def fetch(
-        self, session: AsyncSession, type_: DictionaryType
-    ) -> list[dict]:
+    async def fetch(self, session: AsyncSession, type_: DictionaryType) -> list[dict]:
         if type_ != DictionaryType.currencies:
             return []
         if not self._api_url:
@@ -68,9 +63,11 @@ class ExternalAPISource(DictionarySource):
         rates = raw.get("rates", {})
         items: list[dict] = []
         for currency_code, rate in rates.items():
-            items.append({
-                "type": "currencies",
-                "code": currency_code,
-                "data": {"rate": rate},
-            })
+            items.append(
+                {
+                    "type": "currencies",
+                    "code": currency_code,
+                    "data": {"rate": rate},
+                }
+            )
         return items

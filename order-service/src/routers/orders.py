@@ -1,11 +1,16 @@
-from src.config.settings import settings
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.core.database import get_async_session
 from src.depends import Inject
 from src.schemes.request.order import CreateOrderRequest
@@ -18,7 +23,11 @@ from src.services.order_service import OrderService
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
-@router.post("/", response_model=OrderResponse, status_code=201, summary="Create order",
+@router.post(
+    "/",
+    response_model=OrderResponse,
+    status_code=201,
+    summary="Create order",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_order(
@@ -41,7 +50,10 @@ async def create_order(
     return OrderResponse.model_validate(order)
 
 
-@router.get("/", response_model=OrderListResponse, summary="List user orders",
+@router.get(
+    "/",
+    response_model=OrderListResponse,
+    summary="List user orders",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_orders(
@@ -66,7 +78,10 @@ async def get_orders(
     )
 
 
-@router.get("/{order_uuid}", response_model=OrderResponse, summary="Get order by ID",
+@router.get(
+    "/{order_uuid}",
+    response_model=OrderResponse,
+    summary="Get order by ID",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_order(
@@ -80,7 +95,10 @@ async def get_order(
     return OrderResponse.model_validate(order)
 
 
-@router.post("/{order_uuid}/cancel", response_model=OrderResponse, summary="Cancel order",
+@router.post(
+    "/{order_uuid}/cancel",
+    response_model=OrderResponse,
+    summary="Cancel order",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def cancel_order(

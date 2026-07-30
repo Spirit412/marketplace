@@ -8,7 +8,9 @@ HandlerFunc = Callable[..., Any]
 MOVEMENT_TYPE_HANDLERS: dict[MovementType, HandlerFunc] = {}
 
 
-def register_handler(movement_type: MovementType) -> Callable[[HandlerFunc], HandlerFunc]:
+def register_handler(
+    movement_type: MovementType,
+) -> Callable[[HandlerFunc], HandlerFunc]:
     """Decorator to register a handler for a movement type."""
 
     def decorator(func: HandlerFunc) -> HandlerFunc:

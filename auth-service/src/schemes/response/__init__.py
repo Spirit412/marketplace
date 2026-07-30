@@ -1,4 +1,4 @@
-from .auth import TokenResponse, UserResponse, SessionResponse, CheckCredentialsResponse
+from .auth import CheckCredentialsResponse, SessionResponse, TokenResponse, UserResponse
 
 __all__ = [
     "auth",

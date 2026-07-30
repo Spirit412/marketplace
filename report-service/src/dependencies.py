@@ -1,6 +1,5 @@
 """Dependency injection — rodi container setup and FastAPI integration."""
 
-
 from rodi import Container
 
 from src.config.settings import Settings, settings
@@ -22,7 +21,6 @@ class Inject[T]:
 
 def init_container() -> None:
     """Register all dependencies in the rodi container."""
-    
     container.add_instance(settings, Settings)
     container.add_instance(LocalFileStorage())
 

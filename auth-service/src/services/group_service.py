@@ -97,9 +97,7 @@ class GroupService:
         if not group:
             raise NotFoundError(f"Group {uuid} not found")
 
-        update_data = body.model_dump(
-            exclude={"permission_uuids"}, exclude_none=True
-        )
+        update_data = body.model_dump(exclude={"permission_uuids"}, exclude_none=True)
         if update_data:
             await self._repo.update(session, group, **update_data)
 

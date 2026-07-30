@@ -9,10 +9,6 @@ from httpx import AsyncClient
 
 from src.schemes.request.inventory import (
     ReserveRequest,
-    ReleaseRequest,
-    ReceiptRequest,
-    ShipRequest,
-    AdjustRequest,
     StockCheckRequest,
 )
 
@@ -20,9 +16,7 @@ pytestmark = pytest.mark.anyio
 
 
 class TestStockEndpoints:
-    async def test_check_stock_empty(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def test_check_stock_empty(self, async_client: AsyncClient) -> None:
         product_id = uuid.uuid4()
         warehouse_id = uuid.uuid4()
         response = await async_client.get(
@@ -31,9 +25,7 @@ class TestStockEndpoints:
         )
         assert response.status_code in (200, 403)
 
-    async def test_reserve_requires_auth(
-        self, async_client: AsyncClient
-    ) -> None:
+    async def test_reserve_requires_auth(self, async_client: AsyncClient) -> None:
         request = ReserveRequest(
             product_id=uuid.uuid4(),
             warehouse_id=uuid.uuid4(),
@@ -48,8 +40,8 @@ class TestStockEndpoints:
 
 class TestInventoryService:
     async def test_check_stock_nonexistent(self, db_session) -> None:
-        from src.repositories.stock_repo import StockRepo
         from src.repositories.movement_repo import MovementRepo
+        from src.repositories.stock_repo import StockRepo
         from src.services.inventory_service import InventoryService
 
         stock_repo = StockRepo(db_session)

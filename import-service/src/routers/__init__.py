@@ -7,4 +7,4 @@ from src.routers.imports import router as imports_router
 # parameterised route shadows it.
 routers = [health_router, error_templates_router, imports_router]
 
-__all__ = ['imports', 'health', 'error_templates']
+__all__ = ["error_templates", "health", "imports"]

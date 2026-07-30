@@ -1,6 +1,5 @@
 """Order repository — inherits from BaseRepository."""
 
-
 import uuid
 from datetime import UTC, datetime, timedelta
 

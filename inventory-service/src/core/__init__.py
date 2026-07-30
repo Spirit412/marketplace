@@ -13,17 +13,19 @@ point — API, workers, Alembic, seeds — is configured by the act of importing
 its settings, with no per-entry-point wiring to forget.
 """
 
-from . import access
-from . import auth
-from . import config
-from . import database
-from . import datatype
-from . import event
-from . import health
-from . import http_client
-from . import orm
-from . import repository
-from . import uow
+from . import (
+    access,
+    auth,
+    config,
+    database,
+    datatype,
+    event,
+    health,
+    http_client,
+    orm,
+    repository,
+    uow,
+)
 from .config import configure
 
 __all__ = [

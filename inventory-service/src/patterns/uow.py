@@ -43,8 +43,6 @@ class InventoryUnitOfWork:
 
         return False
 
-    def invalidate_stock_cache(
-        self, product_id: str, warehouse_id: str
-    ) -> None:
+    def invalidate_stock_cache(self, product_id: str, warehouse_id: str) -> None:
         """Mark a stock cache key for invalidation on commit."""
         self._dirty_keys.add(f"stock:{warehouse_id}:{product_id}")

@@ -1,5 +1,3 @@
-from src.enums.dictionary_type import DictionaryType
-
 from functools import lru_cache
 
 import redis.asyncio as redis_asyncio
@@ -7,12 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
+from src.enums.dictionary_type import DictionaryType
 from src.models.dictionary import DictionaryEntry
 
 
 @lru_cache
 def get_redis_client() -> redis_asyncio.Redis:
-        return redis_asyncio.from_url(
+    return redis_asyncio.from_url(
         settings.redis.url,
         decode_responses=True,
     )
@@ -26,7 +25,10 @@ async def check_redis() -> None:
 class RedisDictCache:
     def __init__(self, redis_client: redis_asyncio.Redis | None = None) -> None:
         self._redis = redis_client or get_redis_client()
-    async def get(self, type_: str, code: str | None = None) -> list[dict] | dict | None:
+
+    async def get(
+        self, type_: str, code: str | None = None
+    ) -> list[dict] | dict | None:
         import json
 
         if code is not None:
@@ -41,9 +43,7 @@ class RedisDictCache:
                 items.append(json.loads(data))
         return items
 
-    async def set(
-        self, type_: str, data: list[dict], ttl: int | None = None
-    ) -> None:
+    async def set(self, type_: str, data: list[dict], ttl: int | None = None) -> None:
         import json
 
         if ttl is None:

@@ -15,14 +15,16 @@ if TYPE_CHECKING:
 
 class Group(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "groups"
-    __table_args__ = {"schema": "auth", "comment": "Группа прав — объединяет разрешения (Permission), назначается ролям"}
+    __table_args__ = {
+        "schema": "auth",
+        "comment": "Группа прав — объединяет разрешения (Permission), назначается ролям",
+    }
 
     uuid: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="pk группы"
     )
     name: Mapped[str] = mapped_column(comment="название группы")
     description: Mapped[str | None] = mapped_column(comment="описание группы")
-
 
     roles: Mapped[list[Role]] = relationship(
         secondary="auth.role_group_association", back_populates="groups"

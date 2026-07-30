@@ -53,14 +53,14 @@ class ImportService:
             content, f"{seller_id}/{file_name}"
         )
         task = await self._task_repo.create_task(
-                session,
+            session,
             {
                 "seller_id": seller_id,
                 "import_type": import_type,
                 "file_name": file_name,
                 "file_path": file_path,
                 "status": ImportStatus.PENDING,
-            }
+            },
         )
         return task
 
@@ -91,7 +91,9 @@ class ImportService:
             )
             return task
 
-        return await self._task_repo.update_status(session, task_id, new_status, **extra)
+        return await self._task_repo.update_status(
+            session, task_id, new_status, **extra
+        )
 
     async def validate_csv(self, *, session: AsyncSession, task_id: uuid.UUID) -> None:
 
@@ -118,7 +120,9 @@ class ImportService:
             rows.append({"row_number": row_number, "data": mapped})
 
         validator = RowValidator()
-        valid_rows, error_rows = validator.validate_rows(rows, task.import_type, strategy)
+        valid_rows, error_rows = validator.validate_rows(
+            rows, task.import_type, strategy
+        )
 
         row_records: list[dict] = []
         for item in valid_rows:
@@ -146,7 +150,7 @@ class ImportService:
         total_rows = len(rows)
         error_count = len(error_rows)
         await self._task_repo.update_progress(
-                session,
+            session,
             task_id,
             processed=len(valid_rows),
             total=total_rows,
@@ -180,9 +184,7 @@ class ImportService:
                 product = ProductFromRowBuilder.build(row.row_data)
                 products.append(product)
             except Exception as exc:
-                errors.append(
-                    {"row": row.row_number, "error": str(exc)}
-                )
+                errors.append({"row": row.row_number, "error": str(exc)})
 
         products_created = 0
         if products:
@@ -202,7 +204,7 @@ class ImportService:
                 return
 
         await self._task_repo.update_progress(
-                session,
+            session,
             task_id,
             processed=task.processed_rows + products_created,
             total=task.total_rows,

@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import uuid
 from collections.abc import AsyncGenerator
-from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -16,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.core.datatype import uuid7
 from src.enums.import_status import ImportStatus
 from src.enums.import_type import ImportType
-from src.models.import_row import ImportRow
 from src.models.import_task import Base, ImportTask
 
 
@@ -52,10 +49,9 @@ async def db_session(
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    async with session_factory() as session:
-        async with session.begin():
-            yield session
-            await session.rollback()
+    async with session_factory() as session, session.begin():
+        yield session
+        await session.rollback()
 
 
 @pytest.fixture
@@ -75,9 +71,7 @@ async def test_client(
     async def override_session() -> AsyncGenerator[AsyncSession, None]:
         yield db_session
 
-    app.dependency_overrides[
-        "get_async_session"
-    ] = override_session
+    app.dependency_overrides["get_async_session"] = override_session
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

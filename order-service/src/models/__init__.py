@@ -1,3 +1,3 @@
 from . import order
 
-__all__ = ['order']
+__all__ = ["order"]

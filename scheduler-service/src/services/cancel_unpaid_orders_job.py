@@ -27,11 +27,14 @@ async def cancel_unpaid_orders_job() -> None:
 
         success = await client.cancel_order(order_id)
         if success:
-            await publish_event("order.cancelled", {
-                "order_id": order_id,
-                "user_uuid": user_uuid,
-                "reason": "payment_timeout",
-            })
+            await publish_event(
+                "order.cancelled",
+                {
+                    "order_id": order_id,
+                    "user_uuid": user_uuid,
+                    "reason": "payment_timeout",
+                },
+            )
             logger.info("Cancelled order %s", order_id)
         else:
             logger.warning("Failed to cancel order %s", order_id)

@@ -1,4 +1,3 @@
-from . import cart
-from . import order
+from . import cart, order
 
-__all__ = ['cart', 'order']
+__all__ = ["cart", "order"]

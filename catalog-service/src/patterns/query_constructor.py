@@ -24,9 +24,7 @@ class ProductQueryConstructor:
                 field = key
                 operator = "eq"
 
-            stmt = ProductQueryConstructor._apply_operator(
-                stmt, field, operator, value
-            )
+            stmt = ProductQueryConstructor._apply_operator(stmt, field, operator, value)
 
         return stmt
 
@@ -76,9 +74,7 @@ class ProductQueryConstructor:
         """Apply full-text search using tsvector."""
         if not query:
             return stmt
-        return stmt.where(
-            Product.search_vector.op("@@")(f"plainto_tsquery('{query}')")
-        )
+        return stmt.where(Product.search_vector.op("@@")(f"plainto_tsquery('{query}')"))
 
     @staticmethod
     def apply_sorting(

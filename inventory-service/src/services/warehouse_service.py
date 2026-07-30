@@ -3,7 +3,12 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
-from src.exceptions import ConflictError, ForbiddenError, NotFoundError, ServiceUnavailableError
+from src.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    ServiceUnavailableError,
+)
 from src.models.models import Warehouse
 from src.repositories.warehouse_repo import WarehouseRepo
 from src.schemes.request.inventory import WarehouseCreateRequest, WarehouseUpdateRequest
@@ -11,7 +16,6 @@ from src.schemes.response.inventory import WarehouseResponse
 
 
 class WarehouseService:
-
     async def create(
         self,
         *,
@@ -20,8 +24,8 @@ class WarehouseService:
         seller_id: uuid.UUID,
     ) -> WarehouseResponse:
         warehouse_repo = WarehouseRepo()
-        existing = await warehouse_repo.get_by_name_and_seller(session, 
-            request.name, seller_id
+        existing = await warehouse_repo.get_by_name_and_seller(
+            session, request.name, seller_id
         )
         if existing is not None:
             raise ConflictError(
@@ -47,8 +51,8 @@ class WarehouseService:
         limit: int = 50,
     ) -> list[WarehouseResponse]:
         warehouse_repo = WarehouseRepo()
-        warehouses, _ = await warehouse_repo.list_by_seller(session, 
-            seller_id, offset=offset, limit=limit
+        warehouses, _ = await warehouse_repo.list_by_seller(
+            session, seller_id, offset=offset, limit=limit
         )
         return [WarehouseResponse.model_validate(ware) for ware in warehouses]
 
@@ -79,8 +83,8 @@ class WarehouseService:
             raise ForbiddenError("Access denied")
 
         if request.name is not None:
-            existing = await warehouse_repo.get_by_name_and_seller(session, 
-                request.name, seller_id
+            existing = await warehouse_repo.get_by_name_and_seller(
+                session, request.name, seller_id
             )
             if existing is not None and existing.id != warehouse_id:
                 raise ConflictError(

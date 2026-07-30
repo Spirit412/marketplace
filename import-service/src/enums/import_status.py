@@ -19,4 +19,6 @@ IMPORT_VALID_TRANSITIONS: dict[ImportStatus, set[ImportStatus]] = {
     ImportStatus.FAILED: set(),
 }
 
-IMPORT_STATE_MACHINE: StateMachine[ImportStatus] = StateMachine(IMPORT_VALID_TRANSITIONS)
+IMPORT_STATE_MACHINE: StateMachine[ImportStatus] = StateMachine(
+    IMPORT_VALID_TRANSITIONS
+)

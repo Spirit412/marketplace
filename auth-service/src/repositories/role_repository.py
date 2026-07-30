@@ -18,11 +18,7 @@ class RoleRepository(BaseRepository[Role]):
         return await self.get_by(session, name=name)
 
     async def get_with_groups(self, session: AsyncSession, uuid: UUID) -> Role | None:
-        stmt = (
-            select(Role)
-            .where(Role.uuid == uuid)
-            .options(selectinload(Role.groups))
-        )
+        stmt = select(Role).where(Role.uuid == uuid).options(selectinload(Role.groups))
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 

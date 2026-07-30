@@ -110,7 +110,10 @@ class TestLogin:
     ) -> None:
         response = await async_client.post(
             "/auth/login",
-            json={"email": f"{TEST_EMAIL_PREFIX}never-registered@marketplace.dev", "password": PASSWORD},
+            json={
+                "email": f"{TEST_EMAIL_PREFIX}never-registered@marketplace.dev",
+                "password": PASSWORD,
+            },
         )
         assert response.status_code == 401
 

@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, ConfigDict
 
 from src.enums.order_status import PaymentMethod, TaxStrategy

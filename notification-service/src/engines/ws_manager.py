@@ -23,7 +23,11 @@ class WebSocketManager:
             if user_uuid not in self._connections:
                 self._connections[user_uuid] = set()
             self._connections[user_uuid].add(ws)
-        logger.info("WebSocket connected: user=%s total_connections=%d", user_uuid, len(self._connections[user_uuid]))
+        logger.info(
+            "WebSocket connected: user=%s total_connections=%d",
+            user_uuid,
+            len(self._connections[user_uuid]),
+        )
 
     async def disconnect(self, user_uuid: str, ws: WebSocket) -> None:
         async with self._lock:

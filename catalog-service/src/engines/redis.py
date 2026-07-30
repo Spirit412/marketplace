@@ -7,7 +7,7 @@ from src.config.settings import settings
 
 @lru_cache
 def get_redis_client() -> redis_asyncio.Redis:
-        return redis_asyncio.from_url(
+    return redis_asyncio.from_url(
         settings.redis.url,
         decode_responses=True,
     )

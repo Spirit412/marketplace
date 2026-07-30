@@ -2,8 +2,6 @@ import json
 import logging
 from functools import lru_cache
 
-from src.config.settings import settings
-
 logger = logging.getLogger(__name__)
 
 try:

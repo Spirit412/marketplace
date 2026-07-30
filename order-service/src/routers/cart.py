@@ -1,10 +1,15 @@
-from src.config.settings import settings
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.depends import Inject
 from src.schemes.request.cart import CartItemRequest
 from src.schemes.response.cart import CartItemResponse, CartResponse
@@ -13,7 +18,10 @@ from src.services.cart_service import CartService
 router = APIRouter(prefix="/cart", tags=["cart"])
 
 
-@router.get("/", response_model=CartResponse, summary="Get cart",
+@router.get(
+    "/",
+    response_model=CartResponse,
+    summary="Get cart",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_cart(
@@ -23,13 +31,15 @@ async def get_cart(
     """Get current user's cart."""
     items = await service.get_cart(token_payload.user_uuid)
     cart_items = [
-        CartItemResponse(product_id=uuid.UUID(k), quantity=v)
-        for k, v in items.items()
+        CartItemResponse(product_id=uuid.UUID(k), quantity=v) for k, v in items.items()
     ]
     return CartResponse(items=cart_items)
 
 
-@router.post("/", response_model=CartResponse, summary="Add item to cart",
+@router.post(
+    "/",
+    response_model=CartResponse,
+    summary="Add item to cart",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def add_to_cart(
@@ -44,13 +54,16 @@ async def add_to_cart(
         quantity=body.quantity,
     )
     cart_items = [
-        CartItemResponse(product_id=uuid.UUID(k), quantity=v)
-        for k, v in items.items()
+        CartItemResponse(product_id=uuid.UUID(k), quantity=v) for k, v in items.items()
     ]
     return CartResponse(items=cart_items)
 
 
-@router.delete("/{product_uuid}", status_code=204, response_model=None, summary="Remove item from cart",
+@router.delete(
+    "/{product_uuid}",
+    status_code=204,
+    response_model=None,
+    summary="Remove item from cart",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def remove_from_cart(
@@ -63,7 +76,11 @@ async def remove_from_cart(
     )
 
 
-@router.delete("/", status_code=204, response_model=None, summary="Clear cart",
+@router.delete(
+    "/",
+    status_code=204,
+    response_model=None,
+    summary="Clear cart",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def clear_cart(

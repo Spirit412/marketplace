@@ -21,7 +21,6 @@ from src.schemes.response.inventory import StockResponse
 
 
 class InventoryService:
-
     async def check_stock_by_product(
         self, *, session: AsyncSession, request: StockCheckByProductRequest
     ) -> StockResponse | None:
@@ -73,11 +72,13 @@ class InventoryService:
             f"no single warehouse has {request.quantity} available"
         )
 
-    async def check_stock(self, *, session: AsyncSession, request: StockCheckRequest) -> StockResponse:
+    async def check_stock(
+        self, *, session: AsyncSession, request: StockCheckRequest
+    ) -> StockResponse:
         """Check available stock for a product in a warehouse."""
         stock_repo = StockRepo()
-        item = await stock_repo.get_by_product_and_warehouse(session, 
-            request.product_id, request.warehouse_id
+        item = await stock_repo.get_by_product_and_warehouse(
+            session, request.product_id, request.warehouse_id
         )
         if item is None:
             return StockResponse(
@@ -95,7 +96,9 @@ class InventoryService:
             available=item.available,
         )
 
-    async def reserve(self, *, session: AsyncSession, request: ReserveRequest) -> StockResponse:
+    async def reserve(
+        self, *, session: AsyncSession, request: ReserveRequest
+    ) -> StockResponse:
         """Reserve stock for an order. Uses Redis lock to prevent race conditions."""
         redis_client = get_redis_client()
         stock_repo = StockRepo()
@@ -110,8 +113,8 @@ class InventoryService:
             raise ConflictError("Stock operation in progress, retry")
 
         try:
-            item = await stock_repo.get_or_create(session, 
-                request.product_id, request.warehouse_id
+            item = await stock_repo.get_or_create(
+                session, request.product_id, request.warehouse_id
             )
 
             available = item.quantity - item.reserved
@@ -134,7 +137,8 @@ class InventoryService:
                     f"Insufficient stock: requested {request.quantity}, available {available}"
                 )
 
-            updated = await stock_repo.update_quantity(session, 
+            updated = await stock_repo.update_quantity(
+                session,
                 item.id,
                 reserved_delta=request.quantity,
             )
@@ -195,7 +199,9 @@ class InventoryService:
                 str(request.warehouse_id),
             )
 
-    async def release(self, *, session: AsyncSession, request: ReleaseRequest) -> StockResponse:
+    async def release(
+        self, *, session: AsyncSession, request: ReleaseRequest
+    ) -> StockResponse:
         """Release previously reserved stock."""
         redis_client = get_redis_client()
         stock_repo = StockRepo()
@@ -210,8 +216,8 @@ class InventoryService:
             raise ConflictError("Stock operation in progress, retry")
 
         try:
-            item = await stock_repo.get_by_product_and_warehouse(session, 
-                request.product_id, request.warehouse_id
+            item = await stock_repo.get_by_product_and_warehouse(
+                session, request.product_id, request.warehouse_id
             )
             if item is None:
                 raise NotFoundError("Stock item not found")
@@ -221,7 +227,8 @@ class InventoryService:
                     f"Cannot release {request.quantity}: only {item.reserved} reserved"
                 )
 
-            updated = await stock_repo.update_quantity(session, 
+            updated = await stock_repo.update_quantity(
+                session,
                 item.id,
                 reserved_delta=-request.quantity,
             )
@@ -266,16 +273,19 @@ class InventoryService:
                 str(request.warehouse_id),
             )
 
-    async def receive(self, *, session: AsyncSession, request: ReceiptRequest) -> StockResponse:
+    async def receive(
+        self, *, session: AsyncSession, request: ReceiptRequest
+    ) -> StockResponse:
         """Receive stock into warehouse."""
         stock_repo = StockRepo()
         movement_repo = MovementRepo()
 
-        item = await stock_repo.get_or_create(session, 
-            request.product_id, request.warehouse_id
+        item = await stock_repo.get_or_create(
+            session, request.product_id, request.warehouse_id
         )
 
-        updated = await stock_repo.update_quantity(session, 
+        updated = await stock_repo.update_quantity(
+            session,
             item.id,
             quantity_delta=request.quantity,
         )
@@ -315,13 +325,15 @@ class InventoryService:
             available=updated.available,
         )
 
-    async def ship(self, *, session: AsyncSession, request: ShipRequest) -> StockResponse:
+    async def ship(
+        self, *, session: AsyncSession, request: ShipRequest
+    ) -> StockResponse:
         """Ship/dispatch stock from warehouse."""
         stock_repo = StockRepo()
         movement_repo = MovementRepo()
 
-        item = await stock_repo.get_by_product_and_warehouse(session, 
-            request.product_id, request.warehouse_id
+        item = await stock_repo.get_by_product_and_warehouse(
+            session, request.product_id, request.warehouse_id
         )
         if item is None:
             raise NotFoundError("Stock item not found")
@@ -337,7 +349,8 @@ class InventoryService:
         elif item.reserved > 0:
             reserved_delta = -item.reserved
 
-        updated = await stock_repo.update_quantity(session, 
+        updated = await stock_repo.update_quantity(
+            session,
             item.id,
             quantity_delta=-request.quantity,
             reserved_delta=reserved_delta,
@@ -378,19 +391,22 @@ class InventoryService:
             available=updated.available,
         )
 
-    async def adjust(self, *, session: AsyncSession, request: AdjustRequest) -> StockResponse:
+    async def adjust(
+        self, *, session: AsyncSession, request: AdjustRequest
+    ) -> StockResponse:
         """Adjust stock quantity (inventory audit)."""
         stock_repo = StockRepo()
         movement_repo = MovementRepo()
 
-        item = await stock_repo.get_or_create(session, 
-            request.product_id, request.warehouse_id
+        item = await stock_repo.get_or_create(
+            session, request.product_id, request.warehouse_id
         )
 
         current_qty = item.quantity
         delta = request.quantity - current_qty
 
-        updated = await stock_repo.update_quantity(session, 
+        updated = await stock_repo.update_quantity(
+            session,
             item.id,
             quantity_delta=delta,
         )
@@ -430,16 +446,19 @@ class InventoryService:
             available=updated.available,
         )
 
-    async def return_stock(self, *, session: AsyncSession, request: ReceiptRequest) -> StockResponse:
+    async def return_stock(
+        self, *, session: AsyncSession, request: ReceiptRequest
+    ) -> StockResponse:
         """Return stock to warehouse (same as receive but with RETURN movement type)."""
         stock_repo = StockRepo()
         movement_repo = MovementRepo()
 
-        item = await stock_repo.get_or_create(session, 
-            request.product_id, request.warehouse_id
+        item = await stock_repo.get_or_create(
+            session, request.product_id, request.warehouse_id
         )
 
-        updated = await stock_repo.update_quantity(session, 
+        updated = await stock_repo.update_quantity(
+            session,
             item.id,
             quantity_delta=request.quantity,
         )

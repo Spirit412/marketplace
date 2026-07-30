@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
 
 import pytest
@@ -10,16 +9,11 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
-from src.enums.channel import Channel
-from src.enums.notification_type import NotificationType
 from src.models.notification import Notification, Template
+from src.patterns.frontend_notification_builder import FrontendNotificationBuilder
+from src.patterns.notification_builder import NotificationBuilder
 from src.repositories.notification_repo import NotificationRepository
 from src.repositories.template_repo import TemplateRepository
-from src.services.notification_service import NotificationService
-from src.patterns.channel_strategy import ChannelRegistry
-from src.patterns.template_registry import TemplateRegistry
-from src.patterns.notification_builder import NotificationBuilder
-from src.patterns.frontend_notification_builder import FrontendNotificationBuilder
 from src.schemes.internal.notification import NotificationPayload
 from src.schemes.ws_message import WSMessage
 
@@ -91,12 +85,28 @@ class TestNotificationRepository:
     async def test_get_unread(self, db_session: AsyncSession) -> None:
         repo = NotificationRepository(db_session)
         user = uuid7()
-        n1 = Notification(id=uuid7(), user_uuid=user, event_type="e1", channel="email",
-                          notification_type="info", subject="S1", body="B1", status="unread",
-                          created_at=datetime.now(UTC))
-        n2 = Notification(id=uuid7(), user_uuid=user, event_type="e2", channel="email",
-                          notification_type="info", subject="S2", body="B2", status="read",
-                          created_at=datetime.now(UTC))
+        n1 = Notification(
+            id=uuid7(),
+            user_uuid=user,
+            event_type="e1",
+            channel="email",
+            notification_type="info",
+            subject="S1",
+            body="B1",
+            status="unread",
+            created_at=datetime.now(UTC),
+        )
+        n2 = Notification(
+            id=uuid7(),
+            user_uuid=user,
+            event_type="e2",
+            channel="email",
+            notification_type="info",
+            subject="S2",
+            body="B2",
+            status="read",
+            created_at=datetime.now(UTC),
+        )
         await repo.create(n1)
         await repo.create(n2)
 
@@ -106,9 +116,17 @@ class TestNotificationRepository:
 
     async def test_mark_read(self, db_session: AsyncSession) -> None:
         repo = NotificationRepository(db_session)
-        n = Notification(id=uuid7(), user_uuid=uuid7(), event_type="e1", channel="email",
-                         notification_type="info", subject="S", body="B", status="unread",
-                         created_at=datetime.now(UTC))
+        n = Notification(
+            id=uuid7(),
+            user_uuid=uuid7(),
+            event_type="e1",
+            channel="email",
+            notification_type="info",
+            subject="S",
+            body="B",
+            status="unread",
+            created_at=datetime.now(UTC),
+        )
         await repo.create(n)
         result = await repo.mark_read(n.id)
         assert result is not None
@@ -139,8 +157,12 @@ class TestTemplateRepository:
     async def test_inactive_not_returned(self, db_session: AsyncSession) -> None:
         repo = TemplateRepository(db_session)
         tpl = Template(
-            id=uuid7(), code="old.event", locale="ru",
-            subject="Old", body_template="Old", is_active=False,
+            id=uuid7(),
+            code="old.event",
+            locale="ru",
+            subject="Old",
+            body_template="Old",
+            is_active=False,
         )
         await repo.create(tpl)
         found = await repo.get_by_code_and_locale("old.event", "ru")
@@ -170,6 +192,8 @@ class TestHealthEndpoint:
 
 
 class TestNotificationsEndpoint:
-    async def test_get_notifications_empty(self, async_client: AsyncClient, db_session: AsyncSession) -> None:
+    async def test_get_notifications_empty(
+        self, async_client: AsyncClient, db_session: AsyncSession
+    ) -> None:
         response = await async_client.get("/notifications?status=unread")
         assert response.status_code == 403

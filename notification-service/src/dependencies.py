@@ -1,14 +1,11 @@
-from fastapi import Depends
 from rodi import Container
-from sqlalchemy.ext.asyncio import AsyncSession
 
 container = Container()
 
-from src.core.database import get_async_session
 from src.engines.redis import get_redis_client
-from src.patterns.template_registry import TemplateRegistry
 from src.engines.ws_manager import WebSocketManager
 from src.patterns.channel_strategy import ChannelRegistry
+from src.patterns.template_registry import TemplateRegistry
 from src.repositories.notification_repo import NotificationRepository
 from src.services.notification_service import NotificationService
 

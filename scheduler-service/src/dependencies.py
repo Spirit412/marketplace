@@ -18,11 +18,23 @@ container = Container()
 _scheduler: AsyncIOScheduler | None = None
 
 JOB_REGISTRY = {
-    "cancel_unpaid_orders": (cancel_unpaid_orders_job, settings.CANCEL_UNPAID_ORDERS_CRON, "Cancel unpaid orders"),
-    "daily_report": (daily_report_job, settings.DAILY_REPORT_CRON, "Daily seller report"),
+    "cancel_unpaid_orders": (
+        cancel_unpaid_orders_job,
+        settings.CANCEL_UNPAID_ORDERS_CRON,
+        "Cancel unpaid orders",
+    ),
+    "daily_report": (
+        daily_report_job,
+        settings.DAILY_REPORT_CRON,
+        "Daily seller report",
+    ),
     "cache_warmup": (cache_warmup_job, settings.CACHE_WARMUP_CRON, "Cache warmup"),
     "cart_cleanup": (cart_cleanup_job, settings.CART_CLEANUP_CRON, "Cart cleanup"),
-    "inventory_alert": (inventory_alert_job, settings.INVENTORY_ALERT_CRON, "Inventory low-stock alert"),
+    "inventory_alert": (
+        inventory_alert_job,
+        settings.INVENTORY_ALERT_CRON,
+        "Inventory low-stock alert",
+    ),
 }
 
 

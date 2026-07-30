@@ -1,5 +1,3 @@
-from . import rabbitmq
-from . import redis
-from . import postgres
+from . import postgres, rabbitmq, redis
 
-__all__ = ['rabbitmq', 'redis', 'postgres']
+__all__ = ["postgres", "rabbitmq", "redis"]

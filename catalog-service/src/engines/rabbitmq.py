@@ -2,8 +2,6 @@ import json
 
 import aio_pika
 
-from src.config.settings import settings
-
 
 class RabbitMQEngine:
     def __init__(self) -> None:

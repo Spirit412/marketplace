@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config.settings import settings
 from src.core.auth import (
     Permission,
     require_permission,
@@ -13,8 +14,6 @@ from src.depends import Inject
 from src.schemes.request.category import CreateCategoryRequest, UpdateCategoryRequest
 from src.schemes.response.category import CategoryResponse, CategoryTreeResponse
 from src.services.category_service import CategoryService
-from src.config.settings import settings
-
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -38,7 +37,9 @@ async def create_category(
         slug=body.slug,
         description=body.description,
         parent_id=uuid.UUID(body.parent_id) if body.parent_id else None,
-        properties=[prop.model_dump() for prop in body.properties] if body.properties else None,
+        properties=[prop.model_dump() for prop in body.properties]
+        if body.properties
+        else None,
     )
     return CategoryResponse.model_validate(category)
 
@@ -103,7 +104,8 @@ async def update_category(
 
 @router.delete(
     "/{category_id}",
-    status_code=204, response_model=None,
+    status_code=204,
+    response_model=None,
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Delete category",
 )

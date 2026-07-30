@@ -3,7 +3,6 @@
 Subscribes to order.* and product.created events.
 """
 
-
 from src.engines.rabbitmq import get_broker
 
 broker = get_broker()

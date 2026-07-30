@@ -21,7 +21,6 @@ class Inject[T]:
 
 def init_container() -> None:
     """Register all dependencies in the rodi container."""
-    
     container.add_instance(settings, Settings)
     container.add_instance(get_redis_client())
 

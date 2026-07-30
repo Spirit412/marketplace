@@ -25,9 +25,7 @@ class PermissionService:
         result = await self._repo.create(session, permission)
         return PermissionResponse.model_validate(result)
 
-    async def get_by(
-        self, session: AsyncSession, uuid: UUID
-    ) -> PermissionResponse:
+    async def get_by(self, session: AsyncSession, uuid: UUID) -> PermissionResponse:
         result = await self._repo.get_by_id(session, uuid)
         if not result:
             raise NotFoundError(f"Permission {uuid} not found")

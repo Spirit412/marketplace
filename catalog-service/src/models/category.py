@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import uuid
 
 from sqlalchemy import (
@@ -15,23 +16,41 @@ from src.models.base import Base, SoftDeleteMixin, TimestampMixin
 
 class Category(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "categories"
-    __table_args__ = {"schema": "catalog", "comment": "Категория товара (дерево, MPTT: lft/rgt/tree_id)"}
+    __table_args__ = {
+        "schema": "catalog",
+        "comment": "Категория товара (дерево, MPTT: lft/rgt/tree_id)",
+    }
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7, comment="Первичный ключ категории")
-    name: Mapped[str] = mapped_column(String(255), nullable=False, comment="Название категории")
-    slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, comment="URL-слаг категории")
-    description: Mapped[str | None] = mapped_column(Text, nullable=True, comment="Описание категории")
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid7, comment="Первичный ключ категории"
+    )
+    name: Mapped[str] = mapped_column(
+        String(255), nullable=False, comment="Название категории"
+    )
+    slug: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, comment="URL-слаг категории"
+    )
+    description: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="Описание категории"
+    )
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("catalog.categories.id", ondelete="SET NULL"),
         nullable=True,
         comment="Родительская категория (fk на categories.id)",
     )
 
-    lft: Mapped[int] = mapped_column(Integer, nullable=False, default=0, comment="MPTT: левая граница узла")
-    rgt: Mapped[int] = mapped_column(Integer, nullable=False, default=0, comment="MPTT: правая граница узла")
-    tree_id: Mapped[int] = mapped_column(Integer, nullable=False, default=0, comment="MPTT: идентификатор дерева")
-    level: Mapped[int] = mapped_column(Integer, nullable=False, default=0, comment="Глубина вложенности категории")
-
+    lft: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, comment="MPTT: левая граница узла"
+    )
+    rgt: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, comment="MPTT: правая граница узла"
+    )
+    tree_id: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, comment="MPTT: идентификатор дерева"
+    )
+    level: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, comment="Глубина вложенности категории"
+    )
 
     parent: Mapped[Category | None] = relationship(
         "Category",

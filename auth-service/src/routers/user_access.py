@@ -4,19 +4,27 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.access import ResolvedAccess
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
-from src.depends import get_service_session
-from src.repositories.user_access_repository import UserAccessRepository
 from src.config.settings import settings
+from src.core.access import ResolvedAccess
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
+from src.depends import get_service_session
 from src.repositories.session_repository import SessionRepository
+from src.repositories.user_access_repository import UserAccessRepository
 from src.schemes.rbac import UserAccessAssignRequest, UserAccessResponse
 from src.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["user-access"])
 
 
-@router.put("/users/{user_uuid}/access", response_model=UserAccessResponse, summary="Assign user access",
+@router.put(
+    "/users/{user_uuid}/access",
+    response_model=UserAccessResponse,
+    summary="Assign user access",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def assign_user_access(
@@ -36,7 +44,10 @@ async def assign_user_access(
     return UserAccessResponse.model_validate(result)
 
 
-@router.get("/users/{user_uuid}/access", response_model=UserAccessResponse, summary="Get user access",
+@router.get(
+    "/users/{user_uuid}/access",
+    response_model=UserAccessResponse,
+    summary="Get user access",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_user_access(
@@ -54,7 +65,9 @@ async def get_user_access(
     return UserAccessResponse.model_validate(result)
 
 
-@router.get("/users/{user_uuid}/permissions", summary="Get user permissions",
+@router.get(
+    "/users/{user_uuid}/permissions",
+    summary="Get user permissions",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_user_permissions(
@@ -63,7 +76,6 @@ async def get_user_permissions(
     _token: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> ResolvedAccess:
     """Get the resolved permissions for a user, including inherited role permissions."""
-
     auth_svc = AuthService(
         user_repo=UserRepository(),
         session_repo=SessionRepository(),

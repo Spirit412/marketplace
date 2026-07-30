@@ -5,6 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from src.auth_middleware import AuthMiddleware, init_auth
+from src.config.settings import settings
 from src.depends import init_container
 from src.exceptions import (
     ConflictError,
@@ -16,9 +18,6 @@ from src.exceptions import (
     ValidationError,
 )
 from src.routers import routers
-from src.auth_middleware import AuthMiddleware, init_auth
-from src.config.settings import settings
-
 
 
 @asynccontextmanager
@@ -29,9 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(
-        request: Request, exc: DomainError
-    ) -> JSONResponse:
+    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ConflictError: 409,

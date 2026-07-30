@@ -20,14 +20,17 @@ from src.schemes.response.dictionary import (
 )
 from src.services.dictionary_service import DictionaryService
 
-
 router = APIRouter(
     prefix="/dictionaries",
     tags=["dictionaries"],
 )
 
 
-@router.get("/{type}", response_model=DictionaryListResponse, summary="Get dictionary entries by type")
+@router.get(
+    "/{type}",
+    response_model=DictionaryListResponse,
+    summary="Get dictionary entries by type",
+)
 async def get_dictionary_entries(
     type: DictionaryType,
     service: Annotated[DictionaryService, Depends(Inject(DictionaryService))],

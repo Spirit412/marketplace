@@ -1,5 +1,3 @@
-from . import product
-from . import category
-from . import query_set
+from . import category, product, query_set
 
-__all__ = ['product', 'category', 'query_set']
+__all__ = ["category", "product", "query_set"]

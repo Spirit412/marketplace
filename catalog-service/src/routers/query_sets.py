@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config.settings import settings
 from src.core.auth import (
     Permission,
     TokenPayload,
@@ -12,12 +13,9 @@ from src.core.auth import (
 )
 from src.core.database import get_async_session
 from src.depends import Inject
-from src.repositories.query_set_repo import QuerySetRepo
 from src.schemes.request.query_set import CreateQuerySetRequest, UpdateQuerySetRequest
 from src.schemes.response.query_set import QuerySetListResponse, QuerySetResponse
 from src.services.query_set_service import QuerySetService
-from src.config.settings import settings
-
 
 router = APIRouter(prefix="/query-sets", tags=["query-sets"])
 
@@ -90,7 +88,8 @@ async def update_query_set(
 
 @router.delete(
     "/{query_set_id}",
-    status_code=204, response_model=None,
+    status_code=204,
+    response_model=None,
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Delete query set",
 )

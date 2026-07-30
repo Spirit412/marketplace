@@ -1,4 +1,3 @@
-from . import sort_strategy
-from . import query_constructor
+from . import query_constructor, sort_strategy
 
-__all__ = ['sort_strategy', 'query_constructor']
+__all__ = ["query_constructor", "sort_strategy"]

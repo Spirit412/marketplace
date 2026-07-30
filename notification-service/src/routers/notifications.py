@@ -1,10 +1,15 @@
-from src.config.settings import settings
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.core.database import get_async_session
 from src.dependencies import get_notification_service
 from src.repositories.notification_repo import NotificationRepository
@@ -15,7 +20,10 @@ from src.services.notification_service import NotificationService
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
-@router.get("/", response_model=list[NotificationResponse], summary="Get notifications",
+@router.get(
+    "/",
+    response_model=list[NotificationResponse],
+    summary="Get notifications",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_notifications(
@@ -50,7 +58,10 @@ async def get_notifications(
     ]
 
 
-@router.get("/history", response_model=list[NotificationResponse], summary="Get notification history",
+@router.get(
+    "/history",
+    response_model=list[NotificationResponse],
+    summary="Get notification history",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_history(
@@ -80,7 +91,10 @@ async def get_history(
     ]
 
 
-@router.post("/", response_model=dict, summary="Send notification",
+@router.post(
+    "/",
+    response_model=dict,
+    summary="Send notification",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def send_notification(
@@ -91,7 +105,9 @@ async def send_notification(
 ) -> dict:
     """Send a notification to one or more users."""
     if request.user_uuids is None:
-        raise HTTPException(status_code=400, detail="user_uuids is required for manual send")
+        raise HTTPException(
+            status_code=400, detail="user_uuids is required for manual send"
+        )
 
     results = await service.send_manual(
         session,
@@ -101,10 +117,16 @@ async def send_notification(
         channel=request.channel.value,
         notification_type=request.notification_type.value,
     )
-    return {"sent": len(results), "notification_ids": [str(notif.id) for notif in results]}
+    return {
+        "sent": len(results),
+        "notification_ids": [str(notif.id) for notif in results],
+    }
 
 
-@router.post("/{notification_uuid}/read", response_model=dict, summary="Mark notification as read",
+@router.post(
+    "/{notification_uuid}/read",
+    response_model=dict,
+    summary="Mark notification as read",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def mark_read(

@@ -46,7 +46,6 @@ def _load_json(name: str) -> list | dict:
 
 async def seed_rbac(session: AsyncSession) -> None:
     """Populate DB from JSON data files. Idempotent."""
-
     role_repo = RoleRepository()
     perm_repo = PermissionRepository()
     group_repo = GroupRepository()
@@ -99,9 +98,7 @@ async def seed_rbac(session: AsyncSession) -> None:
     for entry in groups_data:
         group_uuid = group_name_to_uuid[entry["name"]]
         perm_uuids = [
-            perm_name_to_uuid[p]
-            for p in entry["permissions"]
-            if p in perm_name_to_uuid
+            perm_name_to_uuid[p] for p in entry["permissions"] if p in perm_name_to_uuid
         ]
         await group_svc.update(
             session,
@@ -135,11 +132,7 @@ async def seed_rbac(session: AsyncSession) -> None:
         role_uuid = role_name_to_uuid.get(role_name)
         if role_uuid is None:
             continue
-        gids = [
-            group_name_to_uuid[g]
-            for g in group_names
-            if g in group_name_to_uuid
-        ]
+        gids = [group_name_to_uuid[g] for g in group_names if g in group_name_to_uuid]
         await role_svc.update(
             session,
             role_uuid,
@@ -196,8 +189,6 @@ async def seed_rbac(session: AsyncSession) -> None:
 
     await session.commit()
     print("Seed complete.")
-
-
 
 
 async def _main() -> None:

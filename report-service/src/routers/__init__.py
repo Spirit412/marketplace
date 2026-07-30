@@ -3,4 +3,4 @@ from src.routers.reports import router as reports_router
 
 routers = [health_router, reports_router]
 
-__all__ = ['health', 'reports']
+__all__ = ["health", "reports"]

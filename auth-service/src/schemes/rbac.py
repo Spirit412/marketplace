@@ -4,7 +4,6 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 
-
 class RoleCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -40,7 +39,6 @@ class RoleListResponse(BaseModel):
     total: int
     page: int
     pages: int
-
 
 
 class PermissionCreateRequest(BaseModel):
@@ -80,7 +78,6 @@ class PermissionListResponse(BaseModel):
     pages: int
 
 
-
 class GroupCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -115,7 +112,6 @@ class GroupListResponse(BaseModel):
     pages: int
 
 
-
 class UserAccessAssignRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -131,7 +127,6 @@ class UserAccessResponse(BaseModel):
     additional_permissions: list[UUID]
     created_at: datetime
     updated_at: datetime
-
 
 
 class PaginationParams(BaseModel):

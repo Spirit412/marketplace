@@ -1,5 +1,3 @@
-from . import error_template
-from . import dictionary
-from . import timezone
+from . import dictionary, error_template, timezone
 
-__all__ = ['error_template', 'dictionary', 'timezone']
+__all__ = ["dictionary", "error_template", "timezone"]

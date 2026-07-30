@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from src.config.settings import get_settings
 from src.main import app as fastapi_app
 
 
@@ -24,9 +23,7 @@ async def async_client(
 ) -> AsyncGenerator[AsyncClient, None]:
     """Async HTTP client for integration tests."""
     transport = ASGITransport(app=test_app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
 

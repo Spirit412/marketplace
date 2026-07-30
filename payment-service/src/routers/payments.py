@@ -5,14 +5,18 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.core.database import get_async_session
 from src.depends import Inject
 from src.exceptions import NotFoundError
 from src.schemes.request.payment import CreatePaymentRequest, RefundRequest
 from src.schemes.response.payment import PaymentResponse
 from src.services.payment_service import PaymentService
-
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -56,9 +60,7 @@ async def get_payment(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> PaymentResponse:
     """Get payment details by UUID."""
-    payment = await service.get_payment(
-        session=session, payment_uuid=payment_uuid
-    )
+    payment = await service.get_payment(session=session, payment_uuid=payment_uuid)
     if payment is None:
         raise NotFoundError(f"Payment {payment_uuid} not found")
     return PaymentResponse.model_validate(payment)

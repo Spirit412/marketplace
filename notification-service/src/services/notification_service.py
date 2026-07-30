@@ -28,13 +28,19 @@ class NotificationService:
         self._templates = template_registry
         self._channels = channel_registry
 
-    async def dispatch(self, session: AsyncSession, event: NotificationPayload) -> list[Notification]:
+    async def dispatch(
+        self, session: AsyncSession, event: NotificationPayload
+    ) -> list[Notification]:
         """Receive an event from RMQ, render + send via all applicable channels (email/websocket)."""
         results: list[Notification] = []
 
         template = self._templates.get(event.event_type, event.locale)
         if template is None:
-            logger.debug("No template for event_type=%s locale=%s", event.event_type, event.locale)
+            logger.debug(
+                "No template for event_type=%s locale=%s",
+                event.event_type,
+                event.locale,
+            )
             notification = self._build_plain(event)
             await self._repo.create(session, notification)
             results.append(notification)
@@ -55,7 +61,9 @@ class NotificationService:
                 await self._repo.update_status(session, notification.id, "read")
             else:
                 await self._repo.update_status(session, notification.id, "unread")
-                logger.warning("Failed to send notification %s via %s", notification.id, ch_name)
+                logger.warning(
+                    "Failed to send notification %s via %s", notification.id, ch_name
+                )
 
             results.append(notification)
 

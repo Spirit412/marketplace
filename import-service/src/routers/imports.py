@@ -1,11 +1,16 @@
-from src.config.settings import settings
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.auth import Permission, TokenPayload, get_token_payload, require_permission
+from src.config.settings import settings
+from src.core.auth import (
+    Permission,
+    TokenPayload,
+    get_token_payload,
+    require_permission,
+)
 from src.core.database import get_async_session
 from src.dependencies import Inject
 from src.exceptions import NotFoundError, ValidationError
@@ -15,7 +20,11 @@ from src.services.import_service import ImportService
 router = APIRouter(prefix="/imports", tags=["imports"])
 
 
-@router.post("/upload", response_model=ImportTaskResponse, status_code=201, summary="Upload CSV file for import",
+@router.post(
+    "/upload",
+    response_model=ImportTaskResponse,
+    status_code=201,
+    summary="Upload CSV file for import",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def upload_csv(
@@ -43,7 +52,10 @@ async def upload_csv(
     return ImportTaskResponse.model_validate(task)
 
 
-@router.get("/{task_id}", response_model=ImportTaskResponse, summary="Get import task by ID",
+@router.get(
+    "/{task_id}",
+    response_model=ImportTaskResponse,
+    summary="Get import task by ID",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_import_task(
@@ -58,7 +70,10 @@ async def get_import_task(
     return ImportTaskResponse.model_validate(task)
 
 
-@router.get("/{task_id}/errors", response_model=ImportErrorResponse, summary="Get import task errors",
+@router.get(
+    "/{task_id}/errors",
+    response_model=ImportErrorResponse,
+    summary="Get import task errors",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_task_errors(

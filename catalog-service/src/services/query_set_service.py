@@ -28,7 +28,9 @@ class QuerySetService:
         )
         return await self._repo.create(session, query_set)
 
-    async def get_by_id(self, session: AsyncSession, query_set_id: uuid.UUID) -> QuerySet | None:
+    async def get_by_id(
+        self, session: AsyncSession, query_set_id: uuid.UUID
+    ) -> QuerySet | None:
         return await self._repo.get_by_id(session, query_set_id)
 
     async def update(
@@ -62,8 +64,12 @@ class QuerySetService:
     async def get_system(self, session: AsyncSession) -> list[QuerySet]:
         return await self._repo.get_system(session)
 
-    async def get_favorites(self, session: AsyncSession, seller_id: uuid.UUID) -> list[QuerySet]:
+    async def get_favorites(
+        self, session: AsyncSession, seller_id: uuid.UUID
+    ) -> list[QuerySet]:
         return await self._repo.get_favorites(session, seller_id)
 
-    async def toggle_favorite(self, session: AsyncSession, query_set_id: uuid.UUID) -> QuerySet | None:
+    async def toggle_favorite(
+        self, session: AsyncSession, query_set_id: uuid.UUID
+    ) -> QuerySet | None:
         return await self._repo.toggle_favorite(session, query_set_id)

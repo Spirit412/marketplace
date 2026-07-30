@@ -20,20 +20,32 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import JSON, Boolean, DateTime, String, Text, UniqueConstraint, select, text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    String,
+    Text,
+    UniqueConstraint,
+    select,
+    text,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 logger = logging.getLogger(__name__)
 
 DATA_FILE = Path(__file__).resolve().parent / "templates_data.json"
-DEFAULT_DSN = "postgresql+asyncpg://marketplace:marketplace@mp-postgres:5432/marketplace"
+DEFAULT_DSN = (
+    "postgresql+asyncpg://marketplace:marketplace@mp-postgres:5432/marketplace"
+)
 
 
 def _uuid7() -> uuid.UUID:
     """Local copy of src/core/datatype.py's uuid7() — this script deliberately
     avoids importing src/ (see module docstring), so the id generator is
-    copied rather than shared, same as every other core/ file in this codebase."""
+    copied rather than shared, same as every other core/ file in this codebase.
+    """
     rand_bytes = os.urandom(8)
     hex_str = f"{int(time.time() * 1000):016x}{rand_bytes.hex()}"
     hex_list = list(hex_str)
@@ -124,15 +136,16 @@ async def seed_templates(dsn: str | None = None) -> int:
     async with engine.begin() as conn:
         await _ensure_schema(conn)
 
-    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    session_factory = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     items = _load_seed_data()
     logger.info("Seeding %d template entries …", len(items))
 
-    async with session_factory() as session:
-        async with session.begin():
-            for entry in items:
-                await _upsert_template(session, entry)
+    async with session_factory() as session, session.begin():
+        for entry in items:
+            await _upsert_template(session, entry)
 
     await engine.dispose()
     return len(items)

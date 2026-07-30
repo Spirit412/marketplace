@@ -2,8 +2,7 @@
 
 import httpx
 import pytest
-
-from conftest import SERVICES, TRUST_ENV, TIMEOUT, assert_ok, base_url
+from conftest import SERVICES, TIMEOUT, TRUST_ENV, assert_ok, base_url
 
 ALL_SERVICES = sorted(SERVICES)
 

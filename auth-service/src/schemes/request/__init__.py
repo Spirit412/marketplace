@@ -1,4 +1,4 @@
-from .auth import LoginRequest, RefreshRequest, RegisterRequest, BlockUserRequest
+from .auth import BlockUserRequest, LoginRequest, RefreshRequest, RegisterRequest
 
 __all__ = [
     "auth",

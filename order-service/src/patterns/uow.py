@@ -61,9 +61,7 @@ class OrderUnitOfWork:
         except Exception:
             for product_uuid, quantity in reserved:
                 try:
-                    await self._inventory_client.release(
-                        product_uuid, quantity
-                    )
+                    await self._inventory_client.release(product_uuid, quantity)
                 except Exception:
                     logger.exception(
                         "Failed to release stock for %s during rollback",

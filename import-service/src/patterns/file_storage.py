@@ -23,6 +23,7 @@ class LocalFileStorage(BaseFileStorage):
     def __init__(self) -> None:
         self._base_dir = Path(settings.STORAGE_DIR)
         self._base_dir.mkdir(parents=True, exist_ok=True)
+
     def _hash_key(self, key: str) -> str:
         return sha256(key.encode()).hexdigest()[:32]
 

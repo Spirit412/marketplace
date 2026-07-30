@@ -14,7 +14,9 @@ class RowValidator:
             row_errors: dict[str, str] = {}
 
             for field in required:
-                error = self.validate_field(field, row_data.get(field), {"required": True})
+                error = self.validate_field(
+                    field, row_data.get(field), {"required": True}
+                )
                 if error:
                     row_errors[field] = error
 
@@ -34,7 +36,9 @@ class RowValidator:
     @staticmethod
     def validate_field(field: str, value: object, rules: dict) -> str | None:
         required = rules.get("required", False)
-        if required and (value is None or (isinstance(value, str) and not value.strip())):
+        if required and (
+            value is None or (isinstance(value, str) and not value.strip())
+        ):
             return f"Field '{field}' is required"
 
         if value is not None and isinstance(value, str):

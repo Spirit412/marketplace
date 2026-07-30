@@ -19,11 +19,15 @@ class UserAccess(TimestampMixin, SoftDeleteMixin, Base):
     __table_args__ = (
         PrimaryKeyConstraint("user_uuid"),
         Index(None, "user_uuid", "role_uuid"),
-        {"schema": "auth", "comment": "Назначенные пользователю роль и дополнительные разрешения"},
+        {
+            "schema": "auth",
+            "comment": "Назначенные пользователю роль и дополнительные разрешения",
+        },
     )
 
     user_uuid: Mapped[UUID] = mapped_column(
-        ForeignKey("auth.users.id", ondelete="CASCADE"), comment="fk пользователя",
+        ForeignKey("auth.users.id", ondelete="CASCADE"),
+        comment="fk пользователя",
     )
     role_uuid: Mapped[UUID | None] = mapped_column(
         ForeignKey("auth.roles.uuid", ondelete="SET NULL"),
@@ -31,12 +35,18 @@ class UserAccess(TimestampMixin, SoftDeleteMixin, Base):
         comment="fk роли",
     )
     additional_permissions: Mapped[list[UUID]] = mapped_column(
-        default=list, comment="дополнительные разрешения пользователя",
+        default=list,
+        comment="дополнительные разрешения пользователя",
     )
 
-
-    role: Mapped[Role | None] = relationship(back_populates="user_accesses", lazy="selectin",)
-    user: Mapped[User] = relationship(back_populates="user_accesses", lazy="selectin",)
+    role: Mapped[Role | None] = relationship(
+        back_populates="user_accesses",
+        lazy="selectin",
+    )
+    user: Mapped[User] = relationship(
+        back_populates="user_accesses",
+        lazy="selectin",
+    )
 
     permissions: Mapped[list[Permission]] = relationship(
         "Permission",

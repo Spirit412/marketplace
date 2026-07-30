@@ -52,9 +52,7 @@ class UserAccessRepository(BaseRepository[UserAccess]):
         await session.flush()
         return user_access
 
-    async def delete_for_user(
-        self, session: AsyncSession, user_uuid: UUID
-    ) -> None:
+    async def delete_for_user(self, session: AsyncSession, user_uuid: UUID) -> None:
         stmt = delete(UserAccess).where(UserAccess.user_uuid == user_uuid)
         await session.execute(stmt)
         await session.flush()

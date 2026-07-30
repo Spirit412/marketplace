@@ -1,5 +1,3 @@
-from . import dependencies
-from . import exceptions
-from . import main
+from . import dependencies, exceptions, main
 
-__all__ = ['dependencies', 'exceptions', 'main']
+__all__ = ["dependencies", "exceptions", "main"]

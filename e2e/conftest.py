@@ -72,7 +72,9 @@ def auth_headers(admin_token: str) -> dict[str, str]:
 def clients() -> Iterator[dict[str, httpx.Client]]:
     """One HTTP client per service, keyed by service name."""
     opened = {
-        name: httpx.Client(base_url=base_url(name), timeout=TIMEOUT, trust_env=TRUST_ENV)
+        name: httpx.Client(
+            base_url=base_url(name), timeout=TIMEOUT, trust_env=TRUST_ENV
+        )
         for name in SERVICES
     }
     yield opened
@@ -81,7 +83,9 @@ def clients() -> Iterator[dict[str, httpx.Client]]:
 
 
 @pytest.fixture
-def api(request: pytest.FixtureRequest, clients: dict[str, httpx.Client]) -> httpx.Client:
+def api(
+    request: pytest.FixtureRequest, clients: dict[str, httpx.Client]
+) -> httpx.Client:
     """Client for the service named by the module-level `SERVICE` attribute."""
     service = getattr(request.module, "SERVICE", None)
     if service is None:

@@ -3,10 +3,8 @@
 Subscribes to report.generate.* events and processes them asynchronously.
 """
 
-
 from src.engines.rabbitmq import get_broker
 from src.services.report_service import ReportService
-
 
 _broker = None
 

@@ -49,7 +49,9 @@ async def _resolve_seller_id(session: AsyncSession, email: str) -> UUID:
     return row[0]
 
 
-async def _resolve_product_ids(session: AsyncSession, skus: list[str]) -> dict[str, UUID]:
+async def _resolve_product_ids(
+    session: AsyncSession, skus: list[str]
+) -> dict[str, UUID]:
     result = await session.execute(
         text("SELECT sku, id FROM catalog.products WHERE sku = ANY(:skus)"),
         {"skus": skus},
@@ -64,9 +66,10 @@ async def _resolve_product_ids(session: AsyncSession, skus: list[str]) -> dict[s
     return found
 
 
-async def seed_stock(session: AsyncSession, *, seller_email: str = DEFAULT_SELLER_EMAIL) -> None:
+async def seed_stock(
+    session: AsyncSession, *, seller_email: str = DEFAULT_SELLER_EMAIL
+) -> None:
     """Populate one warehouse + stock items for the seeded demo products. Idempotent."""
-
     data = _load_json("stock.json")
     seller_id = await _resolve_seller_id(session, seller_email)
     product_ids = await _resolve_product_ids(session, data["skus"])
@@ -124,14 +127,16 @@ async def seed_stock(session: AsyncSession, *, seller_email: str = DEFAULT_SELLE
         created += 1
 
     await session.commit()
-    print(f"Stock: warehouse '{warehouse.name}' ready, {created} items created, {skipped} already existed")
-
-
+    print(
+        f"Stock: warehouse '{warehouse.name}' ready, {created} items created, {skipped} already existed"
+    )
 
 
 async def _main(seller_email: str) -> None:
     engine = create_async_engine(settings.postgres.dsn, echo=False)
-    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    session_factory = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with session_factory() as session:
         try:
             await seed_stock(session, seller_email=seller_email)

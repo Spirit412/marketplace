@@ -1,8 +1,6 @@
 """Functional coverage of report-service routers."""
 
 import httpx
-import pytest
-
 from conftest import assert_ok
 
 SERVICE = "report"

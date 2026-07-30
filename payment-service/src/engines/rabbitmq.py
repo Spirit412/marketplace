@@ -36,9 +36,7 @@ async def _publish_event(exchange: str, routing_key: str, payload: dict) -> None
             routing_key,
         )
     except Exception:
-        logger.exception(
-            "Failed to publish event %s/%s", exchange, routing_key
-        )
+        logger.exception("Failed to publish event %s/%s", exchange, routing_key)
 
 
 async def publish_payment_succeeded(payload: dict) -> None:

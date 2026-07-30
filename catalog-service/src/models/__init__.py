@@ -1,7 +1,3 @@
-from . import base
-from . import product
-from . import category
-from . import query_set
-from . import property
+from . import base, category, product, property, query_set
 
-__all__ = ['base', 'product', 'category', 'query_set', 'property']
+__all__ = ["base", "category", "product", "property", "query_set"]

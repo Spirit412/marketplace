@@ -8,8 +8,8 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.main import app
 from src.config.settings import get_settings
+from src.main import app
 from src.models.models import Base
 
 

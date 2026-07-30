@@ -1,5 +1,5 @@
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 class RegisterRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -25,8 +25,6 @@ class BlockUserRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     reason: str = Field(min_length=1, max_length=500)
-
-
 
 
 class CheckAccessRequest(BaseModel):

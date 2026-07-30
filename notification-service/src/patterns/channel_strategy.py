@@ -25,7 +25,6 @@ class EmailChannel(BaseChannel):
 
             import aiosmtplib
 
-            
             msg = MIMEText(notification.body, "html", "utf-8")
             msg["Subject"] = notification.subject
             msg["From"] = settings.SMTP_FROM_EMAIL

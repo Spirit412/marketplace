@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, ConfigDict
 
 from src.enums.import_type import ImportType

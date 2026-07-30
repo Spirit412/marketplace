@@ -29,9 +29,7 @@ class CartService:
         await self._redis.expire(key, ttl)
         return await self.get_cart(user_uuid)
 
-    async def remove_item(
-        self, user_uuid: str, product_uuid: str
-    ) -> None:
+    async def remove_item(self, user_uuid: str, product_uuid: str) -> None:
         """Remove a product from the cart."""
         key = self._build_key(user_uuid)
         await self._redis.hdel(key, product_uuid)

@@ -1,4 +1,3 @@
-from . import import_type
-from . import import_status
+from . import import_status, import_type
 
-__all__ = ['import_type', 'import_status']
+__all__ = ["import_status", "import_type"]

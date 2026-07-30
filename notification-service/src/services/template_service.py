@@ -1,7 +1,6 @@
 import json
 import logging
 
-from src.config.settings import settings
 from src.models.notification import Template
 from src.repositories.template_repo import TemplateRepository
 
@@ -18,6 +17,7 @@ class TemplateService:
     ) -> None:
         self._repo = template_repo
         self._redis = redis_client
+
     async def find_template(self, code: str, locale: str) -> Template | None:
         cache_key = f"cache:template:{code}:{locale}"
 

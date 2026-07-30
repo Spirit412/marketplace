@@ -6,10 +6,8 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
-from src.core.auth import Permission, TokenPayload, require_permission
-from src.depends import _require_admin
-from src.depends import get_service_session
-from src.depends import Inject
+from src.core.auth import Permission, require_permission
+from src.depends import Inject, _require_admin, get_service_session
 from src.schemes.rbac import (
     PaginationParams,
     RoleCreateRequest,
@@ -26,7 +24,10 @@ router = APIRouter(
 )
 
 
-@router.get("/roles", response_model=RoleListResponse, summary="List roles",
+@router.get(
+    "/roles",
+    response_model=RoleListResponse,
+    summary="List roles",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_roles(
@@ -38,7 +39,11 @@ async def list_roles(
     return await service.list_all(session, params)
 
 
-@router.post("/roles", response_model=RoleResponse, status_code=201, summary="Create role",
+@router.post(
+    "/roles",
+    response_model=RoleResponse,
+    status_code=201,
+    summary="Create role",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_role(
@@ -50,7 +55,10 @@ async def create_role(
     return await service.create(session, body)
 
 
-@router.get("/roles/{role_uuid}", response_model=RoleResponse, summary="Get role",
+@router.get(
+    "/roles/{role_uuid}",
+    response_model=RoleResponse,
+    summary="Get role",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_role(
@@ -62,7 +70,10 @@ async def get_role(
     return await service.get_by(session, role_uuid)
 
 
-@router.put("/roles/{role_uuid}", response_model=RoleResponse, summary="Update role",
+@router.put(
+    "/roles/{role_uuid}",
+    response_model=RoleResponse,
+    summary="Update role",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def update_role(
@@ -75,7 +86,11 @@ async def update_role(
     return await service.update(session, role_uuid, body)
 
 
-@router.delete("/roles/{role_uuid}", status_code=204, response_class=Response, summary="Delete role",
+@router.delete(
+    "/roles/{role_uuid}",
+    status_code=204,
+    response_class=Response,
+    summary="Delete role",
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def delete_role(

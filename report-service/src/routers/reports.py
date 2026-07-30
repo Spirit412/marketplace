@@ -17,11 +17,12 @@ from src.schemes.request.report import GenerateReportRequest
 from src.schemes.response.report import ReportListResponse, ReportResponse
 from src.services.report_service import ReportService
 
-
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-@router.post("/", response_model=ReportResponse, status_code=202, summary="Generate report")
+@router.post(
+    "/", response_model=ReportResponse, status_code=202, summary="Generate report"
+)
 async def generate_report(
     request: GenerateReportRequest,
     service: Annotated[ReportService, Depends(Inject(ReportService))],
