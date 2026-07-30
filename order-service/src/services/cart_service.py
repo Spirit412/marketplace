@@ -17,7 +17,13 @@ class CartService:
         """Get all items in cart as {product_uuid: quantity}."""
         key = self._build_key(user_uuid)
         raw = await self._redis.hgetall(key)
-        return {k: int(v) for k, v in raw.items()}
+        # decode_responses=True on the client means these are always str at
+        # runtime; the client's own typing leaves the key/value type as
+        # `bytes | str` since it can't know that from the call site.
+        return {
+            (k.decode() if isinstance(k, bytes) else k): int(v)
+            for k, v in raw.items()
+        }
 
     async def add_item(
         self, user_uuid: str, product_uuid: str, quantity: int = 1

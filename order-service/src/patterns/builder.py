@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from src.models.order import Order, OrderItem
 
@@ -67,7 +68,7 @@ class OrderBuilder:
         )
         return self
 
-    def set_shipping_address(self, address: dict) -> "OrderBuilder":
+    def set_shipping_address(self, address: dict[str, Any]) -> "OrderBuilder":
         """Set the shipping address."""
         self._order.shipping_address = address
         return self

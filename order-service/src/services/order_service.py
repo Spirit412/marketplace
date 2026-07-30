@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Any
 
 import redis.asyncio as redis_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,7 @@ from src.core.event import EventManager
 from src.engines.http_client import InsufficientStockError, InventoryClient
 from src.enums.order_status import ORDER_STATE_MACHINE, OrderStatus
 from src.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationError
+from src.models.order import Order
 from src.patterns.builder import OrderBuilder
 from src.patterns.state_machine import InvalidTransitionError
 from src.repositories.order_repo import OrderRepo
@@ -42,12 +44,12 @@ class OrderService:
         *,
         session: AsyncSession,
         user_uuid: uuid.UUID,
-        shipping_address: dict,
+        shipping_address: dict[str, Any],
         payment_method: str,
         tax_strategy: str,
         idempotency_key: str | None = None,
         notes: str | None = None,
-    ) -> object:
+    ) -> Order:
         """Create an order from the user's cart."""
         user_uuid_str = str(user_uuid)
 
@@ -157,7 +159,7 @@ class OrderService:
 
     async def get_order(
         self, *, session: AsyncSession, order_uuid: uuid.UUID
-    ) -> object:
+    ) -> Order:
         """Get an order by UUID."""
         order = await self._order_repo.get_by_uuid(session, order_uuid)
         if not order:
@@ -171,7 +173,7 @@ class OrderService:
         user_uuid: uuid.UUID,
         page: int = 1,
         page_size: int = 20,
-    ) -> tuple[list[object], int]:
+    ) -> tuple[list[Order], int]:
         """Get paginated orders for a user."""
         return await self._order_repo.get_by_user(
             session, user_uuid, page=page, page_size=page_size
@@ -183,7 +185,7 @@ class OrderService:
         session: AsyncSession,
         order_uuid: uuid.UUID,
         user_uuid: uuid.UUID,
-    ) -> object:
+    ) -> Order:
         """Cancel an order and release reserved stock."""
         order = await self._order_repo.get_by_uuid(session, order_uuid)
         if not order:
@@ -226,7 +228,7 @@ class OrderService:
 
     async def get_expired_orders(
         self, *, session: AsyncSession, expiration_minutes: int
-    ) -> list[object]:
+    ) -> list[Order]:
         """Get orders that have expired."""
         return await self._order_repo.get_expired_orders(session, expiration_minutes)
 

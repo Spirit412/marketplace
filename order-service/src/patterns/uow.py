@@ -1,7 +1,11 @@
 import logging
 import uuid
+from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.engines.http_client import InventoryClient
+from src.models.order import Order
 from src.patterns.builder import OrderBuilder
 from src.repositories.order_repo import OrderRepo
 
@@ -23,24 +27,26 @@ class OrderUnitOfWork:
 
     async def commit(
         self,
-        session: object,
+        session: AsyncSession,
         user_uuid: uuid.UUID,
         cart_items: dict[str, int],
-        shipping_address: dict,
+        shipping_address: dict[str, Any],
         payment_method: str,
         tax_strategy: str,
         notes: str | None = None,
-    ) -> object:
+    ) -> Order:
         """Execute order creation as a unit of work.
 
         Reservations are rolled back on failure.
         """
-        reserved: list[tuple[str, int]] = []
+        # {product_uuid: (warehouse_id, quantity)} — release() must target the
+        # exact warehouse reserve() picked, not just the product.
+        reserved: dict[str, tuple[str, int]] = {}
 
         try:
             for product_uuid, quantity in cart_items.items():
-                await self._inventory_client.reserve(product_uuid, quantity)
-                reserved.append((product_uuid, quantity))
+                result = await self._inventory_client.reserve(product_uuid, quantity)
+                reserved[product_uuid] = (result["warehouse_id"], quantity)
 
             builder = self._order_builder
             builder.add_items(cart_items)
@@ -53,15 +59,16 @@ class OrderUnitOfWork:
 
             order = builder.build()
             order.user_uuid = user_uuid
+            order.notes = notes
 
-            order = await self._order_repo.create(session, order)
-
-            return order
+            return await self._order_repo.create(session, order)
 
         except Exception:
-            for product_uuid, quantity in reserved:
+            for product_uuid, (warehouse_id, quantity) in reserved.items():
                 try:
-                    await self._inventory_client.release(product_uuid, quantity)
+                    await self._inventory_client.release(
+                        product_uuid, warehouse_id, quantity
+                    )
                 except Exception:
                     logger.exception(
                         "Failed to release stock for %s during rollback",

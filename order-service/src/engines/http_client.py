@@ -1,3 +1,5 @@
+from typing import Any
+
 import aiohttp
 
 from src.core.http_client import CircuitBreakerClient
@@ -43,7 +45,7 @@ class InventoryClient:
         quantity: int,
         *,
         reference_id: str | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Reserve stock for a product, letting inventory-service pick the warehouse.
 
         Returns the reservation result, including `warehouse_id` — callers
@@ -77,7 +79,7 @@ class InventoryClient:
         quantity: int,
         *,
         reference_id: str | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Release previously reserved stock from the warehouse it was reserved from."""
         return await self._client.post(
             "/stock/release",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSON
@@ -56,7 +57,7 @@ class Order(TimestampMixin, SoftDeleteMixin, Base):
     payment_method: Mapped[str | None] = mapped_column(
         String(20), nullable=True, comment="Способ оплаты"
     )
-    shipping_address: Mapped[dict | None] = mapped_column(
+    shipping_address: Mapped[dict[str, Any] | None] = mapped_column(
         JSON, nullable=True, comment="Адрес доставки (JSON)"
     )
     idempotency_key: Mapped[str | None] = mapped_column(

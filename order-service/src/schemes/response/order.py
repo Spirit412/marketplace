@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -35,7 +36,7 @@ class OrderResponse(BaseModel):
     total: int
     currency: str
     payment_method: str | None
-    shipping_address: dict | None
+    shipping_address: dict[str, Any] | None
     notes: str | None
     idempotency_key: str | None
     created_at: datetime

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from src.config.settings import settings
-from src.core.database import get_async_session
+from src.core.database import _get_session_factory
 from src.core.health import HealthManager, HealthStatus
 from src.core.http_client import CircuitBreakerClient
 from src.engines.http_client import InventoryClient
@@ -9,6 +9,13 @@ from src.engines.postgres import check_postgres
 from src.engines.redis import check_redis
 
 router = APIRouter(tags=["health"])
+
+
+async def _check_postgres() -> None:
+    """Run the database probe on a short-lived session."""
+    factory = _get_session_factory()
+    async with factory() as session:
+        await check_postgres(session)
 
 
 async def _check_catalog() -> None:
@@ -30,9 +37,8 @@ async def _check_inventory() -> None:
 async def health_check() -> HealthStatus:
     """Perform health check for order service."""
     manager = HealthManager(service_name="order-service")
-    session_factory = get_async_session()
 
-    manager.register("postgres", lambda: check_postgres(session_factory))
+    manager.register("postgres", _check_postgres)
     manager.register("redis", check_redis)
     manager.register("catalog", _check_catalog)
     manager.register("inventory", _check_inventory)

@@ -94,8 +94,6 @@ class Settings(BaseSettings):
     redis: RedisSettings = RedisSettings()
     jwt: JWTSettings = JWTSettings()
 
-    jwt: JWTSettings = JWTSettings()
-
     SYSTEM_TOKEN: str = ""
 
     INVENTORY_SERVICE_URL: str = "http://mp-inventory-service:8180"
