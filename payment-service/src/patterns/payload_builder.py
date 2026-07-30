@@ -1,3 +1,5 @@
+from typing import Any
+
 from src.models.payment import Payment, Transaction
 
 
@@ -5,7 +7,7 @@ class PaymentPayloadBuilder:
     """Builds payloads for payment events."""
 
     @staticmethod
-    def build_succeeded(payment: Payment) -> dict:
+    def build_succeeded(payment: Payment) -> dict[str, Any]:
         return {
             "payment_id": str(payment.id),
             "order_id": str(payment.order_id),
@@ -15,7 +17,7 @@ class PaymentPayloadBuilder:
         }
 
     @staticmethod
-    def build_failed(payment: Payment, reason: str) -> dict:
+    def build_failed(payment: Payment, reason: str) -> dict[str, Any]:
         return {
             "payment_id": str(payment.id),
             "order_id": str(payment.order_id),
@@ -25,7 +27,7 @@ class PaymentPayloadBuilder:
         }
 
     @staticmethod
-    def build_refunded(payment: Payment, transaction: Transaction) -> dict:
+    def build_refunded(payment: Payment, transaction: Transaction) -> dict[str, Any]:
         return {
             "payment_id": str(payment.id),
             "order_id": str(payment.order_id),

@@ -95,9 +95,6 @@ class Settings(BaseSettings):
     rabbitmq: RabbitMQSettings = RabbitMQSettings()
     jwt: JWTSettings = JWTSettings()
 
-    jwt: JWTSettings = JWTSettings()
-    rabbitmq: RabbitMQSettings = RabbitMQSettings()
-
     SYSTEM_TOKEN: str = ""
 
     STRIPE_API_KEY: str = ""

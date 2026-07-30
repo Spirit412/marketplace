@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Any
 
 import redis.asyncio as redis_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -172,6 +173,15 @@ class PaymentService:
         if payment.status != PaymentStatus.SUCCEEDED:
             raise ConflictError(f"Cannot refund payment with status {payment.status}")
 
+        if payment.gateway_payment_id is None:
+            # Unreachable in practice: create_payment() always sets this
+            # before a payment can reach SUCCEEDED. Guarded explicitly so a
+            # future path that skips that assignment fails loudly here
+            # instead of asking the gateway to refund "None".
+            raise ConflictError(
+                f"Payment {payment_uuid} has no gateway_payment_id to refund"
+            )
+
         gateway: BasePaymentGateway = self._registry.get_gateway(
             PaymentMethod(payment.payment_method)
         )
@@ -300,7 +310,7 @@ class PaymentService:
                         self._payload_builder.build_failed(payment, reason),
                     )
 
-    async def _publish_event(self, event_type: str, payload: dict) -> None:
+    async def _publish_event(self, event_type: str, payload: dict[str, Any]) -> None:
         """Publish an event to RabbitMQ."""
         from src.engines.rabbitmq import (
             publish_payment_failed,

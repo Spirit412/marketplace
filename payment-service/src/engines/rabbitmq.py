@@ -1,6 +1,7 @@
 import json
 import logging
 from functools import lru_cache
+from typing import Any
 
 from src.config.settings import settings
 
@@ -8,12 +9,14 @@ logger = logging.getLogger(__name__)
 
 
 @lru_cache
-def get_broker():
+def get_broker() -> None:
     """Return a simple RabbitMQ publisher (lazy, no aio_pika if unavailable)."""
     return
 
 
-async def _publish_event(exchange: str, routing_key: str, payload: dict) -> None:
+async def _publish_event(
+    exchange: str, routing_key: str, payload: dict[str, Any]
+) -> None:
     """Publish event to RabbitMQ; if unavailable, log and ignore gracefully."""
     try:
         import aio_pika
@@ -39,16 +42,16 @@ async def _publish_event(exchange: str, routing_key: str, payload: dict) -> None
         logger.exception("Failed to publish event %s/%s", exchange, routing_key)
 
 
-async def publish_payment_succeeded(payload: dict) -> None:
+async def publish_payment_succeeded(payload: dict[str, Any]) -> None:
     """Publish payment.succeeded event."""
     await _publish_event("marketplace.payment", "payment.succeeded", payload)
 
 
-async def publish_payment_failed(payload: dict) -> None:
+async def publish_payment_failed(payload: dict[str, Any]) -> None:
     """Publish payment.failed event."""
     await _publish_event("marketplace.payment", "payment.failed", payload)
 
 
-async def publish_payment_refunded(payload: dict) -> None:
+async def publish_payment_refunded(payload: dict[str, Any]) -> None:
     """Publish payment.refunded event."""
     await _publish_event("marketplace.payment", "payment.refunded", payload)

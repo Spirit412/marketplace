@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -12,4 +14,4 @@ class YooKassaWebhookRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     event: str
-    object: dict
+    object: dict[str, Any]

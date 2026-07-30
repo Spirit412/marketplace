@@ -1,5 +1,5 @@
 import json
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ async def stripe_webhook(
     body: StripeWebhookRequest,
     service: Annotated[PaymentService, Depends(Inject(PaymentService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> dict:
+) -> dict[str, Any]:
     """Handle incoming Stripe webhook event."""
     await service.handle_stripe_webhook(
         session=session,
@@ -32,7 +32,7 @@ async def yookassa_webhook(
     body: YooKassaWebhookRequest,
     service: Annotated[PaymentService, Depends(Inject(PaymentService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-) -> dict:
+) -> dict[str, Any]:
     """Handle incoming YooKassa webhook event."""
     full_payload = json.dumps({"event": body.event, "object": body.object})
     await service.handle_yookassa_webhook(
