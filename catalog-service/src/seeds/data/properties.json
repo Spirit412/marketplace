@@ -1,0 +1,210 @@
+[
+  {
+    "backend_name": "color",
+    "frontend_label": "Color",
+    "property_type": 1,
+    "description": "Product color",
+    "options": {
+      "values": ["Red", "Blue", "Green", "Black", "White", "Yellow", "Purple", "Orange", "Pink", "Gray", "Brown", "Navy", "Beige"]
+    },
+    "category_slugs": ["electronics", "clothing-accessories", "shoes", "mens-clothing", "womens-clothing", "smartphones-accessories", "cases-covers", "audio", "headphones", "earbuds", "car-accessories", "motorcycle-parts", "toys-games", "outdoor-toys"]
+  },
+  {
+    "backend_name": "size",
+    "frontend_label": "Size",
+    "property_type": 1,
+    "description": "Product size",
+    "options": {
+      "values": ["XS", "S", "M", "L", "XL", "XXL", "3XL"]
+    },
+    "category_slugs": ["clothing-accessories", "mens-clothing", "shirts", "pants", "jackets", "womens-clothing", "dresses", "tops", "skirts", "shoes", "sneakers", "boots", "sandals"]
+  },
+  {
+    "backend_name": "weight",
+    "frontend_label": "Weight",
+    "property_type": 2,
+    "description": "Product weight in kilograms",
+    "options": {
+      "unit": "kg"
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "audio", "speakers", "sports-outdoors", "exercise-fitness", "outdoor-recreation", "camping", "hiking", "home-garden", "auto-parts"]
+  },
+  {
+    "backend_name": "material",
+    "frontend_label": "Material",
+    "property_type": 1,
+    "description": "Primary material of the product",
+    "options": {
+      "values": ["Cotton", "Polyester", "Leather", "Wool", "Silk", "Linen", "Nylon", "Rubber", "Plastic", "Metal", "Wood", "Glass", "Ceramic", "Stainless Steel", "Aluminum", "Carbon Fiber"]
+    },
+    "category_slugs": ["clothing-accessories", "mens-clothing", "shoes", "home-garden", "furniture", "kitchen-dining", "cookware", "utensils", "garden-outdoor", "garden-tools", "auto-parts", "car-accessories", "toys-games", "outdoor-toys", "sports-outdoors"]
+  },
+  {
+    "backend_name": "brand",
+    "frontend_label": "Brand",
+    "property_type": 3,
+    "description": "Manufacturer or brand name",
+    "options": {},
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tablets", "smartphones-accessories", "smartphones", "audio", "headphones", "speakers", "earbuds", "tv-video", "tvs", "clothing-accessories", "shoes", "sports-outdoors", "auto-parts", "beauty-health", "toys-games"]
+  },
+  {
+    "backend_name": "gender",
+    "frontend_label": "Gender",
+    "property_type": 1,
+    "description": "Target gender",
+    "options": {
+      "values": ["Men", "Women", "Unisex", "Kids"]
+    },
+    "category_slugs": ["clothing-accessories", "mens-clothing", "womens-clothing", "shoes", "sneakers", "boots", "sandals", "beauty-health", "skin-care", "hair-care", "makeup"]
+  },
+  {
+    "backend_name": "age_group",
+    "frontend_label": "Age Group",
+    "property_type": 1,
+    "description": "Recommended age group",
+    "options": {
+      "values": ["Baby", "Toddler", "Child", "Teen", "Adult"]
+    },
+    "category_slugs": ["clothing-accessories", "toys-games", "board-games", "video-games", "outdoor-toys", "books-media", "educational", "textbooks", "study-guides"]
+  },
+  {
+    "backend_name": "screen_size",
+    "frontend_label": "Screen Size",
+    "property_type": 1,
+    "description": "Display screen size",
+    "options": {
+      "values": ["Under 13\"", "13-14\"", "15-16\"", "17\" and above"],
+      "unit": "inches"
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "tablets", "tv-video", "tvs"]
+  },
+  {
+    "backend_name": "storage_capacity",
+    "frontend_label": "Storage Capacity",
+    "property_type": 1,
+    "description": "Internal storage capacity",
+    "options": {
+      "values": ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB"]
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tablets", "smartphones-accessories", "smartphones", "video-games"]
+  },
+  {
+    "backend_name": "processor",
+    "frontend_label": "Processor",
+    "property_type": 1,
+    "description": "CPU model or series",
+    "options": {
+      "values": ["Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core i9", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9", "Apple M1", "Apple M2", "Apple M3", "Apple M4", "Qualcomm Snapdragon", "MediaTek Dimensity"]
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tablets", "smartphones-accessories", "smartphones"]
+  },
+  {
+    "backend_name": "ram",
+    "frontend_label": "RAM",
+    "property_type": 1,
+    "description": "Memory size",
+    "options": {
+      "values": ["4GB", "8GB", "16GB", "32GB", "64GB", "128GB"],
+      "unit": "GB"
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tablets", "smartphones-accessories", "smartphones"]
+  },
+  {
+    "backend_name": "operating_system",
+    "frontend_label": "Operating System",
+    "property_type": 1,
+    "description": "Pre-installed operating system",
+    "options": {
+      "values": ["Windows", "macOS", "Linux", "Android", "iOS", "iPadOS", "ChromeOS", "Tizen"]
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tablets", "smartphones-accessories", "smartphones", "tvs", "streaming-devices"]
+  },
+  {
+    "backend_name": "connectivity",
+    "frontend_label": "Connectivity",
+    "property_type": 1,
+    "description": "Wireless and wired connectivity options",
+    "options": {
+      "values": ["WiFi 5", "WiFi 6", "WiFi 6E", "WiFi 7", "Bluetooth 5.0", "Bluetooth 5.3", "USB-C", "HDMI", "5G", "4G/LTE", "NFC", "GPS", "Ethernet", "Thunderbolt"]
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tablets", "smartphones-accessories", "smartphones", "audio", "headphones", "speakers", "earbuds", "tv-video", "streaming-devices", "car-accessories"]
+  },
+  {
+    "backend_name": "battery_life",
+    "frontend_label": "Battery Life",
+    "property_type": 2,
+    "description": "Battery life in hours",
+    "options": {
+      "unit": "hours"
+    },
+    "category_slugs": ["electronics", "laptops", "tablets", "smartphones-accessories", "smartphones", "audio", "headphones", "speakers", "earbuds", "outdoor-recreation", "camping", "car-accessories"]
+  },
+  {
+    "backend_name": "power_source",
+    "frontend_label": "Power Source",
+    "property_type": 1,
+    "description": "How the product is powered",
+    "options": {
+      "values": ["Battery", "USB", "AC Adapter", "Solar", "Rechargeable", "Disposable Batteries", "Gasoline", "Electric"]
+    },
+    "category_slugs": ["electronics", "audio", "speakers", "home-garden", "garden-outdoor", "garden-tools", "sports-outdoors", "outdoor-recreation", "camping", "auto-parts", "car-accessories"]
+  },
+  {
+    "backend_name": "water_resistance",
+    "frontend_label": "Water Resistance",
+    "property_type": 1,
+    "description": "Water resistance rating",
+    "options": {
+      "values": ["IPX4", "IPX5", "IPX7", "IP68", "IP69K", "None"]
+    },
+    "category_slugs": ["electronics", "smartphones-accessories", "smartphones", "audio", "headphones", "speakers", "earbuds", "sports-outdoors", "outdoor-recreation", "camping", "hiking", "garden-outdoor"]
+  },
+  {
+    "backend_name": "warranty",
+    "frontend_label": "Warranty",
+    "property_type": 1,
+    "description": "Warranty period",
+    "options": {
+      "values": ["No Warranty", "3 Months", "6 Months", "1 Year", "2 Years", "3 Years", "5 Years", "Lifetime"]
+    },
+    "category_slugs": ["electronics", "computers-tablets", "laptops", "desktops", "tv-video", "tvs", "home-garden", "furniture", "appliances", "sports-outdoors", "auto-parts"]
+  },
+  {
+    "backend_name": "color_temperature",
+    "frontend_label": "Color Temperature",
+    "property_type": 1,
+    "description": "Light color temperature",
+    "options": {
+      "values": ["Warm White (2700K)", "Soft White (3000K)", "Cool White (4000K)", "Daylight (5000K)", "Daylight (6500K)"]
+    },
+    "category_slugs": ["home-garden", "garden-outdoor", "camping"]
+  },
+  {
+    "backend_name": "pages",
+    "frontend_label": "Number of Pages",
+    "property_type": 2,
+    "description": "Total number of pages",
+    "options": {
+      "unit": "pages"
+    },
+    "category_slugs": ["books-media", "fiction", "novels", "short-stories", "non-fiction", "science-technology", "history", "educational", "textbooks", "study-guides"]
+  },
+  {
+    "backend_name": "isbn",
+    "frontend_label": "ISBN",
+    "property_type": 3,
+    "description": "International Standard Book Number",
+    "options": {},
+    "category_slugs": ["books-media", "fiction", "novels", "non-fiction", "educational", "textbooks"]
+  },
+  {
+    "backend_name": "capacity",
+    "frontend_label": "Capacity",
+    "property_type": 2,
+    "description": "Volume or capacity in liters",
+    "options": {
+      "unit": "L"
+    },
+    "category_slugs": ["home-garden", "kitchen-dining", "cookware", "outdoor-recreation", "camping", "hiking"]
+  }
+]

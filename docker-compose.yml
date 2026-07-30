@@ -1,0 +1,160 @@
+# Root docker-compose.yml — orchestrates all 10 microservices.
+# Each service has its own docker-compose.yml for standalone dev.
+
+services:
+
+  mp-auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: mp-${AUTH_APP_NAME}
+    hostname: mp-${AUTH_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - auth-service/.env
+    ports:
+      - "${AUTH_PORT}:${AUTH_PORT}"
+    networks:
+      - proxynet
+
+  mp-catalog-service:
+    build:
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    container_name: mp-${CATALOG_APP_NAME}
+    hostname: mp-${CATALOG_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - catalog-service/.env
+    ports:
+      - "${CATALOG_PORT}:${CATALOG_PORT}"
+    networks:
+      - proxynet
+
+  mp-order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: mp-${ORDER_APP_NAME}
+    hostname: mp-${ORDER_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - order-service/.env
+    ports:
+      - "${ORDER_PORT}:${ORDER_PORT}"
+    networks:
+      - proxynet
+
+  mp-payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: mp-${PAYMENT_APP_NAME}
+    hostname: mp-${PAYMENT_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - payment-service/.env
+    ports:
+      - "${PAYMENT_PORT}:${PAYMENT_PORT}"
+    networks:
+      - proxynet
+
+  mp-notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: mp-${NOTIFICATION_APP_NAME}
+    hostname: mp-${NOTIFICATION_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - notification-service/.env
+    ports:
+      - "${NOTIFICATION_PORT}:${NOTIFICATION_PORT}"
+    networks:
+      - proxynet
+
+  mp-scheduler-service:
+    build:
+      context: ./scheduler-service
+      dockerfile: Dockerfile
+    container_name: mp-${SCHEDULER_APP_NAME}
+    hostname: mp-${SCHEDULER_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - scheduler-service/.env
+    ports:
+      - "${SCHEDULER_PORT}:${SCHEDULER_PORT}"
+    networks:
+      - proxynet
+
+  mp-report-service:
+    build:
+      context: ./report-service
+      dockerfile: Dockerfile
+    container_name: mp-${REPORT_APP_NAME}
+    hostname: mp-${REPORT_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - report-service/.env
+    ports:
+      - "${REPORT_PORT}:${REPORT_PORT}"
+    networks:
+      - proxynet
+
+  mp-inventory-service:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    container_name: mp-${INVENTORY_APP_NAME}
+    hostname: mp-${INVENTORY_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - inventory-service/.env
+    ports:
+      - "${INVENTORY_PORT}:${INVENTORY_PORT}"
+    networks:
+      - proxynet
+
+  mp-dictionary-service:
+    build:
+      context: ./dictionary-service
+      dockerfile: Dockerfile
+    container_name: mp-${DICTIONARY_APP_NAME}
+    hostname: mp-${DICTIONARY_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - dictionary-service/.env
+    ports:
+      - "${DICTIONARY_PORT}:${DICTIONARY_PORT}"
+    networks:
+      - proxynet
+
+  mp-import-service:
+    build:
+      context: ./import-service
+      dockerfile: Dockerfile
+    container_name: mp-${IMPORT_APP_NAME}
+    hostname: mp-${IMPORT_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - import-service/.env
+    ports:
+      - "${IMPORT_PORT}:${IMPORT_PORT}"
+    networks:
+      - proxynet
+
+networks:
+  proxynet:
+    driver: bridge
+    external: true
+    name: proxynet

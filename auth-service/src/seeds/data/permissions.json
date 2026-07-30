@@ -1,0 +1,61 @@
+[
+  {"name": "AUTH:GET:/*", "app_id": "AUTH", "method": "GET", "path": "/*"},
+  {"name": "AUTH:POST:/*", "app_id": "AUTH", "method": "POST", "path": "/*"},
+  {"name": "AUTH:PUT:/*", "app_id": "AUTH", "method": "PUT", "path": "/*"},
+  {"name": "AUTH:PATCH:/*", "app_id": "AUTH", "method": "PATCH", "path": "/*"},
+  {"name": "AUTH:DELETE:/*", "app_id": "AUTH", "method": "DELETE", "path": "/*"},
+
+  {"name": "CATALOG:GET:/*", "app_id": "CATALOG", "method": "GET", "path": "/*"},
+  {"name": "CATALOG:POST:/*", "app_id": "CATALOG", "method": "POST", "path": "/*"},
+  {"name": "CATALOG:PUT:/*", "app_id": "CATALOG", "method": "PUT", "path": "/*"},
+  {"name": "CATALOG:PATCH:/*", "app_id": "CATALOG", "method": "PATCH", "path": "/*"},
+  {"name": "CATALOG:DELETE:/*", "app_id": "CATALOG", "method": "DELETE", "path": "/*"},
+
+  {"name": "ORDER:GET:/*", "app_id": "ORDER", "method": "GET", "path": "/*"},
+  {"name": "ORDER:POST:/*", "app_id": "ORDER", "method": "POST", "path": "/*"},
+  {"name": "ORDER:PUT:/*", "app_id": "ORDER", "method": "PUT", "path": "/*"},
+  {"name": "ORDER:PATCH:/*", "app_id": "ORDER", "method": "PATCH", "path": "/*"},
+  {"name": "ORDER:DELETE:/*", "app_id": "ORDER", "method": "DELETE", "path": "/*"},
+
+  {"name": "INVENTORY:GET:/*", "app_id": "INVENTORY", "method": "GET", "path": "/*"},
+  {"name": "INVENTORY:POST:/*", "app_id": "INVENTORY", "method": "POST", "path": "/*"},
+  {"name": "INVENTORY:PUT:/*", "app_id": "INVENTORY", "method": "PUT", "path": "/*"},
+  {"name": "INVENTORY:PATCH:/*", "app_id": "INVENTORY", "method": "PATCH", "path": "/*"},
+  {"name": "INVENTORY:DELETE:/*", "app_id": "INVENTORY", "method": "DELETE", "path": "/*"},
+
+  {"name": "NOTIFICATION:GET:/*", "app_id": "NOTIFICATION", "method": "GET", "path": "/*"},
+  {"name": "NOTIFICATION:POST:/*", "app_id": "NOTIFICATION", "method": "POST", "path": "/*"},
+  {"name": "NOTIFICATION:PUT:/*", "app_id": "NOTIFICATION", "method": "PUT", "path": "/*"},
+  {"name": "NOTIFICATION:PATCH:/*", "app_id": "NOTIFICATION", "method": "PATCH", "path": "/*"},
+  {"name": "NOTIFICATION:DELETE:/*", "app_id": "NOTIFICATION", "method": "DELETE", "path": "/*"},
+
+  {"name": "DICTIONARY:GET:/*", "app_id": "DICTIONARY", "method": "GET", "path": "/*"},
+  {"name": "DICTIONARY:POST:/*", "app_id": "DICTIONARY", "method": "POST", "path": "/*"},
+  {"name": "DICTIONARY:PUT:/*", "app_id": "DICTIONARY", "method": "PUT", "path": "/*"},
+  {"name": "DICTIONARY:PATCH:/*", "app_id": "DICTIONARY", "method": "PATCH", "path": "/*"},
+  {"name": "DICTIONARY:DELETE:/*", "app_id": "DICTIONARY", "method": "DELETE", "path": "/*"},
+
+  {"name": "IMPORT:GET:/*", "app_id": "IMPORT", "method": "GET", "path": "/*"},
+  {"name": "IMPORT:POST:/*", "app_id": "IMPORT", "method": "POST", "path": "/*"},
+  {"name": "IMPORT:PUT:/*", "app_id": "IMPORT", "method": "PUT", "path": "/*"},
+  {"name": "IMPORT:PATCH:/*", "app_id": "IMPORT", "method": "PATCH", "path": "/*"},
+  {"name": "IMPORT:DELETE:/*", "app_id": "IMPORT", "method": "DELETE", "path": "/*"},
+
+  {"name": "REPORT:GET:/*", "app_id": "REPORT", "method": "GET", "path": "/*"},
+  {"name": "REPORT:POST:/*", "app_id": "REPORT", "method": "POST", "path": "/*"},
+  {"name": "REPORT:PUT:/*", "app_id": "REPORT", "method": "PUT", "path": "/*"},
+  {"name": "REPORT:PATCH:/*", "app_id": "REPORT", "method": "PATCH", "path": "/*"},
+  {"name": "REPORT:DELETE:/*", "app_id": "REPORT", "method": "DELETE", "path": "/*"},
+
+  {"name": "SCHEDULER:GET:/*", "app_id": "SCHEDULER", "method": "GET", "path": "/*"},
+  {"name": "SCHEDULER:POST:/*", "app_id": "SCHEDULER", "method": "POST", "path": "/*"},
+  {"name": "SCHEDULER:PUT:/*", "app_id": "SCHEDULER", "method": "PUT", "path": "/*"},
+  {"name": "SCHEDULER:PATCH:/*", "app_id": "SCHEDULER", "method": "PATCH", "path": "/*"},
+  {"name": "SCHEDULER:DELETE:/*", "app_id": "SCHEDULER", "method": "DELETE", "path": "/*"},
+
+  {"name": "PAYMENT:GET:/*", "app_id": "PAYMENT", "method": "GET", "path": "/*"},
+  {"name": "PAYMENT:POST:/*", "app_id": "PAYMENT", "method": "POST", "path": "/*"},
+  {"name": "PAYMENT:PUT:/*", "app_id": "PAYMENT", "method": "PUT", "path": "/*"},
+  {"name": "PAYMENT:PATCH:/*", "app_id": "PAYMENT", "method": "PATCH", "path": "/*"},
+  {"name": "PAYMENT:DELETE:/*", "app_id": "PAYMENT", "method": "DELETE", "path": "/*"}
+]

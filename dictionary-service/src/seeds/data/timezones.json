@@ -1,0 +1,146 @@
+[
+  {
+    "iana_name": "Europe/Moscow",
+    "utc_offset": "+03:00",
+    "display_name_ru": "Москва",
+    "display_name_en": "Moscow"
+  },
+  {
+    "iana_name": "Europe/Kaliningrad",
+    "utc_offset": "+02:00",
+    "display_name_ru": "Калининград",
+    "display_name_en": "Kaliningrad"
+  },
+  {
+    "iana_name": "Europe/Samara",
+    "utc_offset": "+04:00",
+    "display_name_ru": "Самара",
+    "display_name_en": "Samara"
+  },
+  {
+    "iana_name": "Asia/Yekaterinburg",
+    "utc_offset": "+05:00",
+    "display_name_ru": "Екатеринбург",
+    "display_name_en": "Yekaterinburg"
+  },
+  {
+    "iana_name": "Asia/Omsk",
+    "utc_offset": "+06:00",
+    "display_name_ru": "Омск",
+    "display_name_en": "Omsk"
+  },
+  {
+    "iana_name": "Asia/Krasnoyarsk",
+    "utc_offset": "+07:00",
+    "display_name_ru": "Красноярск",
+    "display_name_en": "Krasnoyarsk"
+  },
+  {
+    "iana_name": "Asia/Irkutsk",
+    "utc_offset": "+08:00",
+    "display_name_ru": "Иркутск",
+    "display_name_en": "Irkutsk"
+  },
+  {
+    "iana_name": "Asia/Yakutsk",
+    "utc_offset": "+09:00",
+    "display_name_ru": "Якутск",
+    "display_name_en": "Yakutsk"
+  },
+  {
+    "iana_name": "Asia/Vladivostok",
+    "utc_offset": "+10:00",
+    "display_name_ru": "Владивосток",
+    "display_name_en": "Vladivostok"
+  },
+  {
+    "iana_name": "Asia/Magadan",
+    "utc_offset": "+11:00",
+    "display_name_ru": "Магадан",
+    "display_name_en": "Magadan"
+  },
+  {
+    "iana_name": "Asia/Kamchatka",
+    "utc_offset": "+12:00",
+    "display_name_ru": "Камчатка",
+    "display_name_en": "Kamchatka"
+  },
+  {
+    "iana_name": "Europe/London",
+    "utc_offset": "+00:00",
+    "display_name_ru": "Лондон",
+    "display_name_en": "London"
+  },
+  {
+    "iana_name": "Europe/Berlin",
+    "utc_offset": "+01:00",
+    "display_name_ru": "Берлин",
+    "display_name_en": "Berlin"
+  },
+  {
+    "iana_name": "Europe/Paris",
+    "utc_offset": "+01:00",
+    "display_name_ru": "Париж",
+    "display_name_en": "Paris"
+  },
+  {
+    "iana_name": "Europe/Helsinki",
+    "utc_offset": "+02:00",
+    "display_name_ru": "Хельсинки",
+    "display_name_en": "Helsinki"
+  },
+  {
+    "iana_name": "Europe/Minsk",
+    "utc_offset": "+03:00",
+    "display_name_ru": "Минск",
+    "display_name_en": "Minsk"
+  },
+  {
+    "iana_name": "Asia/Tokyo",
+    "utc_offset": "+09:00",
+    "display_name_ru": "Токио",
+    "display_name_en": "Tokyo"
+  },
+  {
+    "iana_name": "Asia/Shanghai",
+    "utc_offset": "+08:00",
+    "display_name_ru": "Шанхай",
+    "display_name_en": "Shanghai"
+  },
+  {
+    "iana_name": "Asia/Dubai",
+    "utc_offset": "+04:00",
+    "display_name_ru": "Дубай",
+    "display_name_en": "Dubai"
+  },
+  {
+    "iana_name": "America/New_York",
+    "utc_offset": "-05:00",
+    "display_name_ru": "Нью-Йорк",
+    "display_name_en": "New York"
+  },
+  {
+    "iana_name": "America/Chicago",
+    "utc_offset": "-06:00",
+    "display_name_ru": "Чикаго",
+    "display_name_en": "Chicago"
+  },
+  {
+    "iana_name": "America/Denver",
+    "utc_offset": "-07:00",
+    "display_name_ru": "Денвер",
+    "display_name_en": "Denver"
+  },
+  {
+    "iana_name": "America/Los_Angeles",
+    "utc_offset": "-08:00",
+    "display_name_ru": "Лос-Анджелес",
+    "display_name_en": "Los Angeles"
+  },
+  {
+    "iana_name": "UTC",
+    "utc_offset": "+00:00",
+    "display_name_ru": "Всемирное координированное время",
+    "display_name_en": "Coordinated Universal Time"
+  }
+]

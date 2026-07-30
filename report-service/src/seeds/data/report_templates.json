@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Sales Report",
+    "sql_template": "SELECT date, seller_id, product_id, quantity, amount FROM sales_orders WHERE date BETWEEN {start_date} AND {end_date}",
+    "parameters_schema": {
+      "type": "object",
+      "properties": {
+        "date_range": {
+          "type": "object",
+          "properties": {
+            "start_date": { "type": "string", "format": "date", "description": "Start date (YYYY-MM-DD)" },
+            "end_date": { "type": "string", "format": "date", "description": "End date (YYYY-MM-DD)" }
+          },
+          "required": ["start_date", "end_date"]
+        },
+        "seller_id": { "type": "string", "format": "uuid", "description": "Filter by seller UUID" }
+      },
+      "required": ["date_range"]
+    }
+  },
+  {
+    "name": "Inventory Report",
+    "sql_template": "SELECT product_id, warehouse_id, quantity, reserved, updated_at FROM inventory.stock_items",
+    "parameters_schema": {
+      "type": "object",
+      "properties": {
+        "warehouse_id": { "type": "string", "format": "uuid", "description": "Filter by warehouse UUID" },
+        "min_quantity": { "type": "integer", "description": "Minimum quantity threshold" }
+      }
+    }
+  },
+  {
+    "name": "Customers Report",
+    "sql_template": "SELECT id, email, role, created_at FROM auth.users",
+    "parameters_schema": {
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "description": "Filter by user role" },
+        "created_after": { "type": "string", "format": "date", "description": "Created on or after this date" }
+      }
+    }
+  },
+  {
+    "name": "Products Report",
+    "sql_template": "SELECT id, seller_id, name, price, is_active, created_at FROM catalog.products",
+    "parameters_schema": {
+      "type": "object",
+      "properties": {
+        "seller_id": { "type": "string", "format": "uuid", "description": "Filter by seller UUID" },
+        "is_active": { "type": "boolean", "description": "Filter by active status" }
+      }
+    }
+  }
+]

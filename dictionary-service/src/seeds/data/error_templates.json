@@ -1,0 +1,134 @@
+[
+  {
+    "code": "internal_error",
+    "locale": "ru",
+    "message": "Внутренняя ошибка сервера. Пожалуйста, попробуйте позже.",
+    "severity": "error"
+  },
+  {
+    "code": "internal_error",
+    "locale": "en",
+    "message": "Internal server error. Please try again later.",
+    "severity": "error"
+  },
+  {
+    "code": "not_found",
+    "locale": "ru",
+    "message": "Ресурс не найден.",
+    "severity": "error"
+  },
+  {
+    "code": "not_found",
+    "locale": "en",
+    "message": "Resource not found.",
+    "severity": "error"
+  },
+  {
+    "code": "validation_error",
+    "locale": "ru",
+    "message": "Ошибка валидации данных: {details}",
+    "severity": "warning"
+  },
+  {
+    "code": "validation_error",
+    "locale": "en",
+    "message": "Data validation error: {details}",
+    "severity": "warning"
+  },
+  {
+    "code": "unauthorized",
+    "locale": "ru",
+    "message": "Требуется авторизация. Пожалуйста, войдите в систему.",
+    "severity": "error"
+  },
+  {
+    "code": "unauthorized",
+    "locale": "en",
+    "message": "Authentication required. Please log in.",
+    "severity": "error"
+  },
+  {
+    "code": "forbidden",
+    "locale": "ru",
+    "message": "Доступ запрещён. У вас недостаточно прав.",
+    "severity": "error"
+  },
+  {
+    "code": "forbidden",
+    "locale": "en",
+    "message": "Access denied. You do not have sufficient permissions.",
+    "severity": "error"
+  },
+  {
+    "code": "bad_request",
+    "locale": "ru",
+    "message": "Некорректный запрос. Проверьте введённые данные.",
+    "severity": "warning"
+  },
+  {
+    "code": "bad_request",
+    "locale": "en",
+    "message": "Bad request. Please check your input.",
+    "severity": "warning"
+  },
+  {
+    "code": "rate_limit_exceeded",
+    "locale": "ru",
+    "message": "Превышен лимит запросов. Пожалуйста, повторите попытку через {retry_after} секунд.",
+    "severity": "warning"
+  },
+  {
+    "code": "rate_limit_exceeded",
+    "locale": "en",
+    "message": "Rate limit exceeded. Please try again in {retry_after} seconds.",
+    "severity": "warning"
+  },
+  {
+    "code": "service_unavailable",
+    "locale": "ru",
+    "message": "Сервис временно недоступен. Ведутся технические работы.",
+    "severity": "error"
+  },
+  {
+    "code": "service_unavailable",
+    "locale": "en",
+    "message": "Service temporarily unavailable. Scheduled maintenance in progress.",
+    "severity": "error"
+  },
+  {
+    "code": "conflict",
+    "locale": "ru",
+    "message": "Конфликт данных. Запись с таким идентификатором уже существует.",
+    "severity": "error"
+  },
+  {
+    "code": "conflict",
+    "locale": "en",
+    "message": "Data conflict. A record with this identifier already exists.",
+    "severity": "error"
+  },
+  {
+    "code": "timeout",
+    "locale": "ru",
+    "message": "Время ожидания запроса истекло. Попробуйте ещё раз.",
+    "severity": "error"
+  },
+  {
+    "code": "timeout",
+    "locale": "en",
+    "message": "Request timeout. Please try again.",
+    "severity": "error"
+  },
+  {
+    "code": "method_not_allowed",
+    "locale": "ru",
+    "message": "Метод не поддерживается для данного запроса.",
+    "severity": "error"
+  },
+  {
+    "code": "method_not_allowed",
+    "locale": "en",
+    "message": "Method not allowed for this request.",
+    "severity": "error"
+  }
+]

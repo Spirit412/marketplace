@@ -1,0 +1,68 @@
+[
+  {
+    "slug": "wireless-headphones-wh1",
+    "name": "Wireless Over-Ear Headphones WH-1",
+    "description": "Bluetooth 5.3, active noise cancellation, 30h battery.",
+    "category_slug": "headphones",
+    "price": "89.99",
+    "sku": "WH-1-BLK",
+    "stock": 100,
+    "custom_properties_config": {"color": "Black", "material": "Plastic"},
+    "numeric_properties": {"weight": 0.25, "battery_hours": 30}
+  },
+  {
+    "slug": "true-wireless-earbuds-tw2",
+    "name": "True Wireless Earbuds TW-2",
+    "description": "IPX4 splash resistant, touch controls, charging case.",
+    "category_slug": "earbuds",
+    "price": "49.50",
+    "sku": "TW-2-WHT",
+    "stock": 150,
+    "custom_properties_config": {"color": "White"},
+    "numeric_properties": {"weight": 0.05, "battery_hours": 6}
+  },
+  {
+    "slug": "portable-bluetooth-speaker-bs3",
+    "name": "Portable Bluetooth Speaker BS-3",
+    "description": "360-degree sound, waterproof IPX7, 12h playtime.",
+    "category_slug": "speakers",
+    "price": "34.90",
+    "sku": "BS-3-BLU",
+    "stock": 80,
+    "custom_properties_config": {"color": "Blue"},
+    "numeric_properties": {"weight": 0.6, "battery_hours": 12}
+  },
+  {
+    "slug": "mens-cotton-tshirt-classic",
+    "name": "Men's Classic Cotton T-Shirt",
+    "description": "100% cotton, regular fit, machine washable.",
+    "category_slug": "mens-clothing",
+    "price": "14.99",
+    "sku": "MT-CLASSIC-M",
+    "stock": 200,
+    "custom_properties_config": {"color": "Navy", "size": "M"},
+    "numeric_properties": {"weight": 0.2}
+  },
+  {
+    "slug": "womens-running-shoes-flex",
+    "name": "Women's Running Shoes Flex",
+    "description": "Lightweight mesh upper, cushioned sole.",
+    "category_slug": "shoes",
+    "price": "59.00",
+    "sku": "WS-FLEX-38",
+    "stock": 60,
+    "custom_properties_config": {"color": "Gray", "size": "38"},
+    "numeric_properties": {"weight": 0.7}
+  },
+  {
+    "slug": "canvas-backpack-city",
+    "name": "Canvas Backpack City",
+    "description": "15\" laptop compartment, water-resistant canvas.",
+    "category_slug": "clothing-accessories",
+    "price": "42.00",
+    "sku": "BP-CITY-BLK",
+    "stock": 90,
+    "custom_properties_config": {"color": "Black", "material": "Canvas"},
+    "numeric_properties": {"weight": 0.9}
+  }
+]

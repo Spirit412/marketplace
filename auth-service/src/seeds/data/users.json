@@ -1,0 +1,8 @@
+[
+  {"email": "superadmin@marketplace.dev", "password": "SuperAdmin123!", "role": "super_admin"},
+  {"email": "admin@marketplace.dev", "password": "Admin123!", "role": "admin"},
+  {"email": "moderator@marketplace.dev", "password": "Moderator123!", "role": "moderator"},
+  {"email": "seller@marketplace.dev", "password": "Seller123!", "role": "seller"},
+  {"email": "customer@marketplace.dev", "password": "Customer123!", "role": "customer"},
+  {"email": "customer2@marketplace.dev", "password": "Customer123!", "role": "customer"}
+]

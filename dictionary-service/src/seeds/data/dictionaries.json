@@ -1,0 +1,263 @@
+{
+  "order_statuses": [
+    {
+      "id": "order_status_new",
+      "code": "new",
+      "data": {
+        "name_ru": "Новый",
+        "name_en": "New",
+        "description_ru": "Новый заказ, ожидает подтверждения",
+        "description_en": "New order, awaiting confirmation",
+        "color": "#3498db",
+        "sort_order": 1
+      }
+    },
+    {
+      "id": "order_status_confirmed",
+      "code": "confirmed",
+      "data": {
+        "name_ru": "Подтверждён",
+        "name_en": "Confirmed",
+        "description_ru": "Заказ подтверждён продавцом",
+        "description_en": "Order confirmed by seller",
+        "color": "#2ecc71",
+        "sort_order": 2
+      }
+    },
+    {
+      "id": "order_status_processing",
+      "code": "processing",
+      "data": {
+        "name_ru": "В обработке",
+        "name_en": "Processing",
+        "description_ru": "Заказ собирается или готовится к отправке",
+        "description_en": "Order is being prepared for shipment",
+        "color": "#f39c12",
+        "sort_order": 3
+      }
+    },
+    {
+      "id": "order_status_shipped",
+      "code": "shipped",
+      "data": {
+        "name_ru": "Отправлен",
+        "name_en": "Shipped",
+        "description_ru": "Заказ отправлен покупателю",
+        "description_en": "Order shipped to customer",
+        "color": "#9b59b6",
+        "sort_order": 4
+      }
+    },
+    {
+      "id": "order_status_delivered",
+      "code": "delivered",
+      "data": {
+        "name_ru": "Доставлен",
+        "name_en": "Delivered",
+        "description_ru": "Заказ успешно доставлен",
+        "description_en": "Order successfully delivered",
+        "color": "#27ae60",
+        "sort_order": 5
+      }
+    },
+    {
+      "id": "order_status_cancelled",
+      "code": "cancelled",
+      "data": {
+        "name_ru": "Отменён",
+        "name_en": "Cancelled",
+        "description_ru": "Заказ отменён",
+        "description_en": "Order cancelled",
+        "color": "#e74c3c",
+        "sort_order": 6
+      }
+    },
+    {
+      "id": "order_status_returned",
+      "code": "returned",
+      "data": {
+        "name_ru": "Возврат",
+        "name_en": "Returned",
+        "description_ru": "Заказ возвращён покупателем",
+        "description_en": "Order returned by customer",
+        "color": "#e67e22",
+        "sort_order": 7
+      }
+    }
+  ],
+  "payment_methods": [
+    {
+      "id": "payment_card",
+      "code": "card",
+      "data": {
+        "name_ru": "Банковская карта",
+        "name_en": "Bank card",
+        "description_ru": "Оплата банковской картой Visa/Mastercard/MIR",
+        "description_en": "Payment by Visa/Mastercard/MIR bank card",
+        "icon": "credit-card"
+      }
+    },
+    {
+      "id": "payment_cash",
+      "code": "cash",
+      "data": {
+        "name_ru": "Наличные",
+        "name_en": "Cash",
+        "description_ru": "Оплата наличными при получении",
+        "description_en": "Cash on delivery",
+        "icon": "banknote"
+      }
+    },
+    {
+      "id": "payment_wallet",
+      "code": "wallet",
+      "data": {
+        "name_ru": "Электронный кошелёк",
+        "name_en": "E-wallet",
+        "description_ru": "Оплата через электронный кошелёк",
+        "description_en": "Payment via e-wallet",
+        "icon": "wallet"
+      }
+    },
+    {
+      "id": "payment_bank_transfer",
+      "code": "bank_transfer",
+      "data": {
+        "name_ru": "Банковский перевод",
+        "name_en": "Bank transfer",
+        "description_ru": "Оплата по безналичному расчёту",
+        "description_en": "Payment via bank transfer",
+        "icon": "building-bank"
+      }
+    }
+  ],
+  "delivery_methods": [
+    {
+      "id": "delivery_courier",
+      "code": "courier",
+      "data": {
+        "name_ru": "Курьерская доставка",
+        "name_en": "Courier delivery",
+        "description_ru": "Доставка курьером до двери",
+        "description_en": "Delivery by courier to your door",
+        "icon": "truck"
+      }
+    },
+    {
+      "id": "delivery_pickup",
+      "code": "pickup",
+      "data": {
+        "name_ru": "Самовывоз",
+        "name_en": "Pickup",
+        "description_ru": "Самостоятельное получение из пункта выдачи",
+        "description_en": "Pick up from a pickup point",
+        "icon": "map-pin"
+      }
+    },
+    {
+      "id": "delivery_post",
+      "code": "post",
+      "data": {
+        "name_ru": "Почта",
+        "name_en": "Postal service",
+        "description_ru": "Доставка почтовой службой",
+        "description_en": "Delivery via postal service",
+        "icon": "mail"
+      }
+    }
+  ],
+  "measurement_units": [
+    {
+      "id": "unit_piece",
+      "code": "piece",
+      "data": {
+        "name_ru": "Штука",
+        "name_en": "Piece",
+        "abbreviation_ru": "шт",
+        "abbreviation_en": "pc"
+      }
+    },
+    {
+      "id": "unit_kg",
+      "code": "kg",
+      "data": {
+        "name_ru": "Килограмм",
+        "name_en": "Kilogram",
+        "abbreviation_ru": "кг",
+        "abbreviation_en": "kg"
+      }
+    },
+    {
+      "id": "unit_liter",
+      "code": "liter",
+      "data": {
+        "name_ru": "Литр",
+        "name_en": "Liter",
+        "abbreviation_ru": "л",
+        "abbreviation_en": "l"
+      }
+    },
+    {
+      "id": "unit_meter",
+      "code": "m",
+      "data": {
+        "name_ru": "Метр",
+        "name_en": "Meter",
+        "abbreviation_ru": "м",
+        "abbreviation_en": "m"
+      }
+    },
+    {
+      "id": "unit_pack",
+      "code": "pack",
+      "data": {
+        "name_ru": "Упаковка",
+        "name_en": "Pack",
+        "abbreviation_ru": "уп",
+        "abbreviation_en": "pack"
+      }
+    }
+  ],
+  "product_conditions": [
+    {
+      "id": "condition_new",
+      "code": "new",
+      "data": {
+        "name_ru": "Новый",
+        "name_en": "New",
+        "description_ru": "Товар новый, не использовался",
+        "description_en": "Brand new, unused item"
+      }
+    },
+    {
+      "id": "condition_like_new",
+      "code": "like_new",
+      "data": {
+        "name_ru": "Как новый",
+        "name_en": "Like new",
+        "description_ru": "Товар в идеальном состоянии, без следов использования",
+        "description_en": "Item in perfect condition, no signs of use"
+      }
+    },
+    {
+      "id": "condition_good",
+      "code": "good",
+      "data": {
+        "name_ru": "Хорошее",
+        "name_en": "Good",
+        "description_ru": "Товар в хорошем состоянии, с незначительными следами использования",
+        "description_en": "Item in good condition with minor signs of use"
+      }
+    },
+    {
+      "id": "condition_fair",
+      "code": "fair",
+      "data": {
+        "name_ru": "Удовлетворительное",
+        "name_en": "Fair",
+        "description_ru": "Товар с заметными следами использования, полностью рабочий",
+        "description_en": "Item with noticeable wear, fully functional"
+      }
+    }
+  ]
+}

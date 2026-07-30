@@ -1,0 +1,116 @@
+"""Application settings via pydantic-settings."""
+
+from pydantic import PositiveInt
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class PostgresSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
+
+    USER: str = "marketplace"
+    PASSWORD: str = "marketplace"
+    HOST: str = "mp-postgres"
+    PORT: int = 5432
+    DB: str = "marketplace"
+
+    POOL_PRE_PING: bool = True
+    ECHO: bool = False
+    POOL_SIZE: int = 10
+    MAX_OVERFLOW: int = 5
+    POOL_RECYCLE: int = 3600
+
+    AUTO_COMMIT: bool = False
+    AUTO_FLUSH: bool = False
+    EXPIRE_ON_COMMIT: bool = False
+
+    @property
+    def dsn(self) -> str:
+        return f"postgresql+asyncpg://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DB}"
+
+
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="REDIS_")
+
+    HOST: str = "mp-redis"
+    PORT: int = 6379
+    DB: int = 0
+
+    @property
+    def url(self) -> str:
+        return f"redis://{self.HOST}:{self.PORT}/{self.DB}"
+
+
+class RabbitMQSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
+
+    USER: str = "marketplace"
+    PASSWORD: str = "marketplace"
+    HOST: str = "mp-rabbitmq"
+    PORT: int = 5672
+
+    @property
+    def url(self) -> str:
+        return f"amqp://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}//"
+
+
+class JWTSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="JWT_")
+
+    SECRET_KEY: str = "change-me"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+
+class UpstreamSettings(BaseSettings):
+    """API Gateway upstream service hostnames."""
+    model_config = SettingsConfigDict(env_prefix="UPSTREAM_")
+
+    CATALOG_HOST: str = "mp-catalog-service"
+    ORDER_HOST: str = "mp-order-service"
+    PAYMENT_HOST: str = "mp-payment-service"
+    NOTIFICATION_HOST: str = "mp-notification-service"
+    SCHEDULER_HOST: str = "mp-scheduler-service"
+    REPORT_HOST: str = "mp-report-service"
+    INVENTORY_HOST: str = "mp-inventory-service"
+    DICTIONARY_HOST: str = "mp-dictionary-service"
+    IMPORT_HOST: str = "mp-import-service"
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    APP_NAME: str = "payment-service"
+    APP_ID: str = "PAYMENT"
+    APP_PORT: int = 8140
+    AUTH_SERVICE_URL: str = "http://mp-auth-service:8110"
+    LOG_LEVEL: str = "debug"
+
+    postgres: PostgresSettings = PostgresSettings()
+    redis: RedisSettings = RedisSettings()
+    rabbitmq: RabbitMQSettings = RabbitMQSettings()
+    jwt: JWTSettings = JWTSettings()
+
+    jwt: JWTSettings = JWTSettings()
+    rabbitmq: RabbitMQSettings = RabbitMQSettings()
+
+    SYSTEM_TOKEN: str = ""
+
+    STRIPE_API_KEY: str = ""
+    YOOKASSA_SHOP_ID: str = ""
+    YOOKASSA_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    YOOKASSA_WEBHOOK_SECRET: str = ""
+
+    MOCK_MODE: bool = True
+
+
+settings = Settings()
+
+from src.core.config import configure as _configure_core
+
+_configure_core(settings)

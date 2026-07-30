@@ -1,0 +1,43 @@
+# Guards the conventions in «Детальная архитектура.md», раздел 0.5.
+#
+#   pre-commit install          — activate the hooks
+#   pre-commit run --all-files  — check the whole repo
+#
+# Ruff reads each service's own [tool.ruff] section, which is identical across
+# all ten services; mypy runs per service so it resolves that service's imports.
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      # .env files carry JWT_SECRET_KEY and SYSTEM_TOKEN — never commit them
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.0
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  # mypy needs each service's own dependency graph, so it cannot run as a
+  # single pass over the repo. The wrapper invokes it once per service and
+  # reports every failure rather than stopping at the first.
+  - repo: local
+    hooks:
+      - id: mypy-per-service
+        name: mypy (per service)
+        entry: scripts/run_mypy.sh
+        language: script
+        pass_filenames: false
+        types: [python]

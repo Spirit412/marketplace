@@ -1,0 +1,242 @@
+[
+  {
+    "code": "welcome",
+    "locale": "ru",
+    "subject": "Добро пожаловать, {{ user_name }}!",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nДобро пожаловать на нашу торговую площадку!\n\nВаш email: {{ email }}\n\nТеперь вы можете:\n- Просматривать и заказывать товары от продавцов\n- Отслеживать статус заказов\n- Получать уведомления о акциях и скидках\n\nС уважением,\nКоманда Marketplace",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "welcome",
+    "locale": "en",
+    "subject": "Welcome, {{ user_name }}!",
+    "body_template": "Hello, {{ user_name }}!\n\nWelcome to our marketplace!\n\nYour email: {{ email }}\n\nNow you can:\n- Browse and order products from sellers\n- Track order status\n- Receive notifications about promotions and discounts\n\nBest regards,\nMarketplace Team",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.created",
+    "locale": "ru",
+    "subject": "Заказ #{{ order_id }} создан",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВаш заказ №{{ order_id }} успешно создан.\n\nСумма заказа: {{ total_amount }} ₽\nКоличество позиций: {{ item_count }}\n\nМы уведомим вас, когда заказ будет подтверждён продавцом.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.created",
+    "locale": "en",
+    "subject": "Order #{{ order_id }} created",
+    "body_template": "Hello, {{ user_name }}!\n\nYour order #{{ order_id }} has been created successfully.\n\nOrder total: {{ total_amount }} ₽\nItems: {{ item_count }}\n\nWe will notify you when the order is confirmed.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.confirmed",
+    "locale": "ru",
+    "subject": "Заказ #{{ order_id }} подтверждён",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВаш заказ №{{ order_id }} подтверждён продавцом.\n\nСумма заказа: {{ total_amount }} ₽\nОжидаемая дата доставки: {{ delivery_date }}\n\nЗаказ передан в службу доставки.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.confirmed",
+    "locale": "en",
+    "subject": "Order #{{ order_id }} confirmed",
+    "body_template": "Hello, {{ user_name }}!\n\nYour order #{{ order_id }} has been confirmed by the seller.\n\nOrder total: {{ total_amount }} ₽\nExpected delivery: {{ delivery_date }}\n\nThe order has been handed over to the delivery service.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.shipped",
+    "locale": "ru",
+    "subject": "Заказ #{{ order_id }} отправлен",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВаш заказ №{{ order_id }} отправлен!\n\nНомер отслеживания: {{ tracking_number }}\nСлужба доставки: {{ carrier }}\nОжидаемая дата доставки: {{ delivery_date }}\n\nВы можете отслеживать посылку по номеру отслеживания.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.shipped",
+    "locale": "en",
+    "subject": "Order #{{ order_id }} shipped",
+    "body_template": "Hello, {{ user_name }}!\n\nYour order #{{ order_id }} has been shipped!\n\nTracking number: {{ tracking_number }}\nCarrier: {{ carrier }}\nExpected delivery: {{ delivery_date }}\n\nYou can track your package using the tracking number.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.cancelled",
+    "locale": "ru",
+    "subject": "Заказ #{{ order_id }} отменён",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nЗаказ №{{ order_id }} был отменён.\n\nПричина отмены: {{ reason }}\n\nСредства будут возвращены в течение {{ refund_period }} рабочих дней.\n\nЕсли у вас есть вопросы, свяжитесь с нашей службой поддержки.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "order.cancelled",
+    "locale": "en",
+    "subject": "Order #{{ order_id }} cancelled",
+    "body_template": "Hello, {{ user_name }}!\n\nOrder #{{ order_id }} has been cancelled.\n\nCancellation reason: {{ reason }}\n\nFunds will be refunded within {{ refund_period }} business days.\n\nIf you have any questions, please contact our support team.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "payment.succeeded",
+    "locale": "ru",
+    "subject": "Оплата заказа #{{ order_id }} прошла успешно",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nОплата по заказу №{{ order_id }} успешно прошла.\n\nСумма: {{ amount }} ₽\nМетод оплаты: {{ payment_method }}\n\nЗаказ передан продавцу на обработку.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "payment.succeeded",
+    "locale": "en",
+    "subject": "Payment for order #{{ order_id }} succeeded",
+    "body_template": "Hello, {{ user_name }}!\n\nPayment for order #{{ order_id }} has been completed successfully.\n\nAmount: {{ amount }} ₽\nPayment method: {{ payment_method }}\n\nThe order has been forwarded to the seller for processing.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "payment.failed",
+    "locale": "ru",
+    "subject": "Оплата заказа #{{ order_id }} не прошла",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nК сожалению, оплата заказа №{{ order_id }} не прошла.\n\nСумма: {{ amount }} ₽\nПричина: {{ fail_reason }}\n\nПожалуйста, попробуйте другой способ оплаты в личном кабинете.\n\nЗаказ будет автоматически отменён через {{ auto_cancel_hours }} часов.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "payment.failed",
+    "locale": "en",
+    "subject": "Payment for order #{{ order_id }} failed",
+    "body_template": "Hello, {{ user_name }}!\n\nUnfortunately, payment for order #{{ order_id }} has failed.\n\nAmount: {{ amount }} ₽\nReason: {{ fail_reason }}\n\nPlease try a different payment method in your account.\n\nThe order will be automatically cancelled in {{ auto_cancel_hours }} hours.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "stock.depleted",
+    "locale": "ru",
+    "subject": "Товар \"{{ product_name }}\" закончился на складе",
+    "body_template": "Внимание, {{ user_name }}!\n\nТовар \"{{ product_name }}\" (артикул: {{ sku }}) на складе {{ warehouse }} закончился.\n\nТекущий остаток: {{ current_stock }} шт.\nПороговое значение: {{ threshold }} шт.\n\nПожалуйста, пополните складские запасы.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "stock.depleted",
+    "locale": "en",
+    "subject": "Product \"{{ product_name }}\" out of stock",
+    "body_template": "Attention, {{ user_name }}!\n\nProduct \"{{ product_name }}\" (SKU: {{ sku }}) is out of stock at warehouse {{ warehouse }}.\n\nCurrent stock: {{ current_stock }} pcs\nThreshold: {{ threshold }} pcs\n\nPlease restock the warehouse.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "user.blocked",
+    "locale": "ru",
+    "subject": "Ваш аккаунт заблокирован",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВаш аккаунт был заблокирован.\n\nПричина: {{ reason }}\nДата блокировки: {{ blocked_at }}\n\nЕсли вы считаете, что это ошибка, свяжитесь со службой поддержки.",
+    "channels": ["email"],
+    "is_active": true
+  },
+  {
+    "code": "user.blocked",
+    "locale": "en",
+    "subject": "Your account has been blocked",
+    "body_template": "Hello, {{ user_name }}!\n\nYour account has been blocked.\n\nReason: {{ reason }}\nBlock date: {{ blocked_at }}\n\nIf you believe this is a mistake, please contact our support team.",
+    "channels": ["email"],
+    "is_active": true
+  },
+  {
+    "code": "user.unblocked",
+    "locale": "ru",
+    "subject": "Ваш аккаунт разблокирован",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВаш аккаунт был разблокирован.\n\nДата разблокировки: {{ unblocked_at }}\n\nТеперь вы можете снова пользоваться нашей торговой площадкой.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "user.unblocked",
+    "locale": "en",
+    "subject": "Your account has been unblocked",
+    "body_template": "Hello, {{ user_name }}!\n\nYour account has been unblocked.\n\nUnblock date: {{ unblocked_at }}\n\nYou can now use our marketplace again.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "password.reset",
+    "locale": "ru",
+    "subject": "Сброс пароля",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВы запросили сброс пароля.\n\nДля сброса пароля перейдите по ссылке:\n{{ reset_link }}\n\nСсылка действительна в течение {{ link_ttl_hours }} часов.\n\nЕсли вы не запрашивали сброс пароля, проигнорируйте это письмо.",
+    "channels": ["email"],
+    "is_active": true
+  },
+  {
+    "code": "password.reset",
+    "locale": "en",
+    "subject": "Password reset",
+    "body_template": "Hello, {{ user_name }}!\n\nYou have requested a password reset.\n\nTo reset your password, click the link below:\n{{ reset_link }}\n\nThe link is valid for {{ link_ttl_hours }} hours.\n\nIf you did not request a password reset, please ignore this email.",
+    "channels": ["email"],
+    "is_active": true
+  },
+  {
+    "code": "cart.expired",
+    "locale": "ru",
+    "subject": "Ваша корзина скоро истечёт",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nТовары в вашей корзине скоро будут зарезервированы.\n\nКоличество товаров: {{ item_count }}\nСумма корзины: {{ total_amount }} ₽\n\nЧтобы не потерять выбранные товары, оформите заказ.\n\nКорзина истекает: {{ expires_at }}",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "cart.expired",
+    "locale": "en",
+    "subject": "Your cart is about to expire",
+    "body_template": "Hello, {{ user_name }}!\n\nItems in your cart will soon expire.\n\nItems count: {{ item_count }}\nCart total: {{ total_amount }} ₽\n\nTo keep your selected items, please place your order.\n\nCart expires: {{ expires_at }}",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "report.generated",
+    "locale": "ru",
+    "subject": "Отчёт \"{{ report_name }}\" готов",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nВаш отчёт \"{{ report_name }}\" готов к скачиванию.\n\nПериод: {{ report_period }}\nФормат: {{ report_format }}\n\nСсылка для скачивания: {{ download_link }}\n\nОтчёт будет доступен в течение {{ retention_days }} дней.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "report.generated",
+    "locale": "en",
+    "subject": "Report \"{{ report_name }}\" is ready",
+    "body_template": "Hello, {{ user_name }}!\n\nYour report \"{{ report_name }}\" is ready for download.\n\nPeriod: {{ report_period }}\nFormat: {{ report_format }}\n\nDownload link: {{ download_link }}\n\nThe report will be available for {{ retention_days }} days.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "import.completed",
+    "locale": "ru",
+    "subject": "Импорт данных завершён",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nИмпорт данных успешно завершён.\n\nФайл: {{ filename }}\nОбработано записей: {{ records_processed }}\nСоздано: {{ created }}\nОбновлено: {{ updated }}\nОшибок: {{ errors }}",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "import.completed",
+    "locale": "en",
+    "subject": "Data import completed",
+    "body_template": "Hello, {{ user_name }}!\n\nData import has been completed successfully.\n\nFile: {{ filename }}\nRecords processed: {{ records_processed }}\nCreated: {{ created }}\nUpdated: {{ updated }}\nErrors: {{ errors }}",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "import.failed",
+    "locale": "ru",
+    "subject": "Ошибка импорта данных",
+    "body_template": "Здравствуйте, {{ user_name }}!\n\nИмпорт данных не удался.\n\nФайл: {{ filename }}\nПричина: {{ fail_reason }}\n\nПожалуйста, проверьте файл и попробуйте снова.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  },
+  {
+    "code": "import.failed",
+    "locale": "en",
+    "subject": "Data import failed",
+    "body_template": "Hello, {{ user_name }}!\n\nData import has failed.\n\nFile: {{ filename }}\nReason: {{ fail_reason }}\n\nPlease check the file and try again.",
+    "channels": ["email", "websocket"],
+    "is_active": true
+  }
+]

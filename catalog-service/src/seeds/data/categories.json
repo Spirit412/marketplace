@@ -1,0 +1,405 @@
+[
+  {
+    "name": "Electronics",
+    "slug": "electronics",
+    "description": "Electronic devices, gadgets, and accessories",
+    "children": [
+      {
+        "name": "Computers & Tablets",
+        "slug": "computers-tablets",
+        "description": "Laptops, desktops, tablets, and computer accessories",
+        "children": [
+          {
+            "name": "Laptops",
+            "slug": "laptops",
+            "description": "Notebooks and laptop computers"
+          },
+          {
+            "name": "Desktops",
+            "slug": "desktops",
+            "description": "Desktop computers and all-in-ones"
+          },
+          {
+            "name": "Tablets",
+            "slug": "tablets",
+            "description": "Tablet computers and e-readers"
+          }
+        ]
+      },
+      {
+        "name": "Smartphones & Accessories",
+        "slug": "smartphones-accessories",
+        "description": "Mobile phones, cases, screen protectors, and accessories",
+        "children": [
+          {
+            "name": "Smartphones",
+            "slug": "smartphones",
+            "description": "Mobile phones and smartphones"
+          },
+          {
+            "name": "Cases & Covers",
+            "slug": "cases-covers",
+            "description": "Phone cases, covers, and skins"
+          },
+          {
+            "name": "Screen Protectors",
+            "slug": "screen-protectors",
+            "description": "Tempered glass and film screen protectors"
+          }
+        ]
+      },
+      {
+        "name": "Audio",
+        "slug": "audio",
+        "description": "Headphones, speakers, earbuds, and audio equipment",
+        "children": [
+          {
+            "name": "Headphones",
+            "slug": "headphones",
+            "description": "Over-ear and on-ear headphones"
+          },
+          {
+            "name": "Speakers",
+            "slug": "speakers",
+            "description": "Portable and home speakers"
+          },
+          {
+            "name": "Earbuds",
+            "slug": "earbuds",
+            "description": "In-ear headphones and wireless earbuds"
+          }
+        ]
+      },
+      {
+        "name": "TV & Video",
+        "slug": "tv-video",
+        "description": "Televisions, streaming devices, and video equipment",
+        "children": [
+          {
+            "name": "TVs",
+            "slug": "tvs",
+            "description": "LED, OLED, and QLED televisions"
+          },
+          {
+            "name": "Streaming Devices",
+            "slug": "streaming-devices",
+            "description": "Media streamers and TV sticks"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Clothing & Accessories",
+    "slug": "clothing-accessories",
+    "description": "Apparel, fashion accessories, and footwear",
+    "children": [
+      {
+        "name": "Men's Clothing",
+        "slug": "mens-clothing",
+        "description": "Clothing for men",
+        "children": [
+          {
+            "name": "Shirts",
+            "slug": "shirts",
+            "description": "Dress shirts, t-shirts, and casual shirts"
+          },
+          {
+            "name": "Pants",
+            "slug": "pants",
+            "description": "Trousers, jeans, and casual pants"
+          },
+          {
+            "name": "Jackets",
+            "slug": "jackets",
+            "description": "Jackets, coats, and outerwear"
+          }
+        ]
+      },
+      {
+        "name": "Women's Clothing",
+        "slug": "womens-clothing",
+        "description": "Clothing for women",
+        "children": [
+          {
+            "name": "Dresses",
+            "slug": "dresses",
+            "description": "Dresses and gowns"
+          },
+          {
+            "name": "Tops",
+            "slug": "tops",
+            "description": "Blouses, t-shirts, and casual tops"
+          },
+          {
+            "name": "Skirts",
+            "slug": "skirts",
+            "description": "Skirts of all lengths"
+          }
+        ]
+      },
+      {
+        "name": "Shoes",
+        "slug": "shoes",
+        "description": "Footwear for all occasions",
+        "children": [
+          {
+            "name": "Sneakers",
+            "slug": "sneakers",
+            "description": "Athletic and casual sneakers"
+          },
+          {
+            "name": "Boots",
+            "slug": "boots",
+            "description": "Boots and work footwear"
+          },
+          {
+            "name": "Sandals",
+            "slug": "sandals",
+            "description": "Sandals and flip-flops"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Books & Media",
+    "slug": "books-media",
+    "description": "Books, magazines, and media content",
+    "children": [
+      {
+        "name": "Fiction",
+        "slug": "fiction",
+        "description": "Fiction books and literature",
+        "children": [
+          {
+            "name": "Novels",
+            "slug": "novels",
+            "description": "Full-length fiction novels"
+          },
+          {
+            "name": "Short Stories",
+            "slug": "short-stories",
+            "description": "Short story collections"
+          }
+        ]
+      },
+      {
+        "name": "Non-Fiction",
+        "slug": "non-fiction",
+        "description": "Non-fiction books",
+        "children": [
+          {
+            "name": "Science & Technology",
+            "slug": "science-technology",
+            "description": "Science, engineering, and tech books"
+          },
+          {
+            "name": "History",
+            "slug": "history",
+            "description": "History books and biographies"
+          }
+        ]
+      },
+      {
+        "name": "Educational",
+        "slug": "educational",
+        "description": "Educational materials and textbooks",
+        "children": [
+          {
+            "name": "Textbooks",
+            "slug": "textbooks",
+            "description": "Academic textbooks"
+          },
+          {
+            "name": "Study Guides",
+            "slug": "study-guides",
+            "description": "Test prep and study materials"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Home & Garden",
+    "slug": "home-garden",
+    "description": "Home improvement, furniture, and garden supplies",
+    "children": [
+      {
+        "name": "Furniture",
+        "slug": "furniture",
+        "description": "Indoor and outdoor furniture",
+        "children": [
+          {
+            "name": "Living Room",
+            "slug": "living-room",
+            "description": "Sofas, tables, and living room furniture"
+          },
+          {
+            "name": "Bedroom",
+            "slug": "bedroom",
+            "description": "Beds, dressers, and bedroom furniture"
+          },
+          {
+            "name": "Kitchen",
+            "slug": "kitchen",
+            "description": "Kitchen tables, chairs, and storage"
+          }
+        ]
+      },
+      {
+        "name": "Kitchen & Dining",
+        "slug": "kitchen-dining",
+        "description": "Cookware, utensils, and dining accessories",
+        "children": [
+          {
+            "name": "Cookware",
+            "slug": "cookware",
+            "description": "Pots, pans, and cooking equipment"
+          },
+          {
+            "name": "Utensils",
+            "slug": "utensils",
+            "description": "Kitchen tools and utensils"
+          }
+        ]
+      },
+      {
+        "name": "Garden & Outdoor",
+        "slug": "garden-outdoor",
+        "description": "Garden supplies and outdoor living",
+        "children": [
+          {
+            "name": "Plants & Seeds",
+            "slug": "plants-seeds",
+            "description": "Live plants, seeds, and gardening supplies"
+          },
+          {
+            "name": "Garden Tools",
+            "slug": "garden-tools",
+            "description": "Gardening tools and equipment"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Sports & Outdoors",
+    "slug": "sports-outdoors",
+    "description": "Sports equipment, fitness gear, and outdoor recreation",
+    "children": [
+      {
+        "name": "Exercise & Fitness",
+        "slug": "exercise-fitness",
+        "description": "Fitness equipment and workout gear",
+        "children": [
+          {
+            "name": "Cardio Equipment",
+            "slug": "cardio-equipment",
+            "description": "Treadmills, exercise bikes, and ellipticals"
+          },
+          {
+            "name": "Yoga & Pilates",
+            "slug": "yoga-pilates",
+            "description": "Yoga mats, blocks, and pilates equipment"
+          }
+        ]
+      },
+      {
+        "name": "Outdoor Recreation",
+        "slug": "outdoor-recreation",
+        "description": "Camping, hiking, and outdoor gear",
+        "children": [
+          {
+            "name": "Camping",
+            "slug": "camping",
+            "description": "Tents, sleeping bags, and camping equipment"
+          },
+          {
+            "name": "Hiking",
+            "slug": "hiking",
+            "description": "Hiking gear, backpacks, and accessories"
+          }
+        ]
+      },
+      {
+        "name": "Team Sports",
+        "slug": "team-sports",
+        "description": "Equipment for team sports",
+        "children": [
+          {
+            "name": "Football",
+            "slug": "football",
+            "description": "Football gear and equipment"
+          },
+          {
+            "name": "Basketball",
+            "slug": "basketball",
+            "description": "Basketball gear and equipment"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Beauty & Health",
+    "slug": "beauty-health",
+    "description": "Beauty products, personal care, and health supplies",
+    "children": [
+      {
+        "name": "Skin Care",
+        "slug": "skin-care",
+        "description": "Moisturizers, cleansers, and skin treatments"
+      },
+      {
+        "name": "Hair Care",
+        "slug": "hair-care",
+        "description": "Shampoos, conditioners, and styling products"
+      },
+      {
+        "name": "Makeup",
+        "slug": "makeup",
+        "description": "Cosmetics and makeup products"
+      }
+    ]
+  },
+  {
+    "name": "Toys & Games",
+    "slug": "toys-games",
+    "description": "Toys, games, and entertainment",
+    "children": [
+      {
+        "name": "Board Games",
+        "slug": "board-games",
+        "description": "Board games and puzzles"
+      },
+      {
+        "name": "Video Games",
+        "slug": "video-games",
+        "description": "Video games and gaming accessories"
+      },
+      {
+        "name": "Outdoor Toys",
+        "slug": "outdoor-toys",
+        "description": "Outdoor and playground toys"
+      }
+    ]
+  },
+  {
+    "name": "Auto & Parts",
+    "slug": "auto-parts",
+    "description": "Automotive parts, accessories, and tools",
+    "children": [
+      {
+        "name": "Car Accessories",
+        "slug": "car-accessories",
+        "description": "Interior and exterior car accessories"
+      },
+      {
+        "name": "Motorcycle Parts",
+        "slug": "motorcycle-parts",
+        "description": "Motorcycle parts and accessories"
+      }
+    ]
+  }
+]

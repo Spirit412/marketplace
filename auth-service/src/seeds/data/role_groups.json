@@ -1,0 +1,7 @@
+{
+  "super_admin": ["super_admin_full_access"],
+  "admin": ["admin_full_access"],
+  "moderator": ["moderator_access"],
+  "seller": ["seller_access"],
+  "customer": ["customer_orders"]
+}

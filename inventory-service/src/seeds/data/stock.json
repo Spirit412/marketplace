@@ -1,0 +1,16 @@
+{
+  "warehouse": {
+    "name": "Main Warehouse",
+    "address": "1 Demo Street, Warehouse District",
+    "timezone": "UTC"
+  },
+  "skus": [
+    "WH-1-BLK",
+    "TW-2-WHT",
+    "BS-3-BLU",
+    "MT-CLASSIC-M",
+    "WS-FLEX-38",
+    "BP-CITY-BLK"
+  ],
+  "quantity_per_sku": 100
+}

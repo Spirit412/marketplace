@@ -1,0 +1,31 @@
+# --- secrets: .env files hold JWT_SECRET_KEY, SYSTEM_TOKEN, DB passwords ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- tooling / local state ---
+.serena/
+graphify-out/
+.claude/
+uploads/
+reports/
+*.log
+
+# --- editors ---
+.idea/
+.vscode/
+.DS_Store

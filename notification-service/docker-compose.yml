@@ -1,0 +1,25 @@
+services:
+
+  mp-notification-service:
+    container_name: mp-${APP_NAME}
+    hostname: mp-${APP_NAME}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    tty: true
+    volumes:
+      - ./src:/usr/src/src
+    command: uvicorn src.main:app --host 0.0.0.0 --port ${APP_PORT} --reload --log-level debug --workers 1
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    networks:
+      - proxynet
+
+networks:
+  proxynet:
+    driver: bridge
+    external: true
+    name: proxynet

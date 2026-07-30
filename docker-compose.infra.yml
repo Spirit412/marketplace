@@ -1,0 +1,85 @@
+# Shared infrastructure for Multi-Vendor Marketplace
+# Admin panels: RMQ http://localhost:15673, Redis http://localhost:8081
+# Ports: PG 5432, Redis 6380, RMQ 5673/15673
+#
+# Usage:
+#   docker compose -f docker-compose.infra.yml up -d
+
+services:
+
+  mp-postgres:
+    image: postgres:16-alpine
+    container_name: mp-postgres
+    hostname: mp-postgres
+    restart: unless-stopped
+    shm_size: 256mb
+    environment:
+      POSTGRES_USER: marketplace
+      POSTGRES_PASSWORD: marketplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_mp:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketplace"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxynet
+
+  mp-redis:
+    image: redis:7-alpine
+    container_name: mp-redis
+    hostname: mp-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxynet
+
+  redis-admin:
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: mp-redis-admin
+    hostname: mp-redis-admin
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: mp-redis
+      REDIS_PORT: 6379
+    ports:
+      - "8082:8081"
+    networks:
+      - proxynet
+
+  mp-rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: mp-rabbitmq
+    hostname: mp-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: marketplace
+      RABBITMQ_DEFAULT_PASS: marketplace
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - proxynet
+
+volumes:
+  pgdata_mp:
+
+networks:
+  proxynet:
+    driver: bridge
+    external: true
+    name: proxynet

@@ -1,0 +1,8 @@
+**/*.env
+**/Dockerfile
+**/*__pycache__
+**/tests/*
+**/.venv
+**/.git
+**/.mypy_cache
+**/.pytest_cache

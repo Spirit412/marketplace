@@ -1,0 +1,60 @@
+[
+  {
+    "name": "super_admin_full_access",
+    "description": "Полный доступ ко всем сервисам (все методы)",
+    "permissions": [
+      "AUTH:GET:/*", "AUTH:POST:/*", "AUTH:PUT:/*", "AUTH:PATCH:/*", "AUTH:DELETE:/*",
+      "CATALOG:GET:/*", "CATALOG:POST:/*", "CATALOG:PUT:/*", "CATALOG:PATCH:/*", "CATALOG:DELETE:/*",
+      "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*",
+      "INVENTORY:GET:/*", "INVENTORY:POST:/*", "INVENTORY:PUT:/*", "INVENTORY:PATCH:/*", "INVENTORY:DELETE:/*",
+      "NOTIFICATION:GET:/*", "NOTIFICATION:POST:/*", "NOTIFICATION:PUT:/*", "NOTIFICATION:PATCH:/*", "NOTIFICATION:DELETE:/*",
+      "DICTIONARY:GET:/*", "DICTIONARY:POST:/*", "DICTIONARY:PUT:/*", "DICTIONARY:PATCH:/*", "DICTIONARY:DELETE:/*",
+      "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
+      "REPORT:GET:/*", "REPORT:POST:/*", "REPORT:PUT:/*", "REPORT:PATCH:/*", "REPORT:DELETE:/*",
+      "SCHEDULER:GET:/*", "SCHEDULER:POST:/*", "SCHEDULER:PUT:/*", "SCHEDULER:PATCH:/*", "SCHEDULER:DELETE:/*",
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*", "PAYMENT:PUT:/*", "PAYMENT:PATCH:/*", "PAYMENT:DELETE:/*"
+    ]
+  },
+  {
+    "name": "admin_full_access",
+    "description": "Административный доступ: все сервисы, DICTIONARY без DELETE, PAYMENT без DELETE",
+    "permissions": [
+      "AUTH:GET:/*", "AUTH:POST:/*", "AUTH:PUT:/*", "AUTH:PATCH:/*", "AUTH:DELETE:/*",
+      "CATALOG:GET:/*", "CATALOG:POST:/*", "CATALOG:PUT:/*", "CATALOG:PATCH:/*", "CATALOG:DELETE:/*",
+      "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*",
+      "INVENTORY:GET:/*", "INVENTORY:POST:/*", "INVENTORY:PUT:/*", "INVENTORY:PATCH:/*", "INVENTORY:DELETE:/*",
+      "NOTIFICATION:GET:/*", "NOTIFICATION:POST:/*", "NOTIFICATION:PUT:/*", "NOTIFICATION:PATCH:/*", "NOTIFICATION:DELETE:/*",
+      "DICTIONARY:GET:/*", "DICTIONARY:POST:/*", "DICTIONARY:PUT:/*", "DICTIONARY:PATCH:/*",
+      "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
+      "REPORT:GET:/*", "REPORT:POST:/*", "REPORT:PUT:/*", "REPORT:PATCH:/*", "REPORT:DELETE:/*",
+      "SCHEDULER:GET:/*", "SCHEDULER:POST:/*", "SCHEDULER:PUT:/*", "SCHEDULER:PATCH:/*", "SCHEDULER:DELETE:/*",
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*"
+    ]
+  },
+  {
+    "name": "moderator_access",
+    "description": "Модератор: CATALOG (write), ORDER (read)",
+    "permissions": [
+      "CATALOG:GET:/*", "CATALOG:POST:/*", "CATALOG:PUT:/*", "CATALOG:PATCH:/*",
+      "ORDER:GET:/*"
+    ]
+  },
+  {
+    "name": "seller_access",
+    "description": "Продавец: CATALOG, INVENTORY, IMPORT (all), ORDER, REPORT (read)",
+    "permissions": [
+      "CATALOG:GET:/*", "CATALOG:POST:/*", "CATALOG:PUT:/*", "CATALOG:PATCH:/*", "CATALOG:DELETE:/*",
+      "ORDER:GET:/*",
+      "INVENTORY:GET:/*", "INVENTORY:POST:/*", "INVENTORY:PUT:/*", "INVENTORY:PATCH:/*", "INVENTORY:DELETE:/*",
+      "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
+      "REPORT:GET:/*"
+    ]
+  },
+  {
+    "name": "customer_orders",
+    "description": "Покупатель: только заказы (все методы)",
+    "permissions": [
+      "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*"
+    ]
+  }
+]

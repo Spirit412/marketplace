@@ -1,0 +1,7 @@
+[
+  {"name": "super_admin", "description": "Супер-администратор — полный доступ ко всем сервисам", "is_admin": true},
+  {"name": "admin", "description": "Администратор — управление сервисами", "is_admin": true},
+  {"name": "moderator", "description": "Модератор — управление каталогом, просмотр заказов", "is_admin": false},
+  {"name": "seller", "description": "Продавец — управление товарами, инвентарём, импортом", "is_admin": false},
+  {"name": "customer", "description": "Покупатель — только заказы", "is_admin": false}
+]
