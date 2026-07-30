@@ -1,3 +1,5 @@
+from typing import Any
+
 import httpx
 
 from src.config.settings import settings
@@ -14,7 +16,7 @@ class CatalogClient:
             self._client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
         return self._client
 
-    async def get_product(self, product_id: str) -> dict | None:
+    async def get_product(self, product_id: str) -> dict[str, Any] | None:
         client = await self._get_client()
         headers = {"Authorization": f"Bearer {self._system_token}"}
         response = await client.get(
@@ -22,7 +24,8 @@ class CatalogClient:
             headers=headers,
         )
         if response.status_code == 200:
-            return response.json()
+            product: dict[str, Any] = response.json()
+            return product
         return None
 
     async def close(self) -> None:

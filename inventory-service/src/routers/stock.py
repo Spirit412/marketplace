@@ -38,11 +38,11 @@ router = APIRouter(prefix="/stock", tags=["stock"])
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def check_stock(
+    service: Annotated[InventoryService, Depends(Inject(InventoryService))],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     product_id: uuid.UUID = Query(...),
     warehouse_id: uuid.UUID = Query(...),
-    service: Annotated[InventoryService, Depends(Inject(InventoryService))] = None,
-    session: Annotated[AsyncSession, Depends(get_async_session)] = None,
-    token_payload: Annotated[TokenPayload, Depends(get_token_payload)] = None,
 ) -> StockResponse:
     """Check stock levels for a product at a warehouse."""
     return await service.check_stock(
@@ -59,10 +59,10 @@ async def check_stock(
 )
 async def check_stock_by_product(
     product_id: uuid.UUID,
+    service: Annotated[InventoryService, Depends(Inject(InventoryService))],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     quantity: int = Query(gt=0),
-    service: Annotated[InventoryService, Depends(Inject(InventoryService))] = None,
-    session: Annotated[AsyncSession, Depends(get_async_session)] = None,
-    token_payload: Annotated[TokenPayload, Depends(get_token_payload)] = None,
 ) -> StockResponse:
     """Find a warehouse with enough stock, without the caller knowing which one.
 
@@ -204,13 +204,13 @@ async def return_stock(
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_movements(
+    service: Annotated[MovementService, Depends(Inject(MovementService))],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     stock_item_id: uuid.UUID = Query(...),
     movement_type: str | None = Query(default=None),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
-    service: Annotated[MovementService, Depends(Inject(MovementService))] = None,
-    session: Annotated[AsyncSession, Depends(get_async_session)] = None,
-    token_payload: Annotated[TokenPayload, Depends(get_token_payload)] = None,
 ) -> list[StockMovementResponse]:
     """List stock movements for a stock item with optional filtering."""
     return await service.list_by_stock_item(

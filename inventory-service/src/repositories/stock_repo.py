@@ -40,7 +40,7 @@ class StockRepo:
     async def get_or_create(
         self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
     ) -> StockItem:
-        item = await self.get_by_product_and_warehouse(product_id, warehouse_id)
+        item = await self.get_by_product_and_warehouse(session, product_id, warehouse_id)
         if item is None:
             item = StockItem(product_id=product_id, warehouse_id=warehouse_id)
             session.add(item)
@@ -70,7 +70,7 @@ class StockRepo:
     async def get_available_quantity(
         self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
     ) -> int:
-        item = await self.get_by_product_and_warehouse(product_id, warehouse_id)
+        item = await self.get_by_product_and_warehouse(session, product_id, warehouse_id)
         if item is None:
             return 0
         return item.quantity - item.reserved
