@@ -10,11 +10,11 @@ from src.config.settings import settings
 logger = logging.getLogger(__name__)
 
 _connection: aio_pika.RobustConnection | None = None
-_channel: aio_pika.RobustChannel | None = None
+_channel: aio_pika.abc.AbstractChannel | None = None
 _lock = asyncio.Lock()
 
 
-async def _get_channel() -> aio_pika.RobustChannel:
+async def _get_channel() -> aio_pika.abc.AbstractChannel:
     global _connection, _channel
 
     if _channel is not None and not _channel.is_closed:
