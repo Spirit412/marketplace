@@ -3,6 +3,7 @@ import logging
 
 from src.config.settings import settings
 from src.enums.channel import Channel
+from src.engines.ws_manager import WebSocketManager
 from src.models.notification import Notification
 from src.schemes.ws_message import WSMessage
 
@@ -82,7 +83,7 @@ class PushChannel(BaseChannel):
 class WebSocketChannel(BaseChannel):
     """Deliver notification via WebSocket manager."""
 
-    def __init__(self, ws_manager: object) -> None:
+    def __init__(self, ws_manager: WebSocketManager) -> None:
         self._ws_manager = ws_manager
 
     async def send(self, notification: Notification) -> bool:
@@ -94,7 +95,7 @@ class WebSocketChannel(BaseChannel):
                 notification_type=notification.notification_type,
                 timestamp=notification.created_at,
             )
-            await self._ws_manager.send_to_user(notification.user_uuid, msg)
+            await self._ws_manager.send_to_user(str(notification.user_uuid), msg)
             return True
         except Exception as exc:
             logger.warning("WebSocketChannel failed for %s: %s", notification.id, exc)
@@ -104,7 +105,7 @@ class WebSocketChannel(BaseChannel):
 class ChannelRegistry:
     """Registry mapping Channel → strategy class."""
 
-    def __init__(self, ws_manager: object | None = None) -> None:
+    def __init__(self, ws_manager: WebSocketManager | None = None) -> None:
         self._strategies: dict[str, BaseChannel] = {
             Channel.email: EmailChannel(),
             Channel.sms: SmsChannel(),

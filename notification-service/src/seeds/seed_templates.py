@@ -19,6 +19,7 @@ import time
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -30,7 +31,12 @@ from sqlalchemy import (
     select,
     text,
 )
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncConnection,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 logger = logging.getLogger(__name__)
@@ -72,7 +78,7 @@ class _Template(_Base):
     locale: Mapped[str] = mapped_column(String(8), nullable=False, default="ru")
     subject: Mapped[str] = mapped_column(String(512), nullable=False, default="")
     body_template: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    channels: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    channels: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -83,17 +89,18 @@ class _Template(_Base):
     )
 
 
-def _load_seed_data() -> list[dict]:
+def _load_seed_data() -> list[dict[str, Any]]:
     with open(DATA_FILE, encoding="utf-8") as f:
-        return json.load(f)
+        data: list[dict[str, Any]] = json.load(f)
+        return data
 
 
-async def _ensure_schema(conn):
+async def _ensure_schema(conn: AsyncConnection) -> None:
     await conn.execute(text('CREATE SCHEMA IF NOT EXISTS "notification"'))
     await conn.commit()
 
 
-async def _upsert_template(session: AsyncSession, data: dict) -> _Template:
+async def _upsert_template(session: AsyncSession, data: dict[str, Any]) -> _Template:
     """Upsert a single template by (code, locale). Returns the _Template."""
     stmt = select(_Template).where(
         _Template.code == data["code"],

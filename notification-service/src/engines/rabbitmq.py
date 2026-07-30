@@ -1,29 +1,16 @@
 import asyncio
 import logging
 
-try:
-    from faststream.rabbit import (
-        ExchangeType,
-        RabbitBroker,
-        RabbitExchange,
-        RabbitQueue,
-        RabbitRouter,
-    )
-except ImportError:
-    RabbitBroker = None
-    RabbitRouter = None
-    RabbitExchange = None
-    RabbitQueue = None
-    ExchangeType = None
+from faststream.rabbit import RabbitBroker, RabbitRouter
 
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
 _lock = asyncio.Lock()
-_broker: "RabbitBroker | None" = None
+_broker: RabbitBroker | None = None
 
 
-async def get_broker() -> "RabbitBroker":
+async def get_broker() -> RabbitBroker:
     global _broker
     if _broker is not None:
         return _broker
@@ -45,6 +32,6 @@ async def check_rabbitmq() -> None:
         raise RuntimeError("RabbitMQ not connected")
 
 
-def create_subscriber_router() -> "RabbitRouter":
+def create_subscriber_router() -> RabbitRouter:
     """Factory for a fresh FastStream RabbitRouter to attach @router.subscriber(...) handlers to."""
     return RabbitRouter()

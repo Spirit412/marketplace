@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -102,7 +103,7 @@ async def send_notification(
     token: TokenPayload = Depends(get_token_payload),
     service: NotificationService = Depends(get_notification_service),
     session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Send a notification to one or more users."""
     if request.user_uuids is None:
         raise HTTPException(
@@ -133,7 +134,7 @@ async def mark_read(
     notification_uuid: uuid.UUID,
     token: TokenPayload = Depends(get_token_payload),
     session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Mark a specific notification as read."""
     repo = NotificationRepository()
     result = await repo.mark_read(session, notification_uuid)

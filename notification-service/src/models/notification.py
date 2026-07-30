@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, Index, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -86,7 +87,7 @@ class Template(TimestampMixin, SoftDeleteMixin, Base):
     body_template: Mapped[str] = mapped_column(
         Text, nullable=False, default="", comment="Шаблон текста сообщения"
     )
-    channels: Mapped[dict | None] = mapped_column(
+    channels: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB, nullable=True, comment="Каналы, для которых применим шаблон"
     )
     is_active: Mapped[bool] = mapped_column(

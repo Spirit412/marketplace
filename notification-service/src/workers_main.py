@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Any
 
 from faststream.rabbit import RabbitBroker
 
@@ -28,7 +29,7 @@ async def main() -> None:
     router = create_subscriber_router()
 
     @router.subscriber("notification.all_events")
-    async def handle_event(body: dict) -> None:
+    async def handle_event(body: dict[str, Any]) -> None:
         try:
             payload = NotificationPayload(**body)
             async for session in get_async_session():
@@ -45,7 +46,7 @@ async def main() -> None:
         logger.info("Notification worker started, listening for events...")
         await asyncio.Event().wait()
     finally:
-        await broker.close()
+        await broker.stop()
         await ws_manager.close_all()
 
 
