@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,7 +68,7 @@ class ReportRepo:
         file_path: str | None = None,
         error_message: str | None = None,
     ) -> Report | None:
-        values: dict = {"status": status, "updated_at": datetime.now(UTC)}
+        values: dict[str, Any] = {"status": status, "updated_at": datetime.now(UTC)}
         if file_path is not None:
             values["file_path"] = file_path
         if error_message is not None:

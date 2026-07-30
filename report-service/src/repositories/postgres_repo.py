@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,10 +13,10 @@ class PostgresRepository:
 
     async def get_sellers(
         self, session: AsyncSession, filter_str: str | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         return []
 
     async def get_inventory_items(
         self, session: AsyncSession, seller_id: uuid.UUID | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         return []

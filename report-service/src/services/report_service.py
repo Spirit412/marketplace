@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -217,7 +218,7 @@ class ReportService:
         report_id: uuid.UUID,
         report_type: str,
         fmt: str,
-        parameters: dict,
+        parameters: dict[str, Any],
     ) -> None:
         """Background task: execute query, format, save, and publish completion."""
         try:

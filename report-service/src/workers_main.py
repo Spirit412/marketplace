@@ -3,13 +3,17 @@
 Subscribes to report.generate.* events and processes them asynchronously.
 """
 
+from typing import Any
+
+from faststream.rabbit import RabbitBroker
+
 from src.engines.rabbitmq import get_broker
 from src.services.report_service import ReportService
 
-_broker = None
+_broker: RabbitBroker | None = None
 
 
-def _get_broker():
+def _get_broker() -> RabbitBroker:
     global _broker
     if _broker is None:
         _broker = get_broker()
@@ -17,7 +21,7 @@ def _get_broker():
 
 
 async def handle_report_generation(
-    payload: dict,
+    payload: dict[str, Any],
 ) -> None:
     """Handle async report generation requests."""
     from src.core.database import _get_session_factory

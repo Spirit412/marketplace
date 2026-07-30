@@ -1,13 +1,11 @@
-try:
-    from faststream.rabbit import RabbitBroker
-except ImportError:
-    RabbitBroker = None
+from faststream.rabbit import RabbitBroker
+
 from src.config.settings import settings
 
-_broker: "RabbitBroker | None" = None
+_broker: RabbitBroker | None = None
 
 
-def get_broker() -> "RabbitBroker":
+def get_broker() -> RabbitBroker:
     global _broker
     if _broker is None:
         _broker = RabbitBroker(url=settings.rabbitmq.url)

@@ -12,6 +12,7 @@ Usage:
 import asyncio
 import json
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -22,9 +23,10 @@ from src.models.report import ReportTemplate
 DATA_DIR = Path(__file__).parent / "data"
 
 
-def _load_json(name: str) -> list | dict:
+def _load_json(name: str) -> list[dict[str, Any]]:
     with open(DATA_DIR / name, encoding="utf-8") as fh:
-        return json.load(fh)
+        data: list[dict[str, Any]] = json.load(fh)
+        return data
 
 
 async def seed_report_templates(session: AsyncSession) -> None:

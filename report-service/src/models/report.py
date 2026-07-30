@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -30,7 +31,7 @@ class Report(TimestampMixin, SoftDeleteMixin, Base):
         nullable=False,
         comment="Тип отчёта (sales/inventory/customers/products)",
     )
-    parameters: Mapped[dict] = mapped_column(
+    parameters: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
@@ -80,7 +81,7 @@ class ReportTemplate(SoftDeleteMixin, Base):
     sql_template: Mapped[str] = mapped_column(
         Text, nullable=False, comment="SQL-запрос шаблона"
     )
-    parameters_schema: Mapped[dict] = mapped_column(
+    parameters_schema: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

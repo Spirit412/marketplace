@@ -92,5 +92,5 @@ exclude = ['\.venv', 'migration', 'alembic', 'tests', 'scripts']
 
 [[tool.mypy.overrides]]
 # no type stubs published for these third-party libraries
-module = ["jose.*"]
+module = ["jose.*", "openpyxl.*", "reportlab.*"]
 ignore_missing_imports = true
