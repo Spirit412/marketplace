@@ -31,8 +31,8 @@ class MappingService:
                 mapping[field] = normalized[field]
             elif field.upper() in (k.upper() for k in headers):
                 for header in headers:
-                    if h.strip().upper() == field.upper():
-                        mapping[field] = h.strip()
+                    if header.strip().upper() == field.upper():
+                        mapping[field] = header.strip()
                         break
 
         return mapping

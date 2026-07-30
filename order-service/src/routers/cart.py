@@ -67,6 +67,8 @@ async def add_to_cart(
     dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def remove_from_cart(
+    product_uuid: uuid.UUID,
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[CartService, Depends(Inject(CartService))],
 ) -> None:
     """Remove an item from the cart."""

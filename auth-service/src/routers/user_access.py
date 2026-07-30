@@ -14,6 +14,7 @@ from src.core.auth import (
 )
 from src.depends import get_service_session
 from src.repositories.session_repository import SessionRepository
+from src.repositories.user_repository import UserRepository
 from src.repositories.user_access_repository import UserAccessRepository
 from src.schemes.rbac import UserAccessAssignRequest, UserAccessResponse
 from src.services.auth_service import AuthService

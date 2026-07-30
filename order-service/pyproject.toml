@@ -40,7 +40,9 @@ package-mode = false
 
 [tool.ruff]
 target-version = "py312"
-include = ["src/**"]
+# only Python — src/ also holds .json seeds and .jinja2 templates,
+# which ruff would otherwise try to parse as Python
+include = ["src/**/*.py"]
 exclude = [".venv", ".git", "migrations", "scripts", "alembic"]
 line-length = 88
 
@@ -57,7 +59,16 @@ ignore = [
     "RUF001", "RUF002", "RUF003", "TD003", "FIX002",
     "D100", "D101", "D102", "D103", "D104", "D105", "D107",
     "EM101", "TRY003",
+    # no copyright headers in this project
+    "CPY001",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# SQLAlchemy models use string forward references that ruff cannot resolve
+# (related classes are imported under TYPE_CHECKING); F821 there is noise.
+"src/models/*.py" = ["F821"]
+# Alembic revisions are generated
+"src/alembic/**" = ["ALL"]
 
 [tool.ruff.lint.pylint]
 max-args = 10
