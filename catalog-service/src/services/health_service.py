@@ -1,5 +1,7 @@
 """Health check service — infrastructure probes delegated from router."""
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.config.settings import settings
 from src.core.health import HealthManager, HealthStatus
 from src.core.http_client import CircuitBreakerClient
@@ -27,7 +29,7 @@ class HealthService:
         client = CircuitBreakerClient(base_url=settings.DICTIONARY_SERVICE_URL)
         await client.get("/health")
 
-    async def check_all(self, session) -> HealthStatus:
+    async def check_all(self, session: AsyncSession) -> HealthStatus:
         self._manager.register("postgres", lambda: check_postgres(session))
         self._manager.register("redis", check_redis)
         self._manager.register("rabbitmq", self.check_rabbitmq)

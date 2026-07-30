@@ -12,7 +12,7 @@ def supports_soft_delete(model: type) -> bool:
     return isinstance(model, type) and issubclass(model, SoftDeleteMixin)
 
 
-def exclude_deleted[S: Select](
+def exclude_deleted[S: Select[Any]](
     stmt: S, model: type, include_deleted: bool = False
 ) -> S:
     """Filter soft-deleted rows out of a statement.
@@ -30,7 +30,7 @@ def exclude_deleted[S: Select](
     """
     if include_deleted or not supports_soft_delete(model):
         return stmt
-    return stmt.where(model.is_delete.is_(False))
+    return stmt.where(cast("type[SoftDeleteMixin]", model).is_delete.is_(False))
 
 
 def mark_deleted(instance: object, deleted: bool = True) -> None:
@@ -107,7 +107,7 @@ class BaseRepository[T: Base]:
         *,
         include_deleted: bool = False,
     ) -> T | None:
-        pk_col = getattr(self._model, "id", None) or self._model.uuid
+        pk_col = getattr(self._model, "id", None) or getattr(self._model, "uuid")
         stmt = select(self._model).where(pk_col == entity_id)
         stmt = self._apply_soft_delete_filter(stmt, include_deleted)
         result = await session.execute(stmt)

@@ -17,6 +17,7 @@ import asyncio
 import json
 import uuid
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,7 +40,12 @@ from src.services.role_service import RoleService
 DATA_DIR = Path(__file__).parent / "data"
 
 
-def _load_json(name: str) -> list | dict:
+def _load_json(name: str) -> Any:
+    """Load a seed data file.
+
+    Returns `Any`: callers annotate the variable with the shape that
+    specific file actually holds (a list of dicts, or a dict of lists).
+    """
     with open(DATA_DIR / name, encoding="utf-8") as fh:
         return json.load(fh)
 
@@ -55,14 +61,14 @@ async def seed_rbac(session: AsyncSession) -> None:
     group_svc = GroupService(group_repo, perm_repo)
 
     print("[1/6] Permissions...")
-    permissions_data: list[dict] = _load_json("permissions.json")
+    permissions_data: list[dict[str, Any]] = _load_json("permissions.json")
     perm_name_to_uuid: dict[str, uuid.UUID] = {}
     for entry in permissions_data:
-        existing = await perm_repo.get_by(
+        existing_permission = await perm_repo.get_by(
             session, app_id=entry["app_id"], method=entry["method"], path=entry["path"]
         )
-        if existing is None:
-            result = await perm_svc.create(
+        if existing_permission is None:
+            created_permission = await perm_svc.create(
                 session,
                 PermissionCreateRequest(
                     name=entry["name"],
@@ -71,27 +77,27 @@ async def seed_rbac(session: AsyncSession) -> None:
                     path=entry["path"],
                 ),
             )
-            perm_name_to_uuid[entry["name"]] = result.uuid
+            perm_name_to_uuid[entry["name"]] = created_permission.uuid
         else:
-            perm_name_to_uuid[entry["name"]] = existing.uuid
+            perm_name_to_uuid[entry["name"]] = existing_permission.uuid
     print(f"  {len(perm_name_to_uuid)} permissions")
 
     print("[2/6] Groups...")
-    groups_data: list[dict] = _load_json("groups.json")
+    groups_data: list[dict[str, Any]] = _load_json("groups.json")
     group_name_to_uuid: dict[str, uuid.UUID] = {}
     for entry in groups_data:
-        existing = await group_repo.get_by(session, name=entry["name"])
-        if existing is None:
-            result = await group_svc.create(
+        existing_group = await group_repo.get_by(session, name=entry["name"])
+        if existing_group is None:
+            created_group = await group_svc.create(
                 session,
                 GroupCreateRequest(
                     name=entry["name"],
                     description=entry["description"],
                 ),
             )
-            group_name_to_uuid[entry["name"]] = result.uuid
+            group_name_to_uuid[entry["name"]] = created_group.uuid
         else:
-            group_name_to_uuid[entry["name"]] = existing.uuid
+            group_name_to_uuid[entry["name"]] = existing_group.uuid
     print(f"  {len(group_name_to_uuid)} groups")
 
     print("[3/6] Linking groups → permissions...")
@@ -108,12 +114,12 @@ async def seed_rbac(session: AsyncSession) -> None:
     print("  done")
 
     print("[4/6] Roles...")
-    roles_data: list[dict] = _load_json("roles.json")
+    roles_data: list[dict[str, Any]] = _load_json("roles.json")
     role_name_to_uuid: dict[str, uuid.UUID] = {}
     for entry in roles_data:
-        existing = await role_repo.get_by(session, name=entry["name"])
-        if existing is None:
-            result = await role_svc.create(
+        existing_role = await role_repo.get_by(session, name=entry["name"])
+        if existing_role is None:
+            created_role = await role_svc.create(
                 session,
                 RoleCreateRequest(
                     name=entry["name"],
@@ -121,9 +127,9 @@ async def seed_rbac(session: AsyncSession) -> None:
                     is_admin=entry.get("is_admin", False),
                 ),
             )
-            role_name_to_uuid[entry["name"]] = result.uuid
+            role_name_to_uuid[entry["name"]] = created_role.uuid
         else:
-            role_name_to_uuid[entry["name"]] = existing.uuid
+            role_name_to_uuid[entry["name"]] = existing_role.uuid
     print(f"  {len(role_name_to_uuid)} roles")
 
     print("[5/6] Linking roles → groups...")
@@ -158,16 +164,16 @@ async def seed_rbac(session: AsyncSession) -> None:
         role_repo=role_repo,
         group_repo=group_repo,
     )
-    users_data: list[dict] = _load_json("users.json")
+    users_data: list[dict[str, Any]] = _load_json("users.json")
     for entry in users_data:
-        existing = await auth_svc.user_repo.get_by_email(session, entry["email"])
-        if existing is not None:
+        existing_user = await auth_svc.user_repo.get_by_email(session, entry["email"])
+        if existing_user is not None:
             role_uuid = role_name_to_uuid.get(entry["role"])
             if role_uuid:
                 ua_repo = UserAccessRepository()
                 await ua_repo.create_or_update(
                     session,
-                    user_uuid=existing.id,
+                    user_uuid=existing_user.id,
                     role_uuid=role_uuid,
                 )
             continue

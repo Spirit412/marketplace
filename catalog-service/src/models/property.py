@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     Boolean,
@@ -14,6 +15,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.datatype import uuid7
 from src.models.base import Base, CreatedAtMixin, SoftDeleteMixin
+
+if TYPE_CHECKING:
+    from src.models.category import Category
 
 
 class Property(CreatedAtMixin, SoftDeleteMixin, Base):
@@ -44,7 +48,7 @@ class Property(CreatedAtMixin, SoftDeleteMixin, Base):
     description: Mapped[str | None] = mapped_column(
         Text, nullable=True, comment="Описание свойства"
     )
-    options: Mapped[dict] = mapped_column(
+    options: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

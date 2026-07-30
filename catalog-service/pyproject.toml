@@ -86,3 +86,8 @@ strict = true
 python_version = "3.12"
 files = ["src"]
 exclude = ['\.venv', 'migration', 'alembic', 'tests', 'scripts']
+
+[[tool.mypy.overrides]]
+# no type stubs published for these third-party libraries
+module = ["jose.*"]
+ignore_missing_imports = true

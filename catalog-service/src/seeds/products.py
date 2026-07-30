@@ -25,6 +25,7 @@ import asyncio
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select, text
@@ -38,9 +39,10 @@ DATA_DIR = Path(__file__).parent / "data"
 DEFAULT_SELLER_EMAIL = "seller@marketplace.dev"
 
 
-def _load_json(name: str) -> list:
+def _load_json(name: str) -> list[dict[str, Any]]:
     with open(DATA_DIR / name, encoding="utf-8") as fh:
-        return json.load(fh)
+        data: list[dict[str, Any]] = json.load(fh)
+        return data
 
 
 async def _resolve_seller_id(session: AsyncSession, email: str) -> UUID:
@@ -54,7 +56,8 @@ async def _resolve_seller_id(session: AsyncSession, email: str) -> UUID:
             f"Seller user '{email}' not found in auth.users — "
             "run auth-service's `python -m src.seeds.rbac` first."
         )
-    return row[0]
+    seller_id: UUID = row[0]
+    return seller_id
 
 
 async def seed_products(

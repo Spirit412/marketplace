@@ -1,5 +1,7 @@
 import uuid
 
+from typing import Any
+
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,7 +62,7 @@ class ProductRepo:
         await session.flush()
         return True
 
-    def base_query(self, *, include_deleted: bool = False) -> Select:
+    def base_query(self, *, include_deleted: bool = False) -> Select[Any]:
         return exclude_deleted(
             select(Product).where(Product.is_active.is_(True)), Product, include_deleted
         )
@@ -68,7 +70,7 @@ class ProductRepo:
     async def search(
         self,
         session: AsyncSession,
-        stmt: Select,
+        stmt: Select[Any],
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Product], int]:

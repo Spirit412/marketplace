@@ -1,4 +1,5 @@
 import uuid as _uuid
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -14,8 +15,8 @@ class CreateProductRequest(BaseModel):
     sku: str | None = Field(default=None, max_length=100)
     stock: int = Field(default=0, ge=0)
     category_id: str | None = None
-    custom_properties_config: dict = Field(default_factory=dict)
-    images: dict = Field(default_factory=dict)
+    custom_properties_config: dict[str, Any] = Field(default_factory=dict)
+    images: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("category_id")
     @classmethod
@@ -34,8 +35,8 @@ class UpdateProductRequest(BaseModel):
     sku: str | None = Field(default=None, max_length=100)
     stock: int | None = Field(default=None, ge=0)
     category_id: str | None = None
-    custom_properties_config: dict | None = None
-    images: dict | None = None
+    custom_properties_config: dict[str, Any] | None = None
+    images: dict[str, Any] | None = None
     is_active: bool | None = None
     status: str | None = None
 

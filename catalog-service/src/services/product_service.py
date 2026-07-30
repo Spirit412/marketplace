@@ -1,6 +1,7 @@
 import json
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,8 +37,8 @@ class ProductService:
         sku: str | None = None,
         stock: int = 0,
         category_id: uuid.UUID | None = None,
-        custom_properties_config: dict | None = None,
-        images: dict | None = None,
+        custom_properties_config: dict[str, Any] | None = None,
+        images: dict[str, Any] | None = None,
     ) -> Product:
         product = Product(
             seller_id=seller_id,
@@ -60,7 +61,8 @@ class ProductService:
     ) -> Product | None:
         cached = await self._redis.get(f"product:{product_id}")
         if cached:
-            return self._deserialize_product(cached)
+            text = cached.decode() if isinstance(cached, bytes) else cached
+            return self._deserialize_product(text)
 
         product = await self._repo.get_by_id(session, product_id)
         if product:
@@ -148,11 +150,11 @@ class ProductService:
         self,
         routing_key: str,
         product: Product,
-        changed_fields: dict | None = None,
+        changed_fields: dict[str, Any] | None = None,
     ) -> None:
         if self._rmq is None:
             return
-        payload: dict = {
+        payload: dict[str, Any] = {
             "product_id": str(product.id),
             "seller_id": str(product.seller_id),
             "name": product.name,
@@ -164,7 +166,7 @@ class ProductService:
         await self._rmq.publish(routing_key, payload)
 
     @staticmethod
-    def _serialize_product(product: Product) -> dict:
+    def _serialize_product(product: Product) -> dict[str, Any]:
         return {
             "id": str(product.id),
             "seller_id": str(product.seller_id),

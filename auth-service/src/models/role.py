@@ -10,7 +10,7 @@ from src.core.datatype import uuid7
 from src.models.base import Base, SoftDeleteMixin, TimestampMixin
 
 if TYPE_CHECKING:
-    from .groups import Group
+    from .group import Group
     from .user_access import UserAccess
 
 

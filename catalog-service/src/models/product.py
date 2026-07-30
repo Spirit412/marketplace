@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     Boolean,
@@ -19,6 +20,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.datatype import uuid7
 from src.models.base import Base, SoftDeleteMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from src.models.category import Category
 
 
 class Product(TimestampMixin, SoftDeleteMixin, Base):
@@ -77,21 +81,21 @@ class Product(TimestampMixin, SoftDeleteMixin, Base):
         Float, nullable=False, default=0.0, comment="Средний рейтинг товара"
     )
 
-    custom_properties_config: Mapped[dict] = mapped_column(
+    custom_properties_config: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
         server_default=text("'{}'::jsonb"),
         comment="Динамические атрибуты товара (цвет, материал и т.п.)",
     )
-    numeric_properties: Mapped[dict] = mapped_column(
+    numeric_properties: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
         server_default=text("'{}'::jsonb"),
         comment="Числовые атрибуты для диапазонных фильтров (вес и т.п.)",
     )
-    images: Mapped[dict] = mapped_column(
+    images: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

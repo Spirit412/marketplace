@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -24,13 +25,13 @@ class QuerySet(TimestampMixin, SoftDeleteMixin, Base):
     name: Mapped[str] = mapped_column(
         String(255), nullable=False, comment="Название набора фильтров"
     )
-    data: Mapped[dict] = mapped_column(
+    data: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
         comment="Структура условий фильтрации (JSONB)",
     )
-    displayed_fields: Mapped[dict] = mapped_column(
+    displayed_fields: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, comment="Список отображаемых полей"
     )
     is_favorite: Mapped[bool] = mapped_column(
@@ -39,6 +40,6 @@ class QuerySet(TimestampMixin, SoftDeleteMixin, Base):
     is_system: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="Системный набор (нельзя редактировать/удалять)"
     )
-    tags: Mapped[dict] = mapped_column(
+    tags: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, comment="Произвольные теги набора"
     )

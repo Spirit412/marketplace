@@ -69,7 +69,8 @@ def _user_role_name(user: object) -> str | None:
     accesses = getattr(user, "user_accesses", None) or []
     for ua in accesses:
         if ua.role is not None:
-            return ua.role.name
+            name: str = ua.role.name
+            return name
     return None
 
 

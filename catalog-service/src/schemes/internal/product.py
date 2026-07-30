@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -12,4 +14,4 @@ class ProductCreatedPayload(BaseModel):
 class ProductUpdatedPayload(BaseModel):
     product_id: str
     seller_id: str
-    changed_fields: dict
+    changed_fields: dict[str, Any]

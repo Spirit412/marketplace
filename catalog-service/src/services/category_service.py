@@ -1,6 +1,7 @@
 import json
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,7 +57,7 @@ class CategoryService:
         slug: str,
         description: str | None = None,
         parent_id: uuid.UUID | None = None,
-        properties: list[dict] | None = None,
+        properties: list[dict[str, Any]] | None = None,
     ) -> Category:
         category = await self.create(
             session,
@@ -147,7 +148,7 @@ class CategoryService:
         self,
         session: AsyncSession,
         category_id: uuid.UUID,
-        property_ids: list[dict],
+        property_ids: list[dict[str, Any]],
     ) -> None:
         if self._property_repo is None:
             return
@@ -191,7 +192,7 @@ class CategoryService:
         await self._redis.delete("category_tree")
 
     @staticmethod
-    def _deserialize_tree(data: list[dict]) -> list[Category]:
+    def _deserialize_tree(data: list[dict[str, Any]]) -> list[Category]:
         return [
             Category(
                 id=uuid.UUID(item["id"]),

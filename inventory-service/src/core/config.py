@@ -32,11 +32,24 @@ class CoreSettings(Protocol):
     """The settings surface this package depends on.
 
     Declared structurally so a consuming service can satisfy it with its own
-    configuration object without inheriting from anything here.
+    configuration object without inheriting from anything here. `jwt` and
+    `postgres` are typed as properties rather than plain attributes: mypy
+    checks a Protocol's plain attributes invariantly, which a concrete
+    service's own `JWTSettings`/`PostgresSettings` classes — structurally
+    identical but nominally distinct from this module's — would fail even
+    though they satisfy every field. Properties are checked covariantly by
+    return type, which a plain attribute on the concrete class also satisfies.
     """
 
-    jwt: JWTSettings
-    postgres: PostgresSettings
+    @property
+    def jwt(self) -> JWTSettings:
+        """JWT signing settings."""
+        ...
+
+    @property
+    def postgres(self) -> PostgresSettings:
+        """Postgres connection settings."""
+        ...
 
 
 _settings: CoreSettings | None = None

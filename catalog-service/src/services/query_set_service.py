@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,9 +16,9 @@ class QuerySetService:
         session: AsyncSession,
         seller_id: uuid.UUID,
         name: str,
-        data: dict | None = None,
-        displayed_fields: dict | None = None,
-        tags: dict | None = None,
+        data: dict[str, Any] | None = None,
+        displayed_fields: dict[str, Any] | None = None,
+        tags: dict[str, Any] | None = None,
     ) -> QuerySet:
         query_set = QuerySet(
             seller_id=seller_id,

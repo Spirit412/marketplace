@@ -1,3 +1,5 @@
+from typing import Any
+
 import aiohttp
 from backoff import expo, on_exception
 
@@ -12,8 +14,8 @@ class CircuitBreakerClient:
         self,
         method: str,
         path: str,
-        **kwargs: object,
-    ) -> dict:
+        **kwargs: Any,
+    ) -> dict[str, Any]:
         """Read the JSON body before the response/session context managers
         close the connection — returning the raw response object and reading
         .json() afterward (the previous approach) fails with "Connection
@@ -25,10 +27,11 @@ class CircuitBreakerClient:
         async with aiohttp.ClientSession(timeout=self._timeout) as session:
             async with session.request(method, url, **kwargs) as response:
                 response.raise_for_status()
-                return await response.json()
+                data: dict[str, Any] = await response.json()
+                return data
 
-    async def get(self, path: str, **kwargs: object) -> dict:
+    async def get(self, path: str, **kwargs: Any) -> dict[str, Any]:
         return await self._request("GET", path, **kwargs)
 
-    async def post(self, path: str, **kwargs: object) -> dict:
+    async def post(self, path: str, **kwargs: Any) -> dict[str, Any]:
         return await self._request("POST", path, **kwargs)

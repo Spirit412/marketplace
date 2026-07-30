@@ -14,6 +14,7 @@ import asyncio
 import json
 import uuid
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -26,12 +27,19 @@ from src.models.property import CategoryProperty, Property
 DATA_DIR = Path(__file__).parent / "data"
 
 
-def _load_json(name: str) -> list | dict:
+def _load_json(name: str) -> Any:
+    """Load a seed data file.
+
+    Returns `Any`: callers annotate the variable with the shape that
+    specific file actually holds.
+    """
     with open(DATA_DIR / name, encoding="utf-8") as fh:
         return json.load(fh)
 
 
-def _compute_mptt(nodes: list[dict], tree_id_start: int = 0) -> list[dict]:
+def _compute_mptt(
+    nodes: list[dict[str, Any]], tree_id_start: int = 0
+) -> list[dict[str, Any]]:
     """Walk nested category tree and fill in MPTT fields in-place.
 
     Each node receives ``tree_id``, ``level``, ``lft``, ``rgt``.
@@ -39,7 +47,7 @@ def _compute_mptt(nodes: list[dict], tree_id_start: int = 0) -> list[dict]:
     """
 
     def _walk(
-        node: dict,
+        node: dict[str, Any],
         tree_id: int,
         level: int,
         counter: list[int],
@@ -63,9 +71,9 @@ def _compute_mptt(nodes: list[dict], tree_id_start: int = 0) -> list[dict]:
     return nodes
 
 
-def _flatten(nodes: list[dict]) -> list[dict]:
+def _flatten(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return a flat list of all nodes (breadth-first) from a nested tree."""
-    result: list[dict] = []
+    result: list[dict[str, Any]] = []
     queue = list(nodes)
     while queue:
         node = queue.pop(0)
@@ -78,7 +86,7 @@ def _flatten(nodes: list[dict]) -> list[dict]:
 async def seed_catalog(session: AsyncSession) -> None:
     """Populate DB from JSON data files. Idempotent."""
     print("[1/2] Categories...")
-    categories_data: list[dict] = _load_json("categories.json")
+    categories_data: list[dict[str, Any]] = _load_json("categories.json")
     _compute_mptt(categories_data)
     flat_categories = _flatten(categories_data)
 
@@ -115,7 +123,7 @@ async def seed_catalog(session: AsyncSession) -> None:
     print(f"  {len(slug_to_uuid)} categories ready")
 
     print("[2/2] Properties...")
-    properties_data: list[dict] = _load_json("properties.json")
+    properties_data: list[dict[str, Any]] = _load_json("properties.json")
 
     backend_to_uuid: dict[str, uuid.UUID] = {}
     for entry in properties_data:

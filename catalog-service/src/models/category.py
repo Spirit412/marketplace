@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     ForeignKey,
@@ -12,6 +13,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.datatype import uuid7
 from src.models.base import Base, SoftDeleteMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from src.models.product import Product
+    from src.models.property import CategoryProperty
 
 
 class Category(TimestampMixin, SoftDeleteMixin, Base):

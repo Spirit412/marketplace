@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -14,8 +15,8 @@ class ProductResponse(BaseModel):
     sku: str | None = None
     stock: int
     rating: float
-    custom_properties_config: dict
-    images: dict
+    custom_properties_config: dict[str, Any]
+    images: dict[str, Any]
     is_active: bool
     status: str
     created_at: datetime

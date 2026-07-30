@@ -150,7 +150,9 @@ def decode_jwt(
     return TokenPayload.model_validate(payload)
 
 
-def require_permission(application: str, required: Permission) -> Callable:
+def require_permission(
+    application: str, required: Permission
+) -> Callable[[TokenPayload], TokenPayload]:
     """Build a dependency asserting a permission level for an application.
 
     Args:
@@ -209,7 +211,8 @@ def _encode(
         "iat": int(now.timestamp()),
         "exp": int((now + lifetime).timestamp()),
     }
-    return jwt.encode(payload, secret_key, algorithm=algorithm)
+    encoded: str = jwt.encode(payload, secret_key, algorithm=algorithm)
+    return encoded
 
 
 def _generate_jti() -> str:

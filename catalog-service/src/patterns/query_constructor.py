@@ -1,5 +1,7 @@
 import uuid
 
+from typing import Any
+
 from sqlalchemy import Select
 
 from src.models.product import Product
@@ -10,9 +12,9 @@ class ProductQueryConstructor:
 
     @staticmethod
     def apply_filters(
-        stmt: Select,
+        stmt: Select[Any],
         filters: dict[str, str],
-    ) -> Select:
+    ) -> Select[Any]:
         """Apply dynamic filters to a select statement."""
         for key, value in filters.items():
             if key == "filters_set":
@@ -30,9 +32,9 @@ class ProductQueryConstructor:
 
     @staticmethod
     def apply_filters_set(
-        stmt: Select,
+        stmt: Select[Any],
         filters_set_id: uuid.UUID | None,
-    ) -> Select:
+    ) -> Select[Any]:
         """Apply a saved filters set to the query."""
         if filters_set_id is None:
             return stmt
@@ -40,11 +42,11 @@ class ProductQueryConstructor:
 
     @staticmethod
     def _apply_operator(
-        stmt: Select,
+        stmt: Select[Any],
         field: str,
         operator: str,
         value: str,
-    ) -> Select:
+    ) -> Select[Any]:
         """Apply operator to JSONB custom_properties field."""
         jsonb_field = Product.custom_properties_config[field]
 
@@ -68,9 +70,9 @@ class ProductQueryConstructor:
 
     @staticmethod
     def apply_search(
-        stmt: Select,
+        stmt: Select[Any],
         query: str,
-    ) -> Select:
+    ) -> Select[Any]:
         """Apply full-text search using tsvector."""
         if not query:
             return stmt
@@ -78,11 +80,11 @@ class ProductQueryConstructor:
 
     @staticmethod
     def apply_sorting(
-        stmt: Select,
+        stmt: Select[Any],
         sort_field: str = "newest",
-    ) -> Select:
+    ) -> Select[Any]:
         """Apply sorting based on sort field."""
-        sort_map = {
+        sort_map: dict[str, Any] = {
             "price": Product.price.asc(),
             "price_desc": Product.price.desc(),
             "rating": Product.rating.desc(),

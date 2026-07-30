@@ -1,4 +1,3 @@
-from collections.abc import Callable
 """Shared auth middleware for all marketplace services.
 
 Usage in any service:
@@ -22,12 +21,14 @@ Usage in any service:
         ...
 """
 
+from collections.abc import Callable
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.types import ASGIApp
 
 from src.core.auth import TokenPayload, decode_jwt
 
@@ -82,7 +83,7 @@ def get_current_user(
 def check_access(
     method: str,
     path: str,
-) -> Callable:
+) -> Callable[[TokenPayload, Request], TokenPayload]:
     """FastAPI dependency: validate JWT + check path-level access via auth-service.
 
     Calls POST {auth_service_url}/auth/check-access.
@@ -130,7 +131,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     def __init__(
         self,
-        app: object,
+        app: ASGIApp,
         exclude_paths: list[str] | None = None,
     ) -> None:
         super().__init__(app)
@@ -138,7 +139,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             exclude_paths or ["/health", "/docs", "/openapi.json", "/redoc"]
         )
 
-    async def dispatch(self, request: Request, call_next: Callable) -> JSONResponse:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         if request.url.path in self._exclude:
             return await call_next(request)
 
