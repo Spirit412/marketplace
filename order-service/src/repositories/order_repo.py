@@ -29,20 +29,20 @@ class OrderRepo(BaseRepository[Order]):
     async def get_by_user(
         self,
         session: AsyncSession,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
         *,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Order], int]:
         offset = (page - 1) * page_size
         count_stmt = (
-            select(func.count()).select_from(Order).where(Order.user_uuid == user_uuid)
+            select(func.count()).select_from(Order).where(Order.user_id == user_id)
         )
         total = (await session.execute(count_stmt)).scalar_one()
 
         stmt = (
             select(Order)
-            .where(Order.user_uuid == user_uuid)
+            .where(Order.user_id == user_id)
             .options(selectinload(Order.items))
             .order_by(Order.created_at.desc())
             .offset(offset)
@@ -70,6 +70,11 @@ class OrderRepo(BaseRepository[Order]):
         session.add(history_entry)
         order.status = new_status
         await session.flush()
+        # updated_at is server-side (onupdate=func.now()) — flush() alone
+        # leaves it expired on the Python object; the next (synchronous)
+        # attribute read, e.g. Pydantic serializing the response, would need
+        # to lazy-load it and fail with MissingGreenlet outside an await.
+        await session.refresh(order)
         return order
 
     async def get_expired_orders(

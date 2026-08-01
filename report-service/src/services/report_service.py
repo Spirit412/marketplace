@@ -1,6 +1,8 @@
+import asyncio
 import json
 import logging
 import uuid
+from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException
@@ -49,7 +51,7 @@ class ReportService:
         self,
         session: AsyncSession,
         request: GenerateReportRequest,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
     ) -> ReportResponse:
         """Initiate report generation. Publishes to RabbitMQ for async processing."""
         config = REPORT_TYPE_REGISTRY.get(request.report_type)
@@ -61,7 +63,7 @@ class ReportService:
 
         report = Report(
             id=uuid7(),
-            user_uuid=user_uuid,
+            user_id=user_id,
             report_type=request.report_type.value,
             parameters={
                 "date_from": request.date_range.from_date.isoformat(),
@@ -80,14 +82,14 @@ class ReportService:
             await broker.publish(
                 {
                     "report_id": str(report.id),
-                    "user_uuid": str(user_uuid),
+                    "user_id": str(user_id),
                     "report_type": request.report_type.value,
                     "format": request.format.value,
                     "parameters": report.parameters,
                 },
                 routing_key=f"report.generate.{request.report_type.value}",
             )
-        except Exception:
+        except Exception as exc:
             await self._transition_status(
                 session,
                 report.id,
@@ -97,7 +99,7 @@ class ReportService:
             raise HTTPException(
                 status_code=503,
                 detail="Report generation queue unavailable",
-            )
+            ) from exc
 
         return ReportResponse.model_validate(report)
 
@@ -183,9 +185,10 @@ class ReportService:
             )
 
         if report.status == ReportStatus.FAILED.value:
+            error = report.error_message or "Unknown error"
             raise HTTPException(
                 status_code=500,
-                detail=f"Report generation failed: {report.error_message or 'Unknown error'}",
+                detail=f"Report generation failed: {error}",
             )
 
         if report.file_path is None:
@@ -200,12 +203,12 @@ class ReportService:
     async def list_reports(
         self,
         session: AsyncSession,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
         offset: int = 0,
         limit: int = 50,
     ) -> ReportListResponse:
         reports, total = await self._report_repo.list_by_user(
-            session, user_uuid, offset=offset, limit=limit
+            session, user_id, offset=offset, limit=limit
         )
         return ReportListResponse(
             reports=[ReportResponse.model_validate(report) for report in reports],
@@ -238,7 +241,9 @@ class ReportService:
             file_path = f"{report_id}/report.{fmt}"
             saved_path = await strategy.export(result_set, file_path)
 
-            file_content = open(saved_path, "rb").read()
+            # Offloaded to a thread: report files can be large, and this
+            # runs on the event loop's own thread otherwise.
+            file_content = await asyncio.to_thread(Path(saved_path).read_bytes)
             await self._file_storage.save(file_content, file_path)
 
             await self._transition_status(

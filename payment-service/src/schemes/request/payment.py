@@ -9,7 +9,7 @@ class CreatePaymentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     order_id: uuid.UUID
-    user_uuid: uuid.UUID
+    user_id: uuid.UUID
     amount: int
     currency: str = "RUB"
     payment_method: PaymentMethod

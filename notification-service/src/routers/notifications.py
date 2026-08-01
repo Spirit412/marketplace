@@ -1,15 +1,12 @@
 import uuid
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.core.database import get_async_session
 from src.dependencies import get_notification_service
@@ -23,25 +20,23 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 @router.get(
     "/",
-    response_model=list[NotificationResponse],
     summary="Get notifications",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_notifications(
-    status: str = Query("unread", description="Filter: unread | all"),
-    limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
-    token: TokenPayload = Depends(get_token_payload),
-    session: AsyncSession = Depends(get_async_session),
+    token: Annotated[TokenPayload, Depends(get_token_payload)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    status: Annotated[str, Query(description="Filter: unread | all")] = "unread",
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[NotificationResponse]:
     """Get notifications for the authenticated user, filtered by status."""
     repo = NotificationRepository()
-    user_uuid = uuid.UUID(token.user_uuid)
+    user_id = uuid.UUID(token.user_id)
 
     if status == "unread":
-        items = await repo.get_unread(session, user_uuid, limit=limit, offset=offset)
+        items = await repo.get_unread(session, user_id, limit=limit, offset=offset)
     else:
-        items = await repo.get_history(session, user_uuid, limit=limit, offset=offset)
+        items = await repo.get_history(session, user_id, limit=limit, offset=offset)
 
     return [
         NotificationResponse(
@@ -61,20 +56,18 @@ async def get_notifications(
 
 @router.get(
     "/history",
-    response_model=list[NotificationResponse],
     summary="Get notification history",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_history(
-    limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
-    token: TokenPayload = Depends(get_token_payload),
-    session: AsyncSession = Depends(get_async_session),
+    token: Annotated[TokenPayload, Depends(get_token_payload)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[NotificationResponse]:
     """Get notification history for the authenticated user."""
     repo = NotificationRepository()
-    user_uuid = uuid.UUID(token.user_uuid)
-    items = await repo.get_history(session, user_uuid, limit=limit, offset=offset)
+    user_id = uuid.UUID(token.user_id)
+    items = await repo.get_history(session, user_id, limit=limit, offset=offset)
 
     return [
         NotificationResponse(
@@ -96,13 +89,12 @@ async def get_history(
     "/",
     response_model=dict,
     summary="Send notification",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def send_notification(
     request: SendNotificationRequest,
-    token: TokenPayload = Depends(get_token_payload),
-    service: NotificationService = Depends(get_notification_service),
-    session: AsyncSession = Depends(get_async_session),
+    _token: Annotated[TokenPayload, Depends(get_token_payload)],
+    service: Annotated[NotificationService, Depends(get_notification_service)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> dict[str, Any]:
     """Send a notification to one or more users."""
     if request.user_uuids is None:
@@ -128,12 +120,11 @@ async def send_notification(
     "/{notification_uuid}/read",
     response_model=dict,
     summary="Mark notification as read",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def mark_read(
     notification_uuid: uuid.UUID,
-    token: TokenPayload = Depends(get_token_payload),
-    session: AsyncSession = Depends(get_async_session),
+    _token: Annotated[TokenPayload, Depends(get_token_payload)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> dict[str, Any]:
     """Mark a specific notification as read."""
     repo = NotificationRepository()

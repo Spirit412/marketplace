@@ -5,8 +5,6 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
-from src.core.auth import Permission, require_permission
 from src.depends import Inject, _require_admin, get_service_session
 from src.schemes.rbac import (
     GroupCreateRequest,
@@ -25,10 +23,8 @@ router = APIRouter(
 
 
 @router.get(
-    "/groups",
-    response_model=GroupListResponse,
+    "",
     summary="List groups",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_groups(
     params: Annotated[PaginationParams, Depends()],
@@ -40,11 +36,9 @@ async def list_groups(
 
 
 @router.post(
-    "/groups",
-    response_model=GroupResponse,
+    "",
     status_code=201,
     summary="Create group",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_group(
     body: GroupCreateRequest,
@@ -56,10 +50,8 @@ async def create_group(
 
 
 @router.get(
-    "/groups/{group_uuid}",
-    response_model=GroupResponse,
+    "/{group_uuid}",
     summary="Get group",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_group(
     group_uuid: uuid.UUID,
@@ -71,10 +63,8 @@ async def get_group(
 
 
 @router.put(
-    "/groups/{group_uuid}",
-    response_model=GroupResponse,
+    "/{group_uuid}",
     summary="Update group",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def update_group(
     group_uuid: uuid.UUID,
@@ -87,11 +77,8 @@ async def update_group(
 
 
 @router.delete(
-    "/groups/{group_uuid}",
-    status_code=204,
-    response_class=Response,
+    "/{group_uuid}",
     summary="Delete group",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def delete_group(
     group_uuid: uuid.UUID,

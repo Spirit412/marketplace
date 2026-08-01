@@ -1,9 +1,13 @@
 import abc
 import logging
+from email.mime.text import MIMEText
+
+import aiosmtplib
+import httpx
 
 from src.config.settings import settings
-from src.enums.channel import Channel
 from src.engines.ws_manager import WebSocketManager
+from src.enums.channel import Channel
 from src.models.notification import Notification
 from src.schemes.ws_message import WSMessage
 
@@ -22,10 +26,6 @@ class EmailChannel(BaseChannel):
 
     async def send(self, notification: Notification) -> bool:
         try:
-            from email.mime.text import MIMEText
-
-            import aiosmtplib
-
             msg = MIMEText(notification.body, "html", "utf-8")
             msg["Subject"] = notification.subject
             msg["From"] = settings.SMTP_FROM_EMAIL
@@ -39,10 +39,11 @@ class EmailChannel(BaseChannel):
                 password=settings.SMTP_PASSWORD or None,
                 start_tls=True,
             )
-            return True
         except Exception as exc:
             logger.warning("EmailChannel failed for %s: %s", notification.id, exc)
             return False
+        else:
+            return True
 
 
 class SmsChannel(BaseChannel):
@@ -50,8 +51,6 @@ class SmsChannel(BaseChannel):
 
     async def send(self, notification: Notification) -> bool:
         try:
-            import httpx
-
             if not settings.SMS_API_KEY or not settings.SMS_API_URL:
                 logger.warning("SMS not configured")
                 return False
@@ -95,11 +94,12 @@ class WebSocketChannel(BaseChannel):
                 notification_type=notification.notification_type,
                 timestamp=notification.created_at,
             )
-            await self._ws_manager.send_to_user(str(notification.user_uuid), msg)
-            return True
+            await self._ws_manager.send_to_user(str(notification.user_id), msg)
         except Exception as exc:
             logger.warning("WebSocketChannel failed for %s: %s", notification.id, exc)
             return False
+        else:
+            return True
 
 
 class ChannelRegistry:

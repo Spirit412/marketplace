@@ -60,7 +60,18 @@ ignore = [
     "ANN", "COM", "C90", "DJ", "EXE", "T10", "TID",
     "RUF001", "RUF002", "RUF003", "TD003", "FIX002",
     "D100", "D101", "D102", "D103", "D104", "D105", "D107",
-    "EM101", "TRY003",
+    "EM101", "EM102", "TRY003",
+    # Boolean args are pervasive in this codebase's internal service/DI
+    # methods (include_deleted, caller_is_privileged, ...). None of these
+    # are public-library entry points where the "boolean trap" actually
+    # bites an unaware caller, so the rule isn't worth the churn here.
+    "FBT001", "FBT002", "FBT003",
+    # Every service's business logic deliberately catches broadly at I/O
+    # boundaries (HTTP calls to other services, RMQ publish, SMTP/JMS,
+    # JWT decode) and either logs-and-degrades or converts to a domain
+    # error — narrowing to specific exception types would just chase each
+    # third-party library's exception hierarchy without adding safety.
+    "BLE001",
     # no copyright headers in this project
     "CPY001",
 ]
@@ -68,9 +79,42 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # SQLAlchemy models use string forward references that ruff cannot resolve
 # (related classes are imported under TYPE_CHECKING); F821 there is noise.
-"src/models/*.py" = ["F821"]
+# __table_args__ is SQLAlchemy's declarative-class attribute (dict/tuple) --
+# annotating it ClassVar to satisfy RUF012 conflicts with DeclarativeBase's
+# own stub (mypy/pyright then flag an incompatible override instead).
+# TC001-003 ("move type-only import under TYPE_CHECKING") are actively
+# wrong here for scalar column types (uuid.UUID, datetime, ...): SQLAlchemy
+# resolves Mapped[...] annotations at class-mapping time via the module's
+# real (non-TYPE_CHECKING) namespace, even with `from __future__ import
+# annotations` -- moving them under TYPE_CHECKING breaks the app at import
+# time with MappedAnnotationError, it isn't just unnecessary caution.
+"src/models/*.py" = ["F821", "RUF012", "TC001", "TC002", "TC003"]
 # Alembic revisions are generated
 "src/alembic/**" = ["ALL"]
+# Byte-identical across every service (see core-shared-package convention).
+# init_auth() intentionally mutates module-level singleton state instead of
+# a class (the whole file is meant to be self-contained, importable as-is
+# into any service without its own DI container), and the dispatch/cache
+# lookup naturally has more early-return branches than the default limit.
+"src/auth_middleware.py" = ["PLW0603", "PLR0911"]
+# pytest convention: assert is the whole point, HTTP status codes
+# (200/201/404/...) are self-explanatory without a named constant, dummy
+# credentials/"bearer" discriminators in fixtures aren't real secrets, and
+# reaching into a module's private state for test cleanup is normal here.
+"tests/**/*.py" = ["S101", "PLR2004", "S105", "S106", "SLF001"]
+# CLI seed scripts: print() is the intended user-facing progress output,
+# not debug noise; and each seed function linearly walks a fixed sequence
+# of steps (permissions → groups → roles → ... ), which trips the
+# branch/statement-count limits without being genuinely hard to follow.
+"src/seeds/**/*.py" = ["T201", "PLR0912", "PLR0915"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's own DI pattern is a function call as a default value -- that's
+# not the mutable-default footgun B008 exists to catch.
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.Query", "fastapi.Body",
+    "fastapi.Header", "fastapi.Path", "fastapi.Security",
+]
 
 [tool.ruff.lint.pylint]
 max-args = 10

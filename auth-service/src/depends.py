@@ -1,7 +1,8 @@
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from rodi import Container
 
 from src.config.settings import Settings, settings
@@ -9,6 +10,7 @@ from src.core.auth import TokenPayload, get_token_payload
 from src.database.session import ServiceAsyncSession, ServiceSessionMaker
 from src.database.transaction import get_async_session
 from src.engines.redis_client import get_redis_client
+from src.exceptions import ForbiddenError, RateLimitExceededError
 from src.patterns.password_hasher import PasswordHasher
 from src.repositories.group_repository import GroupRepository
 from src.repositories.permission_repository import PermissionRepository
@@ -84,12 +86,34 @@ def get_auth_service() -> AuthService:
     )
 
 
-def _require_admin(
-    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-) -> TokenPayload:
-    """Dependency: only admins pass."""
-    from src.exceptions import ForbiddenError
+async def enforce_login_rate_limit(request: Request) -> None:
+    """Dependency: throttle POST /auth/login attempts per client IP.
 
-    if not token_payload.is_admin:
+    Fixed-window counter in Redis, sharing the key format already read by
+    GET /auth/rate-limit-status. Protects against credential-stuffing /
+    brute-force login attempts; does not gate any other endpoint.
+    """
+    redis_client = get_redis_client()
+    ip_address = request.client.host if request.client else "unknown"
+    key = f"{settings.REDIS_KEY_PREFIX}:rate_limit:{ip_address}"
+
+    count = await redis_client.incr(key)
+    if count == 1:
+        await redis_client.expire(key, settings.RATE_LIMIT_WINDOW_SECONDS)
+
+    if count > settings.RATE_LIMIT_MAX_REQUESTS:
+        message = f"Too many login attempts from {ip_address}, retry later"
+        raise RateLimitExceededError(message)
+
+
+async def _require_admin(
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
+    session: Annotated[ServiceAsyncSession, Depends(get_service_session)],
+) -> TokenPayload:
+    """Dependency: only admins pass. Resolves role from DB, not JWT."""
+    credentials = await get_auth_service().resolve_credentials(
+        session, uuid.UUID(token_payload.user_id), token_payload.iat
+    )
+    if not credentials.is_admin:
         raise ForbiddenError("Admin access required")
     return token_payload

@@ -19,7 +19,8 @@ dev = [
 
 [tool.ruff]
 target-version = "py312"
-include = ["e2e/**", "scripts/**"]
+# *.py only -- without it ruff also tries to parse e2e/pytest.ini as Python.
+include = ["e2e/**/*.py", "scripts/**/*.py"]
 exclude = [".venv", ".git", "**/alembic/**", "**/migrations/**"]
 line-length = 88
 
@@ -35,12 +36,17 @@ ignore = [
     "ANN", "COM", "C90", "DJ", "EXE", "T10", "TID",
     "RUF001", "RUF002", "RUF003", "TD003", "FIX002",
     "D100", "D101", "D102", "D103", "D104", "D105", "D107",
-    "EM101", "TRY003",
+    "EM101", "EM102", "TRY003",
+    # no copyright headers in this project
+    "CPY001",
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# tests assert on literals and reach into fixtures by design
-"e2e/**" = ["S101", "PLR2004", "INP001"]
+# tests assert on literals and reach into fixtures by design; docstrings
+# here document *why* a test case exists (often a multi-sentence TC-XXX-###
+# rationale) rather than a one-line summary, and dummy credentials in
+# fixtures aren't real secrets.
+"e2e/**" = ["S101", "PLR2004", "INP001", "D205", "S105"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

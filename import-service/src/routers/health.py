@@ -1,11 +1,13 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_async_session
 from src.core.health import HealthManager, HealthStatus
-from src.engines.http_client import CatalogClient, DictionaryClient
 from src.engines.postgres import check_postgres
 from src.engines.rabbitmq import ImportPublisher
+from src.facades import CatalogClient, DictionaryClient
 
 router = APIRouter(tags=["health"])
 
@@ -32,9 +34,9 @@ async def _check_dictionary() -> None:
     await client.get_units()
 
 
-@router.get("/health", response_model=HealthStatus, summary="Health check")
+@router.get("/health", summary="Health check")
 async def health_check(
-    session: AsyncSession = Depends(get_async_session),
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> HealthStatus:
     """Perform health check for import service."""
     manager = HealthManager(service_name="import-service")

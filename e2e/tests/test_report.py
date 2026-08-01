@@ -13,7 +13,8 @@ def test_report_listing(api: httpx.Client, auth_headers: dict) -> None:
     DI container because its repositories captured a session in __init__.
     """
     body = assert_ok(api.get("/reports/", headers=auth_headers)).json()
-    assert "reports" in body and "total" in body, body
+    assert "reports" in body, body
+    assert "total" in body, body
 
 
 def test_report_listing_pagination(api: httpx.Client, auth_headers: dict) -> None:

@@ -23,7 +23,7 @@ class Notification(CreatedAtMixin, SoftDeleteMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ уведомления"
     )
-    user_uuid: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         index=True, nullable=False, comment="Получатель уведомления"
     )
     event_type: Mapped[str] = mapped_column(

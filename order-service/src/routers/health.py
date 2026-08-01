@@ -4,9 +4,9 @@ from src.config.settings import settings
 from src.core.database import _get_session_factory
 from src.core.health import HealthManager, HealthStatus
 from src.core.http_client import CircuitBreakerClient
-from src.engines.http_client import InventoryClient
 from src.engines.postgres import check_postgres
 from src.engines.redis import check_redis
+from src.facades import InventoryClient
 
 router = APIRouter(tags=["health"])
 
@@ -33,7 +33,7 @@ async def _check_inventory() -> None:
     await client.check_stock("00000000-0000-0000-0000-000000000000", 1)
 
 
-@router.get("/health", response_model=HealthStatus, summary="Health check")
+@router.get("/health", summary="Health check")
 async def health_check() -> HealthStatus:
     """Perform health check for order service."""
     manager = HealthManager(service_name="order-service")

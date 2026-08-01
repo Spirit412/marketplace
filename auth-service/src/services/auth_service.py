@@ -1,5 +1,6 @@
+import fnmatch
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +28,7 @@ from src.models.permission import Permission
 from src.models.user import SessionLog, User
 from src.patterns.password_hasher import PasswordHasher
 from src.repositories.group_repository import GroupRepository
+from src.repositories.permission_repository import PermissionRepository
 from src.repositories.role_repository import RoleRepository
 from src.repositories.session_repository import SessionRepository
 from src.repositories.user_access_repository import UserAccessRepository
@@ -71,15 +73,16 @@ class AuthService:
         """Build a namespaced Redis key: {prefix}:{part1}:{part2}:..."""
         return ":".join((self._settings.REDIS_KEY_PREFIX, *parts))
 
-    def _user_tokens_key(self, user_uuid: str) -> str:
-        """Redis Set tracking active refresh-token jti's for a user (avoids KEYS/SCAN in logout-all)."""
-        return self._redis_key("user_tokens", user_uuid)
+    def _user_tokens_key(self, user_id: str) -> str:
+        """Redis Set tracking active refresh-token jti's for a user.
+
+        Avoids KEYS/SCAN in logout-all.
+        """
+        return self._redis_key("user_tokens", user_id)
 
     @property
     def _token_ttl_seconds(self) -> int:
         """Refresh token TTL in seconds."""
-        from datetime import timedelta
-
         return int(
             timedelta(days=self._settings.jwt.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()
         )
@@ -107,7 +110,7 @@ class AuthService:
         if default_role is not None:
             await self._user_access_repo.create_or_update(
                 session,
-                user_uuid=created.id,
+                user_id=created.id,
                 role_uuid=default_role.uuid,
             )
 
@@ -127,22 +130,16 @@ class AuthService:
             raise UnauthorizedError("Invalid credentials")
 
         if user.is_blocked:
-            raise ForbiddenError(f"User blocked: {user.block_reason}")
+            msg = f"User blocked: {user.block_reason}"
+            raise ForbiddenError(msg)
 
         if not self._password_hasher.verify(password, user.password_hash):
             raise UnauthorizedError("Invalid credentials")
-
-        access_data = await self._resolve_permissions(session, user.id)
-
-        permission_levels = self._permission_levels(access_data)
 
         access_token = create_access_token(
             str(user.id),
             self._settings.jwt.SECRET_KEY,
             self._settings.jwt.ALGORITHM,
-            permissions=permission_levels,
-            role=access_data.role_name,
-            is_admin=access_data.is_admin,
             expires_minutes=self._settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
         refresh_token = create_refresh_token(
@@ -160,7 +157,7 @@ class AuthService:
 
         session_log = SessionLog(
             id=uuid7(),
-            user_uuid=user.id,
+            user_id=user.id,
             device_info=device_info,
             ip_address=ip_address,
             session_jti=refresh_payload.jti,
@@ -191,39 +188,45 @@ class AuthService:
                 self._settings.jwt.ALGORITHM,
             )
         except Exception:
-            raise UnauthorizedError("Invalid refresh token")
+            raise UnauthorizedError("Invalid refresh token") from None
 
         if payload.type != "refresh":
             raise UnauthorizedError("Not a refresh token")
 
-        invalidated_at = await self._redis.get(
-            self._redis_key("token_invalidated_at", payload.user_uuid)
-        )
-        if invalidated_at and payload.iat:
-            invalidated_dt = datetime.fromisoformat(invalidated_at).replace(tzinfo=UTC)
-            token_iat = datetime.fromtimestamp(payload.iat, tz=UTC)
-            if token_iat < invalidated_dt:
-                raise ForbiddenError("Token revoked (logout-all)")
+        if await self._is_token_revoked(payload.user_id, payload.iat):
+            raise ForbiddenError("Token revoked (logout-all)")
 
         stored = await self._redis.get(
-            self._redis_key("refresh_token", payload.user_uuid, payload.jti)
+            self._redis_key("refresh_token", payload.user_id, payload.jti)
         )
         if not stored:
+            reused = await self._redis.get(
+                self._redis_key("rotated_refresh", payload.user_id, payload.jti)
+            )
+            if reused:
+                # This jti was legitimately rotated away already and is being
+                # redeemed a second time — signature of a stolen refresh
+                # token. Revoke the whole session family, not just this one.
+                # Commit explicitly: raising below rolls back the request
+                # session, which would otherwise silently undo the DB side
+                # (session_logs.logout_at) of logout_all while the Redis
+                # side stays revoked — leaving the audit trail out of sync
+                # with actual (correctly revoked) access.
+                await self.logout_all(session, uuid.UUID(payload.user_id))
+                await session.commit()
+                raise ForbiddenError(
+                    "Refresh token reuse detected — all sessions revoked"
+                )
             raise UnauthorizedError("Refresh token revoked")
 
-        user = await self._user_repo.get_by_id(session, uuid.UUID(payload.user_uuid))
+        user = await self._user_repo.get_by_id(session, uuid.UUID(payload.user_id))
         if not user or user.is_blocked:
             raise ForbiddenError("User blocked or not found")
-
-        access_data = await self._resolve_permissions(session, user.id)
 
         new_access = create_access_token(
             str(user.id),
             self._settings.jwt.SECRET_KEY,
             self._settings.jwt.ALGORITHM,
-            permissions=self._permission_levels(access_data),
-            role=access_data.role_name,
-            is_admin=access_data.is_admin,
             expires_minutes=self._settings.jwt.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
         new_refresh = create_refresh_token(
@@ -239,10 +242,15 @@ class AuthService:
             self._settings.jwt.ALGORITHM,
         )
 
-        await self._redis.delete(
-            self._redis_key("refresh_token", payload.user_uuid, payload.jti)
+        await self._redis.setex(
+            self._redis_key("rotated_refresh", payload.user_id, payload.jti),
+            self._token_ttl_seconds,
+            "1",
         )
-        await self._redis.srem(self._user_tokens_key(payload.user_uuid), payload.jti)
+        await self._redis.delete(
+            self._redis_key("refresh_token", payload.user_id, payload.jti)
+        )
+        await self._redis.srem(self._user_tokens_key(payload.user_id), payload.jti)
 
         await self._redis.setex(
             self._redis_key("refresh_token", str(user.id), new_payload.jti),
@@ -272,34 +280,34 @@ class AuthService:
             return
 
         await self._redis.delete(
-            self._redis_key("refresh_token", payload.user_uuid, payload.jti)
+            self._redis_key("refresh_token", payload.user_id, payload.jti)
         )
-        await self._redis.srem(self._user_tokens_key(payload.user_uuid), payload.jti)
+        await self._redis.srem(self._user_tokens_key(payload.user_id), payload.jti)
         await self._session_repo.close_session(session, payload.jti)
 
-    async def logout_all(self, session: AsyncSession, user_uuid: uuid.UUID) -> None:
-        await self._session_repo.close_all_for_user(session, user_uuid)
+    async def logout_all(self, session: AsyncSession, user_id: uuid.UUID) -> None:
+        await self._session_repo.close_all_for_user(session, user_id)
 
-        tokens_key = self._user_tokens_key(str(user_uuid))
+        tokens_key = self._user_tokens_key(str(user_id))
         jtis = await self._redis.smembers(tokens_key)
         if jtis:
             token_keys = [
-                self._redis_key("refresh_token", str(user_uuid), jti) for jti in jtis
+                self._redis_key("refresh_token", str(user_id), jti) for jti in jtis
             ]
             await self._redis.delete(*token_keys)
         await self._redis.delete(tokens_key)
 
         invalidated_at = datetime.now(UTC)
         await self._redis.set(
-            self._redis_key("token_invalidated_at", str(user_uuid)),
+            self._redis_key("token_invalidated_at", str(user_id)),
             invalidated_at.isoformat(),
             ex=self._token_ttl_seconds,
         )
 
     async def get_sessions(
-        self, session: AsyncSession, user_uuid: uuid.UUID
+        self, session: AsyncSession, user_id: uuid.UUID
     ) -> list[SessionLog]:
-        return await self._session_repo.get_active_for_user(session, user_uuid)
+        return await self._session_repo.get_active_for_user(session, user_id)
 
     async def block_user(
         self,
@@ -358,8 +366,6 @@ class AuthService:
                 is_admin = user_access.role.is_admin
 
         if user_access is not None and user_access.additional_permissions:
-            from src.repositories.permission_repository import PermissionRepository
-
             perm_repo = PermissionRepository()
             extra_perms = await perm_repo.check_by_uuids(
                 session, set(user_access.additional_permissions)
@@ -420,6 +426,49 @@ class AuthService:
             levels[app_id] = max(granted) if granted else int(AccessLevel.READ)
         return levels
 
+    async def _is_token_revoked(self, user_id: str, iat: int | None) -> bool:
+        """True if a logout-all happened after this token's issue time.
+
+        Shared by refresh() (already enforced this), check_access(), and
+        resolve_credentials() — previously only refresh() checked it, so an
+        already-issued access token kept passing authorization for up to its
+        full TTL after a global logout-all.
+        """
+        if iat is None:
+            return False
+        invalidated_at = await self._redis.get(
+            self._redis_key("token_invalidated_at", user_id)
+        )
+        if not invalidated_at:
+            return False
+        invalidated_dt = datetime.fromisoformat(invalidated_at).replace(tzinfo=UTC)
+        # Compare on whole epoch seconds on both sides: `iat` is an integer
+        # (second resolution) but invalidated_dt carries microseconds, so a
+        # token minted in the very same second as a block/logout-all could
+        # floor below a sub-second-later invalidated_dt and be flagged as
+        # revoked despite being issued at or after it.
+        return iat < int(invalidated_dt.timestamp())
+
+    async def _is_user_blocked(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
+        """True if the user is blocked or no longer exists."""
+        user = await self._user_repo.get_by_id(session, user_id)
+        return user is None or bool(user.is_blocked)
+
+    async def resolve_credentials(
+        self, session: AsyncSession, user_id: uuid.UUID, iat: int | None = None
+    ) -> ResolvedAccess:
+        """Return role metadata for a user without checking a specific path.
+
+        Used by /auth/check_credentials and internal admin guards. Raises if
+        the token was revoked by a logout-all or the user is blocked — both
+        previously went unchecked here, unlike login()/refresh().
+        """
+        if await self._is_token_revoked(str(user_id), iat):
+            raise ForbiddenError("Token revoked (logout-all)")
+        if await self._is_user_blocked(session, user_id):
+            raise ForbiddenError("User is blocked")
+        return await self._resolve_permissions(session, user_id)
+
     async def check_access(
         self,
         session: AsyncSession,
@@ -430,46 +479,51 @@ class AuthService:
     ) -> tuple[bool, str, str | None, bool]:
         """Check if the token bearer can access (application, method, path).
 
-        Returns: (allowed, user_uuid, role, is_admin)
+        Returns: (allowed, user_id, role, is_admin)
         """
-        import fnmatch
-
         payload = await self.check_credentials(token)
-        user_id = uuid.UUID(payload.user_uuid)
+        user_id = uuid.UUID(payload.user_id)
+
+        if await self._is_token_revoked(
+            payload.user_id, payload.iat
+        ) or await self._is_user_blocked(session, user_id):
+            return False, payload.user_id, None, False
+
         access = await self._resolve_permissions(session, user_id)
         app_perms = access.permissions.get(application, {})
 
         patterns = app_perms.get(method, [])
         allowed = any(fnmatch.fnmatch(path, p) for p in patterns)
 
-        return allowed, payload.user_uuid, access.role_name, access.is_admin
+        return allowed, payload.user_id, access.role_name, access.is_admin
 
     async def assign_role(
         self,
         session: AsyncSession,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
         role_uuid: uuid.UUID | None,
         additional_permissions: list[uuid.UUID] | None = None,
     ) -> None:
         """Assign or update a role for a user."""
-        user = await self._user_repo.get_by_id(session, user_uuid)
+        user = await self._user_repo.get_by_id(session, user_id)
         if not user:
             raise NotFoundError("User not found")
 
         if role_uuid is not None:
             role = await self._role_repo.get_by_id(session, role_uuid)
             if not role:
-                raise NotFoundError(f"Role {role_uuid} not found")
+                msg = f"Role {role_uuid} not found"
+                raise NotFoundError(msg)
 
         await self._user_access_repo.create_or_update(
             session,
-            user_uuid=user_uuid,
+            user_id=user_id,
             role_uuid=role_uuid,
             additional_permissions=additional_permissions,
         )
 
     async def get_user_permissions(
-        self, session: AsyncSession, user_uuid: uuid.UUID
+        self, session: AsyncSession, user_id: uuid.UUID
     ) -> ResolvedAccess:
         """Get resolved permissions for any user (admin use)."""
-        return await self._resolve_permissions(session, user_uuid)
+        return await self._resolve_permissions(session, user_id)

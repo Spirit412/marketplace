@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -55,8 +56,6 @@ class WarehouseRepo:
     async def deactivate(
         self, session: AsyncSession, warehouse_id: uuid.UUID
     ) -> Warehouse | None:
-        from datetime import UTC, datetime
-
         stmt = (
             update(Warehouse)
             .where(Warehouse.id == warehouse_id)

@@ -1,10 +1,13 @@
 import uuid
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.core.repository import BaseRepository
+from src.models.role import Role
 from src.models.user import User
+from src.models.user_access import UserAccess
 
 
 class UserRepository(BaseRepository[User]):
@@ -17,12 +20,6 @@ class UserRepository(BaseRepository[User]):
     async def get_with_access(
         self, session: AsyncSession, user_id: uuid.UUID
     ) -> User | None:
-        from sqlalchemy import select
-        from sqlalchemy.orm import selectinload
-
-        from src.models.role import Role
-        from src.models.user_access import UserAccess
-
         stmt = (
             select(User)
             .where(User.id == user_id)

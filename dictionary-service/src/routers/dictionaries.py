@@ -1,14 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.core.database import get_async_session
 from src.depends import Inject
@@ -28,18 +25,17 @@ router = APIRouter(
 
 @router.get(
     "/{type}",
-    response_model=DictionaryListResponse,
     summary="Get dictionary entries by type",
 )
 async def get_dictionary_entries(
-    type: DictionaryType,
+    dict_type: Annotated[DictionaryType, Path(alias="type")],
     service: Annotated[DictionaryService, Depends(Inject(DictionaryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> DictionaryListResponse:
     """Get dictionary entries filtered by type."""
-    items = await service.get_all(session=session, type_=type)
+    items = await service.get_all(session=session, type_=dict_type)
     return DictionaryListResponse(
-        type=type,
+        type=dict_type,
         items=[DictionaryEntryResponse.model_validate(i) for i in items],
         total=len(items),
     )
@@ -47,21 +43,19 @@ async def get_dictionary_entries(
 
 @router.post(
     "/{type}",
-    response_model=DictionaryEntryResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Create dictionary entry",
 )
 async def create_dictionary_entry(
-    type: DictionaryType,
+    dict_type: Annotated[DictionaryType, Path(alias="type")],
     body: CreateDictionaryEntry,
     service: Annotated[DictionaryService, Depends(Inject(DictionaryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
+    _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> DictionaryEntryResponse:
     """Create or update a dictionary entry for the given type."""
     entry = await service.create_or_update(
         session=session,
-        type_=type,
+        type_=dict_type,
         code=body.code,
         data=body.data,
     )

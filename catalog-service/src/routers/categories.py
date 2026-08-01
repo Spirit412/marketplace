@@ -4,11 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
-from src.core.auth import (
-    Permission,
-    require_permission,
-)
 from src.core.database import get_async_session
 from src.depends import Inject
 from src.schemes.request.category import CreateCategoryRequest, UpdateCategoryRequest
@@ -20,9 +15,7 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 
 @router.post(
     "/",
-    response_model=CategoryResponse,
     status_code=201,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Create category",
 )
 async def create_category(
@@ -46,8 +39,6 @@ async def create_category(
 
 @router.get(
     "/",
-    response_model=CategoryTreeResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Get category tree",
 )
 async def get_tree(
@@ -63,8 +54,6 @@ async def get_tree(
 
 @router.get(
     "/{category_id}",
-    response_model=CategoryResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Get category by ID",
 )
 async def get_category(
@@ -81,8 +70,6 @@ async def get_category(
 
 @router.put(
     "/{category_id}",
-    response_model=CategoryResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Update category",
 )
 async def update_category(
@@ -106,7 +93,6 @@ async def update_category(
     "/{category_id}",
     status_code=204,
     response_model=None,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Delete category",
 )
 async def delete_category(
@@ -122,8 +108,6 @@ async def delete_category(
 
 @router.get(
     "/{category_id}/ancestors",
-    response_model=list[CategoryResponse],
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Get category ancestors",
 )
 async def get_ancestors(
@@ -138,8 +122,6 @@ async def get_ancestors(
 
 @router.get(
     "/{category_id}/descendants",
-    response_model=list[CategoryResponse],
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Get category descendants",
 )
 async def get_descendants(
@@ -154,15 +136,13 @@ async def get_descendants(
 
 @router.post(
     "/{category_id}/move",
-    response_model=CategoryResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Move category",
 )
 async def move_category(
     category_id: uuid.UUID,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    new_parent_id: str | None = Query(None),
+    new_parent_id: Annotated[str | None, Query()] = None,
 ) -> CategoryResponse:
     """Move a category to a new parent."""
     parent = uuid.UUID(new_parent_id) if new_parent_id else None

@@ -6,10 +6,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.enums.movement_type import MovementType
 from src.models.models import StockMovement
 from src.repositories.movement_repo import MovementRepo
-from src.schemes.response.inventory import StockMovementResponse
+from src.schemes.response.inventory import PopularProductResponse, StockMovementResponse
 
 
 class MovementService:
+    async def list_popular_products(
+        self, *, session: AsyncSession, limit: int = 50
+    ) -> list[PopularProductResponse]:
+        """Products ranked by reserved/shipped volume.
+
+        Backs the cache warmup job's "popular products" preload.
+        """
+        movement_repo = MovementRepo()
+        ranked = await movement_repo.list_popular_products(session, limit=limit)
+        return [
+            PopularProductResponse(product_id=product_id, total_quantity=total)
+            for product_id, total in ranked
+        ]
+
     async def record(
         self,
         *,

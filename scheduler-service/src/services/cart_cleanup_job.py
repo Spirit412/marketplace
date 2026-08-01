@@ -1,6 +1,8 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy import text
+
 from src.config.settings import settings
 from src.core.database import _get_session_factory
 from src.engines.rabbitmq import publish_event
@@ -14,10 +16,8 @@ async def cart_cleanup_job() -> None:
 
     factory = _get_session_factory()
     async with factory() as session:
-        from sqlalchemy import text
-
         result = await session.execute(
-            text("SELECT id, user_uuid FROM cart.carts WHERE updated_at < :cutoff"),
+            text("SELECT id, user_id FROM cart.carts WHERE updated_at < :cutoff"),
             {"cutoff": cutoff},
         )
         expired_carts = result.fetchall()
@@ -28,12 +28,12 @@ async def cart_cleanup_job() -> None:
 
         logger.info("Cleaning up %d expired carts", len(expired_carts))
 
-        for cart_id, user_uuid in expired_carts:
+        for cart_id, user_id in expired_carts:
             await publish_event(
                 "cart.expired",
                 {
                     "cart_id": str(cart_id),
-                    "user_uuid": str(user_uuid),
+                    "user_id": str(user_id),
                     "reason": "expired",
                 },
             )

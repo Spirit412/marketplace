@@ -12,6 +12,7 @@ from src.exceptions import (
     DomainError,
     ForbiddenError,
     NotFoundError,
+    RateLimitExceededError,
     ServiceUnavailableError,
     UnauthorizedError,
     ValidationError,
@@ -20,14 +21,16 @@ from src.routers import routers
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     init_container()
     yield
 
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    async def _domain_error_handler(
+        _request: Request, exc: DomainError
+    ) -> JSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ConflictError: 409,
@@ -35,6 +38,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
             UnauthorizedError: 401,
             ForbiddenError: 403,
             ServiceUnavailableError: 503,
+            RateLimitExceededError: 429,
         }
         status_code = status_map.get(type(exc), 500)
         return JSONResponse(

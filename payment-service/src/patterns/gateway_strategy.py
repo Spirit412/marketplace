@@ -1,7 +1,16 @@
+import base64
+import json
 import logging
 import secrets
 from abc import ABC, abstractmethod
 from typing import Any
+
+import aiohttp
+
+try:
+    import stripe
+except ImportError:
+    stripe = None
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +26,10 @@ class BasePaymentGateway(ABC):
         order_id: str,
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a payment. Returns dict with gateway_payment_id, status, raw_response."""
+        """Create a payment.
+
+        Returns dict with gateway_payment_id, status, raw_response.
+        """
         ...
 
     @abstractmethod
@@ -26,7 +38,9 @@ class BasePaymentGateway(ABC):
         ...
 
     @abstractmethod
-    async def refund(self, payment_id: str, amount: int | None = None) -> dict[str, Any]:
+    async def refund(
+        self, payment_id: str, amount: int | None = None
+    ) -> dict[str, Any]:
         """Refund a payment. Returns dict with gateway_transaction_id, status."""
         ...
 
@@ -45,8 +59,8 @@ class MockGateway(BasePaymentGateway):
         self,
         amount: int,
         currency: str,
-        order_id: str,
-        metadata: dict[str, Any] | None = None,
+        order_id: str,  # noqa: ARG002 -- interface param; caller passes it by keyword
+        metadata: dict[str, Any] | None = None,  # noqa: ARG002 -- ditto
     ) -> dict[str, Any]:
         return {
             "gateway_payment_id": f"mock_pi_{secrets.token_hex(12)}",
@@ -59,14 +73,18 @@ class MockGateway(BasePaymentGateway):
             },
         }
 
-    async def capture(self, payment_id: str) -> dict[str, Any]:
+    async def capture(self, payment_id: str) -> dict[str, Any]:  # noqa: ARG002
         return {
             "gateway_transaction_id": f"mock_cap_{secrets.token_hex(12)}",
             "status": "succeeded",
             "raw_response": {"status": "succeeded"},
         }
 
-    async def refund(self, payment_id: str, amount: int | None = None) -> dict[str, Any]:
+    async def refund(
+        self,
+        payment_id: str,  # noqa: ARG002 -- interface param, must match base signature
+        amount: int | None = None,  # noqa: ARG002 -- ditto
+    ) -> dict[str, Any]:
         return {
             "gateway_transaction_id": f"mock_re_{secrets.token_hex(12)}",
             "status": "succeeded",
@@ -74,12 +92,12 @@ class MockGateway(BasePaymentGateway):
         }
 
     async def verify_webhook(
-        self, payload: str | bytes, signature: str | None = None
+        self,
+        payload: str | bytes,
+        signature: str | None = None,  # noqa: ARG002
     ) -> dict[str, Any]:
         if isinstance(payload, bytes):
             payload = payload.decode()
-        import json
-
         result: dict[str, Any] = json.loads(payload)
         return result
 
@@ -91,14 +109,11 @@ class StripeGateway(BasePaymentGateway):
         self._api_key = api_key
         self._webhook_secret = webhook_secret
         self._stripe = None
-        if api_key:
-            try:
-                import stripe
-
-                self._stripe = stripe
-                self._stripe.api_key = api_key
-            except ImportError:
-                logger.warning("stripe package not installed; falling back to mock")
+        if api_key and stripe is not None:
+            self._stripe = stripe
+            self._stripe.api_key = api_key
+        elif api_key:
+            logger.warning("stripe package not installed; falling back to mock")
 
     async def create_payment(
         self,
@@ -138,7 +153,9 @@ class StripeGateway(BasePaymentGateway):
             "raw_response": {"status": "succeeded"},
         }
 
-    async def refund(self, payment_id: str, amount: int | None = None) -> dict[str, Any]:
+    async def refund(
+        self, payment_id: str, amount: int | None = None
+    ) -> dict[str, Any]:
         if self._stripe:
             refund_args: dict[str, Any] = {"payment_intent": payment_id}
             if amount is not None:
@@ -163,8 +180,6 @@ class StripeGateway(BasePaymentGateway):
                 payload, signature, self._webhook_secret
             )
             return event
-        import json
-
         if isinstance(payload, bytes):
             payload = payload.decode()
         result: dict[str, Any] = json.loads(payload)
@@ -182,8 +197,6 @@ class YooKassaGateway(BasePaymentGateway):
         self._webhook_secret = webhook_secret
 
     def _auth_header(self) -> str:
-        import base64
-
         credentials = base64.b64encode(
             f"{self._shop_id}:{self._secret_key}".encode()
         ).decode()
@@ -192,8 +205,6 @@ class YooKassaGateway(BasePaymentGateway):
     async def _request(
         self, method: str, path: str, json_data: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        import aiohttp
-
         headers = {
             "Authorization": self._auth_header(),
             "Content-Type": "application/json",
@@ -239,7 +250,9 @@ class YooKassaGateway(BasePaymentGateway):
             "raw_response": result,
         }
 
-    async def refund(self, payment_id: str, amount: int | None = None) -> dict[str, Any]:
+    async def refund(
+        self, payment_id: str, amount: int | None = None
+    ) -> dict[str, Any]:
         payload: dict[str, Any] = {"payment_id": payment_id}
         if amount is not None:
             payload["amount"] = {
@@ -254,10 +267,10 @@ class YooKassaGateway(BasePaymentGateway):
         }
 
     async def verify_webhook(
-        self, payload: str | bytes, signature: str | None = None
+        self,
+        payload: str | bytes,
+        signature: str | None = None,  # noqa: ARG002
     ) -> dict[str, Any]:
-        import json
-
         if isinstance(payload, bytes):
             payload = payload.decode()
         result: dict[str, Any] = json.loads(payload)

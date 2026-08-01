@@ -1,18 +1,17 @@
+from functools import lru_cache
+
 from faststream.rabbit import RabbitBroker
 
 from src.config.settings import settings
 
-_broker: RabbitBroker | None = None
 
-
+@lru_cache
 def get_broker() -> RabbitBroker:
-    global _broker
-    if _broker is None:
-        _broker = RabbitBroker(url=settings.rabbitmq.url)
-    return _broker
+    return RabbitBroker(url=settings.rabbitmq.url)
 
 
 async def check_rabbitmq() -> None:
-    broker = get_broker()
-    if not broker._connection:
-        await broker.connect()
+    # connect() is idempotent — it only opens a connection if one doesn't
+    # already exist — so there's no need to peek at the broker's private
+    # _connection state first.
+    await get_broker().connect()

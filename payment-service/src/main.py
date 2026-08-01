@@ -21,14 +21,21 @@ from src.routers import routers
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     init_container()
+    init_auth(
+        auth_service_url=settings.AUTH_SERVICE_URL,
+        app_id=settings.APP_ID,
+        redis_url=settings.redis.url,
+    )
     yield
 
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    async def _domain_error_handler(
+        _request: Request, exc: DomainError
+    ) -> JSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ConflictError: 409,
@@ -59,13 +66,7 @@ app.add_middleware(
 )
 
 
-init_auth(
-    jwt_secret=settings.jwt.SECRET_KEY,
-    jwt_algorithm=settings.jwt.ALGORITHM,
-    auth_service_url=settings.AUTH_SERVICE_URL,
-    app_id=settings.APP_ID,
-)
-app.add_middleware(AuthMiddleware)
+app.add_middleware(AuthMiddleware, exclude_paths=["/health", "/docs", "/openapi.json"])
 
 for router in routers:
     app.include_router(router)

@@ -13,22 +13,34 @@ from src.exceptions import (
     DomainError,
     ForbiddenError,
     NotFoundError,
+    RateLimitExceededError,
     ServiceUnavailableError,
     UnauthorizedError,
     ValidationError,
 )
 from src.routers import routers
+from src.workers_main import broker as _events_broker
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     init_container()
+    # Runs the payment.succeeded/payment.failed consumers (workers_main.py)
+    # in this same process rather than a separate worker container — no
+    # other service in this project runs a standalone worker process either
+    # (their workers_main.py files exist but are never invoked), so this
+    # keeps order-service self-contained instead of adding a new deployment
+    # topology just for itself.
+    await _events_broker.start()
     yield
+    await _events_broker.stop()
 
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    async def _domain_error_handler(
+        _request: Request, exc: DomainError
+    ) -> JSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ConflictError: 409,
@@ -36,6 +48,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
             UnauthorizedError: 401,
             ForbiddenError: 403,
             ServiceUnavailableError: 503,
+            RateLimitExceededError: 429,
         }
         status_code = status_map.get(type(exc), 500)
         errors = getattr(exc, "errors", None)
@@ -62,12 +75,11 @@ app.add_middleware(
 
 
 init_auth(
-    jwt_secret=settings.jwt.SECRET_KEY,
-    jwt_algorithm=settings.jwt.ALGORITHM,
     auth_service_url=settings.AUTH_SERVICE_URL,
     app_id=settings.APP_ID,
+    redis_url=settings.redis.url,
 )
-app.add_middleware(AuthMiddleware)
+app.add_middleware(AuthMiddleware, exclude_paths=["/health", "/docs", "/openapi.json"])
 
 for router in routers:
     app.include_router(router)

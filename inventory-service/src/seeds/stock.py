@@ -16,6 +16,7 @@ Usage:
     poetry run python -m src.seeds.stock
 """
 
+import argparse
 import asyncio
 import json
 from pathlib import Path
@@ -34,7 +35,7 @@ DEFAULT_SELLER_EMAIL = "seller@marketplace.dev"
 
 
 def _load_json(name: str) -> dict[str, Any]:
-    with open(DATA_DIR / name, encoding="utf-8") as fh:
+    with (DATA_DIR / name).open(encoding="utf-8") as fh:
         data: dict[str, Any] = json.load(fh)
         return data
 
@@ -45,9 +46,11 @@ async def _resolve_seller_id(session: AsyncSession, email: str) -> UUID:
     )
     row = result.first()
     if row is None:
-        raise RuntimeError(
-            f"Seller user '{email}' not found — run auth-service's `python -m src.seeds.rbac` first."
+        msg = (
+            f"Seller user '{email}' not found — "
+            "run auth-service's `python -m src.seeds.rbac` first."
         )
+        raise RuntimeError(msg)
     seller_id: UUID = row[0]
     return seller_id
 
@@ -59,13 +62,14 @@ async def _resolve_product_ids(
         text("SELECT sku, id FROM catalog.products WHERE sku = ANY(:skus)"),
         {"skus": skus},
     )
-    found = {sku: pid for sku, pid in result.all()}
+    found: dict[str, UUID] = {row[0]: row[1] for row in result.all()}
     missing = set(skus) - set(found)
     if missing:
-        raise RuntimeError(
+        msg = (
             f"Products not found for SKUs {sorted(missing)} — "
             "run catalog-service's `python -m src.seeds.products` first."
         )
+        raise RuntimeError(msg)
     return found
 
 
@@ -97,7 +101,7 @@ async def seed_stock(
     quantity = data.get("quantity_per_sku", 100)
     created = 0
     skipped = 0
-    for sku, product_id in product_ids.items():
+    for product_id in product_ids.values():
         existing_item = await session.execute(
             select(StockItem).where(
                 StockItem.warehouse_id == warehouse.id,
@@ -131,7 +135,8 @@ async def seed_stock(
 
     await session.commit()
     print(
-        f"Stock: warehouse '{warehouse.name}' ready, {created} items created, {skipped} already existed"
+        f"Stock: warehouse '{warehouse.name}' ready, "
+        f"{created} items created, {skipped} already existed"
     )
 
 
@@ -149,8 +154,6 @@ async def _main(seller_email: str) -> None:
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--seller-email", default=DEFAULT_SELLER_EMAIL)
     args = parser.parse_args()

@@ -72,7 +72,7 @@ def test_protected_endpoints_reject_anonymous(
     A service with no parameter-free GET routes has nothing to assert here,
     so it is skipped rather than silently passing.
     """
-    paths = [p for p in _protected_get_paths(service) if p not in ("/openapi.json",)]
+    paths = [p for p in _protected_get_paths(service) if p != "/openapi.json"]
     if not paths:
         pytest.skip(f"{service} exposes no parameter-free GET routes")
     unauthorised = []
@@ -88,7 +88,7 @@ def test_garbage_token_is_rejected(
     service: str, clients: dict[str, httpx.Client]
 ) -> None:
     """A malformed bearer token is rejected with 401, not a 500."""
-    paths = [p for p in _protected_get_paths(service) if p not in ("/openapi.json",)]
+    paths = [p for p in _protected_get_paths(service) if p != "/openapi.json"]
     if not paths:
         pytest.skip(f"{service} exposes no parameter-free GET routes")
     headers = {"Authorization": "Bearer not.a.real.token"}

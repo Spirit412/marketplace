@@ -3,6 +3,8 @@ import logging
 from functools import lru_cache
 from typing import Any
 
+import aio_pika
+
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -19,8 +21,6 @@ async def _publish_event(
 ) -> None:
     """Publish event to RabbitMQ; if unavailable, log and ignore gracefully."""
     try:
-        import aio_pika
-
         connection = await aio_pika.connect_robust(settings.rabbitmq.url)
         async with connection:
             channel = await connection.channel()
@@ -32,26 +32,20 @@ async def _publish_event(
                 content_type="application/json",
             )
             await exchange_obj.publish(message, routing_key=routing_key)
-    except ImportError:
-        logger.debug(
-            "aio_pika not installed; skipping publish to %s/%s",
-            exchange,
-            routing_key,
-        )
     except Exception:
         logger.exception("Failed to publish event %s/%s", exchange, routing_key)
 
 
 async def publish_payment_succeeded(payload: dict[str, Any]) -> None:
     """Publish payment.succeeded event."""
-    await _publish_event("marketplace.payment", "payment.succeeded", payload)
+    await _publish_event("marketplace.events", "payment.succeeded", payload)
 
 
 async def publish_payment_failed(payload: dict[str, Any]) -> None:
     """Publish payment.failed event."""
-    await _publish_event("marketplace.payment", "payment.failed", payload)
+    await _publish_event("marketplace.events", "payment.failed", payload)
 
 
 async def publish_payment_refunded(payload: dict[str, Any]) -> None:
     """Publish payment.refunded event."""
-    await _publish_event("marketplace.payment", "payment.refunded", payload)
+    await _publish_event("marketplace.events", "payment.refunded", payload)

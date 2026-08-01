@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -8,5 +8,5 @@ class CartItemRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    product_id: uuid.UUID
+    product_id: UUID
     quantity: int = Field(default=1, ge=1, le=100)

@@ -1,11 +1,14 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.repository import exclude_deleted
+from src.enums.movement_type import MovementType
 from src.models.models import StockItem, StockMovement
+
+_POPULARITY_MOVEMENT_TYPES = (MovementType.RESERVE.value, MovementType.SHIPMENT.value)
 
 
 class MovementRepo:
@@ -38,6 +41,29 @@ class MovementRepo:
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())
+
+    async def list_popular_products(
+        self, session: AsyncSession, limit: int = 50
+    ) -> list[tuple[uuid.UUID, int]]:
+        """Rank products by total reserved/shipped quantity.
+
+        This is the closest proxy for demand buildable from data
+        inventory-service actually owns — it has no visibility into orders
+        or sales, which live in order-service. Returns (product_id, total)
+        pairs, highest first.
+        """
+        stmt = (
+            select(
+                StockItem.product_id, func.sum(StockMovement.quantity).label("total")
+            )
+            .join(StockItem, StockMovement.stock_item_id == StockItem.id)
+            .where(StockMovement.movement_type.in_(_POPULARITY_MOVEMENT_TYPES))
+            .group_by(StockItem.product_id)
+            .order_by(func.sum(StockMovement.quantity).desc())
+            .limit(limit)
+        )
+        result = await session.execute(stmt)
+        return [(row.product_id, row.total) for row in result.all()]
 
     async def list_by_warehouse(
         self,

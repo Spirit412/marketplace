@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 from typing import Any
 
@@ -31,8 +32,6 @@ class RedisDictCache:
     async def get(
         self, type_: str, code: str | None = None
     ) -> list[dict[str, Any]] | dict[str, Any] | None:
-        import json
-
         if code is not None:
             key = f"dict:{type_}:{code}"
             data = await self._redis.get(key)
@@ -49,8 +48,6 @@ class RedisDictCache:
     async def set(
         self, type_: str, data: list[dict[str, Any]], ttl: int | None = None
     ) -> None:
-        import json
-
         if ttl is None:
             ttl = self._settings.CACHE_TTL_SECONDS
 

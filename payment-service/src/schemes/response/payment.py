@@ -21,7 +21,7 @@ class PaymentResponse(BaseModel):
 
     id: uuid.UUID
     order_id: uuid.UUID
-    user_uuid: uuid.UUID
+    user_id: uuid.UUID
     amount: int
     currency: str
     status: PaymentStatus

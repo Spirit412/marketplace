@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from src.core.event import BaseEventValidator, EventError
-from src.engines.http_client import InventoryClient
+from src.facades import InventoryClient
 
 
 @dataclass
@@ -20,9 +20,11 @@ class CartNotEmptyValidator(BaseEventValidator[CreateOrderContext]):
 
 
 class StockAvailableValidator(BaseEventValidator[CreateOrderContext]):
-    """Checks every cart line — not just the first insufficient one — so a
-    customer sees every out-of-stock product in a single response instead of
-    fixing their cart one item at a time across repeated submits.
+    """Checks every cart line, not just the first insufficient one.
+
+    So a customer sees every out-of-stock product in a single response
+    instead of fixing their cart one item at a time across repeated
+    submits.
     """
 
     async def validate(self, context: CreateOrderContext) -> None:
@@ -34,7 +36,8 @@ class StockAvailableValidator(BaseEventValidator[CreateOrderContext]):
 
         if insufficient:
             context.insufficient_products = insufficient
+            msg = f"Insufficient stock for products: {', '.join(insufficient)}"
             raise EventError(
-                f"Insufficient stock for products: {', '.join(insufficient)}",
+                msg,
                 code="insufficient_stock",
             )

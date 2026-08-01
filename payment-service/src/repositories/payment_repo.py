@@ -71,6 +71,11 @@ class PaymentRepo:
     ) -> Payment:
         payment.status = new_status
         await session.flush()
+        # updated_at is server-side (onupdate=func.now()) — flush() alone
+        # leaves it expired on the Python object; the next (synchronous)
+        # attribute read, e.g. Pydantic serializing the response, would need
+        # to lazy-load it and fail with MissingGreenlet outside an await.
+        await session.refresh(payment)
         return payment
 
     async def add_transaction(

@@ -5,7 +5,7 @@ class PostgresSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="POSTGRES_")
 
     USER: str = "marketplace"
-    PASSWORD: str = "marketplace"
+    PASSWORD: str = "marketplace"  # noqa: S105 -- local-dev default, overridden by env in real deployments
     HOST: str = "mp-postgres"
     PORT: int = 5432
     DB: str = "marketplace"
@@ -41,7 +41,7 @@ class RabbitMQSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
 
     USER: str = "marketplace"
-    PASSWORD: str = "marketplace"
+    PASSWORD: str = "marketplace"  # noqa: S105 -- local-dev default, overridden by env in real deployments
     HOST: str = "mp-rabbitmq"
     PORT: int = 5672
 
@@ -53,7 +53,7 @@ class RabbitMQSettings(BaseSettings):
 class JWTSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="JWT_")
 
-    SECRET_KEY: str = "change-me"
+    SECRET_KEY: str = "change-me"  # noqa: S105 -- local-dev default, overridden by env in real deployments
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -84,6 +84,7 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "auth-service"
     APP_ID: str = "AUTH"
+    AUTH_SERVICE_URL: str = "http://mp-auth-service:8110"
     APP_PORT: int = 8110
     LOG_LEVEL: str = "debug"
 
@@ -102,11 +103,11 @@ class Settings(BaseSettings):
     RATE_LIMIT_MAX_REQUESTS: int = 60
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
-    PASSWORD_HASHER: str = "bcrypt"
+    PASSWORD_HASHER: str = "bcrypt"  # noqa: S105 -- algorithm name, not a secret
 
 
 settings = Settings()
 
-from src.core.config import configure as _configure_core
+from src.core.config import configure as _configure_core  # noqa: E402
 
 _configure_core(settings)

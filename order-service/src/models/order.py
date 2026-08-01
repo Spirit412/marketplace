@@ -19,7 +19,7 @@ class Order(TimestampMixin, SoftDeleteMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ заказа"
     )
-    user_uuid: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         index=True, comment="Покупатель, оформивший заказ"
     )
     seller_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -116,7 +116,9 @@ class OrderItem(Base):
     )
     warehouse_id: Mapped[uuid.UUID | None] = mapped_column(
         nullable=True,
-        comment="Склад, с которого зарезервирован товар (fk на inventory.warehouses.id)",
+        comment=(
+            "Склад, с которого зарезервирован товар (fk на inventory.warehouses.id)"
+        ),
     )
 
     order: Mapped[Order] = relationship(back_populates="items")

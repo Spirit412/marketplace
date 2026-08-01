@@ -1,5 +1,5 @@
 import uuid
-from typing import Any
+from typing import Any, ClassVar
 
 from src.models.order import Order, OrderItem
 
@@ -7,7 +7,7 @@ from src.models.order import Order, OrderItem
 class OrderBuilder:
     """Fluent builder for constructing Order objects."""
 
-    TAX_RATES: dict[str, float] = {
+    TAX_RATES: ClassVar[dict[str, float]] = {
         "RU": 0.20,
         "US": 0.08,
         "EU": 0.21,
@@ -53,7 +53,7 @@ class OrderBuilder:
         self._order.tax_strategy = region
         return self
 
-    def apply_discounts(self, user_uuid: uuid.UUID | None) -> "OrderBuilder":
+    def apply_discounts(self, _user_id: uuid.UUID | None) -> "OrderBuilder":
         """Apply discounts (noop for now)."""
         self._order.discount = 0
         return self

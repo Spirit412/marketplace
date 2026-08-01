@@ -6,11 +6,11 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.engines.http_client import CatalogClient, DictionaryClient
 from src.engines.rabbitmq import ImportPublisher
 from src.enums.import_status import IMPORT_STATE_MACHINE, ImportStatus
 from src.enums.import_type import ImportType
 from src.exceptions import NotFoundError
+from src.facades import CatalogClient, DictionaryClient
 from src.models.import_row import ImportRow
 from src.models.import_task import ImportTask
 from src.patterns.file_storage_registry import FileStorageRegistry
@@ -54,7 +54,7 @@ class ImportService:
         file_path = await self._file_storage.backend.save(
             content, f"{seller_id}/{file_name}"
         )
-        task = await self._task_repo.create_task(
+        return await self._task_repo.create_task(
             session,
             {
                 "seller_id": seller_id,
@@ -64,7 +64,6 @@ class ImportService:
                 "status": ImportStatus.PENDING,
             },
         )
-        return task
 
     async def _transition_status(
         self,
@@ -101,7 +100,8 @@ class ImportService:
 
         task = await self._task_repo.get_task(session, task_id)
         if task is None:
-            raise NotFoundError(f"Task {task_id} not found")
+            msg = f"Task {task_id} not found"
+            raise NotFoundError(msg)
 
         await self._transition_status(session, task_id, ImportStatus.VALIDATING)
 
@@ -115,9 +115,7 @@ class ImportService:
         mapping = MappingService.auto_map(headers, task.import_type)
 
         rows: list[dict[str, Any]] = []
-        row_number = 0
-        for row in reader:
-            row_number += 1
+        for row_number, row in enumerate(reader, start=1):
             mapped = MappingService.apply_mapping(row, mapping)
             rows.append({"row_number": row_number, "data": mapped})
 
@@ -126,26 +124,25 @@ class ImportService:
             rows, task.import_type, strategy
         )
 
-        row_records: list[dict[str, Any]] = []
-        for item in valid_rows:
-            row_records.append(
-                {
-                    "task_id": task_id,
-                    "row_number": item["row_number"],
-                    "row_data": item["data"],
-                    "is_valid": True,
-                }
-            )
-        for item in error_rows:
-            row_records.append(
-                {
-                    "task_id": task_id,
-                    "row_number": item["row_number"],
-                    "row_data": item["data"],
-                    "error_description": item["errors"],
-                    "is_valid": False,
-                }
-            )
+        row_records: list[dict[str, Any]] = [
+            {
+                "task_id": task_id,
+                "row_number": item["row_number"],
+                "row_data": item["data"],
+                "is_valid": True,
+            }
+            for item in valid_rows
+        ]
+        row_records.extend(
+            {
+                "task_id": task_id,
+                "row_number": item["row_number"],
+                "row_data": item["data"],
+                "error_description": item["errors"],
+                "is_valid": False,
+            }
+            for item in error_rows
+        )
 
         await self._row_repo.bulk_insert_rows(session, row_records)
 
@@ -173,7 +170,8 @@ class ImportService:
 
         task = await self._task_repo.get_task(session, task_id)
         if task is None:
-            raise NotFoundError(f"Task {task_id} not found")
+            msg = f"Task {task_id} not found"
+            raise NotFoundError(msg)
 
         rows = await self._row_repo.get_rows_by_task(session, task_id)
         valid_rows = [r for r in rows if r.is_valid]

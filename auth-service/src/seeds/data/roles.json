@@ -3,5 +3,6 @@
   {"name": "admin", "description": "Администратор — управление сервисами", "is_admin": true},
   {"name": "moderator", "description": "Модератор — управление каталогом, просмотр заказов", "is_admin": false},
   {"name": "seller", "description": "Продавец — управление товарами, инвентарём, импортом", "is_admin": false},
-  {"name": "customer", "description": "Покупатель — только заказы", "is_admin": false}
+  {"name": "customer", "description": "Покупатель — только заказы", "is_admin": false},
+  {"name": "system", "description": "Системный пользователь — межсервисные вызовы (SYSTEM_TOKEN)", "is_admin": false}
 ]

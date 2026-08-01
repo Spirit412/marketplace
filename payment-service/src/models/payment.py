@@ -20,7 +20,7 @@ class Payment(TimestampMixin, SoftDeleteMixin, Base):
         index=True,
         comment="Заказ, к которому относится платёж (id из order-service)",
     )
-    user_uuid: Mapped[uuid.UUID] = mapped_column(index=True, comment="Плательщик")
+    user_id: Mapped[uuid.UUID] = mapped_column(index=True, comment="Плательщик")
     amount: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="Сумма платежа, в минорных единицах валюты"
     )

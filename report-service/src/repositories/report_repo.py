@@ -37,13 +37,13 @@ class ReportRepo:
     async def list_by_user(
         self,
         session: AsyncSession,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
         offset: int = 0,
         limit: int = 50,
     ) -> tuple[list[Report], int]:
         stmt = exclude_deleted(
             select(Report)
-            .where(Report.user_uuid == user_uuid)
+            .where(Report.user_id == user_id)
             .order_by(Report.created_at.desc())
             .offset(offset)
             .limit(limit),
@@ -53,7 +53,7 @@ class ReportRepo:
         reports = list(result.scalars().all())
 
         count_stmt = exclude_deleted(
-            select(Report).where(Report.user_uuid == user_uuid), Report
+            select(Report).where(Report.user_id == user_id), Report
         )
         count_result = await session.execute(count_stmt)
         total = len(list(count_result.scalars().all()))

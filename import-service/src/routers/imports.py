@@ -4,12 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.core.database import get_async_session
 from src.dependencies import Inject
@@ -22,10 +19,8 @@ router = APIRouter(prefix="/imports", tags=["imports"])
 
 @router.post(
     "/upload",
-    response_model=ImportTaskResponse,
     status_code=201,
     summary="Upload CSV file for import",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def upload_csv(
     file: Annotated[UploadFile, File()],
@@ -39,7 +34,7 @@ async def upload_csv(
         raise ValidationError("No file provided")
 
     content = await file.read()
-    seller_id = uuid.UUID(token_payload.user_uuid)
+    seller_id = uuid.UUID(token_payload.user_id)
 
     task = await service.create_task(
         session=session,
@@ -54,9 +49,7 @@ async def upload_csv(
 
 @router.get(
     "/{task_id}",
-    response_model=ImportTaskResponse,
     summary="Get import task by ID",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_import_task(
     task_id: uuid.UUID,
@@ -72,9 +65,7 @@ async def get_import_task(
 
 @router.get(
     "/{task_id}/errors",
-    response_model=ImportErrorResponse,
     summary="Get import task errors",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_task_errors(
     task_id: uuid.UUID,

@@ -1,15 +1,15 @@
 import logging
 
 from src.config.settings import settings
-from src.engines.http_client import ReportClient
 from src.engines.rabbitmq import publish_event
+from src.facades import ReportClient
 
 logger = logging.getLogger(__name__)
 
 
 async def daily_report_job() -> None:
     """Generate daily summary report via report-service."""
-    client = ReportClient(settings.REPORT_SERVICE_URL)
+    client = ReportClient(settings.REPORT_SERVICE_URL, settings.SYSTEM_TOKEN)
 
     report = await client.generate_daily_report()
     if report is not None:

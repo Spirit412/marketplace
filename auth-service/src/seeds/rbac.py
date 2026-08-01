@@ -15,16 +15,21 @@ Usage:
 
 import asyncio
 import json
-import uuid
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config.settings import settings
 from src.database.session import ServiceSessionMaker
+from src.engines.redis_client import get_redis_client
+from src.patterns.password_hasher import PasswordHasher
 from src.repositories.group_repository import GroupRepository
 from src.repositories.permission_repository import PermissionRepository
 from src.repositories.role_repository import RoleRepository
+from src.repositories.session_repository import SessionRepository
+from src.repositories.user_access_repository import UserAccessRepository
+from src.repositories.user_repository import UserRepository
 from src.schemes.rbac import (
     GroupCreateRequest,
     GroupUpdateRequest,
@@ -37,6 +42,9 @@ from src.services.group_service import GroupService
 from src.services.permission_service import PermissionService
 from src.services.role_service import RoleService
 
+if TYPE_CHECKING:
+    import uuid
+
 DATA_DIR = Path(__file__).parent / "data"
 
 
@@ -46,7 +54,7 @@ def _load_json(name: str) -> Any:
     Returns `Any`: callers annotate the variable with the shape that
     specific file actually holds (a list of dicts, or a dict of lists).
     """
-    with open(DATA_DIR / name, encoding="utf-8") as fh:
+    with (DATA_DIR / name).open(encoding="utf-8") as fh:
         return json.load(fh)
 
 
@@ -147,13 +155,6 @@ async def seed_rbac(session: AsyncSession) -> None:
     print("  done")
 
     print("[6/6] Users...")
-    from src.config.settings import settings
-    from src.engines.redis_client import get_redis_client
-    from src.patterns.password_hasher import PasswordHasher
-    from src.repositories.session_repository import SessionRepository
-    from src.repositories.user_access_repository import UserAccessRepository
-    from src.repositories.user_repository import UserRepository
-
     auth_svc = AuthService(
         user_repo=UserRepository(),
         session_repo=SessionRepository(),
@@ -173,7 +174,7 @@ async def seed_rbac(session: AsyncSession) -> None:
                 ua_repo = UserAccessRepository()
                 await ua_repo.create_or_update(
                     session,
-                    user_uuid=existing_user.id,
+                    user_id=existing_user.id,
                     role_uuid=role_uuid,
                 )
             continue
@@ -188,7 +189,7 @@ async def seed_rbac(session: AsyncSession) -> None:
             ua_repo = UserAccessRepository()
             await ua_repo.create_or_update(
                 session,
-                user_uuid=user.id,
+                user_id=user.id,
                 role_uuid=role_uuid,
             )
     print(f"  {len(users_data)} users")

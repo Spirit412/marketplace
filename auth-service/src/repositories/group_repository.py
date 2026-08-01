@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -9,6 +9,7 @@ from src.core.repository import BaseRepository
 from src.models.group import Group
 from src.models.permission import Permission
 from src.models.permission_group_association import PermissionGroupAssociation
+from src.models.role_group_association import RoleGroupAssociation
 
 
 class GroupRepository(BaseRepository[Group]):
@@ -73,8 +74,6 @@ class GroupRepository(BaseRepository[Group]):
         to_remove = existing - permission_uuids
 
         if to_remove:
-            from sqlalchemy import delete
-
             stmt = delete(PermissionGroupAssociation).where(
                 PermissionGroupAssociation.group_uuid == group_uuid,
                 PermissionGroupAssociation.permission_uuid.in_(to_remove),
@@ -97,14 +96,12 @@ class GroupRepository(BaseRepository[Group]):
             PermissionGroupAssociation.group_uuid == group_uuid
         )
         result = await session.execute(stmt)
-        return {row for row in result.scalars().all()}
+        return set(result.scalars().all())
 
     async def resolve_permissions_for_role(
         self, session: AsyncSession, role_uuid: UUID
     ) -> list[Permission]:
         """Get all permissions for a role through its groups."""
-        from src.models.role_group_association import RoleGroupAssociation
-
         stmt = (
             select(Permission)
             .join(

@@ -122,7 +122,7 @@ class UserAccessAssignRequest(BaseModel):
 class UserAccessResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    user_uuid: UUID
+    user_id: UUID
     role_uuid: UUID | None
     additional_permissions: list[UUID]
     created_at: datetime

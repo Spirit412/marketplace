@@ -3,5 +3,6 @@
   "admin": ["admin_full_access"],
   "moderator": ["moderator_access"],
   "seller": ["seller_access"],
-  "customer": ["customer_orders"]
+  "customer": ["customer_orders"],
+  "system": ["system_full_access"]
 }

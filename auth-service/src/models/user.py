@@ -69,7 +69,7 @@ class SessionLog(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ записи сессии"
     )
-    user_uuid: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("auth.users.id", ondelete="CASCADE"),
         nullable=False,
         comment="Пользователь, которому принадлежит сессия",

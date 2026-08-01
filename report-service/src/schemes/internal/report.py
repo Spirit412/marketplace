@@ -8,7 +8,7 @@ from src.enums.report import ReportFormat, ReportType
 
 class ReportGeneratedPayload(BaseModel):
     report_id: uuid.UUID
-    user_uuid: uuid.UUID
+    user_id: uuid.UUID
     seller_id: uuid.UUID | None = None
     report_type: ReportType
     file_url: str

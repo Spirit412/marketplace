@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.datatype import uuid7
 from src.enums.channel import Channel
 from src.models.notification import Notification
+from src.models.notification import Template as Tpl
 from src.patterns.channel_strategy import ChannelRegistry
 from src.patterns.notification_builder import NotificationBuilder
 from src.patterns.template_registry import TemplateRegistry
@@ -31,7 +32,10 @@ class NotificationService:
     async def dispatch(
         self, session: AsyncSession, event: NotificationPayload
     ) -> list[Notification]:
-        """Receive an event from RMQ, render + send via all applicable channels (email/websocket)."""
+        """Receive an event from RMQ.
+
+        Renders and sends via all applicable channels (email/websocket).
+        """
         results: list[Notification] = []
 
         template = self._templates.get(event.event_type, event.locale)
@@ -46,7 +50,7 @@ class NotificationService:
             results.append(notification)
             return results
 
-        channels_to_use = self._resolve_channels(template, event)
+        channels_to_use = self._resolve_channels(template)
 
         for ch_name in channels_to_use:
             strategy = self._channels.get(ch_name)
@@ -82,10 +86,10 @@ class NotificationService:
         results: list[Notification] = []
         strategy = self._channels.get(channel)
 
-        for user_uuid in user_uuids:
+        for user_id in user_uuids:
             notification = Notification(
                 id=uuid7(),
-                user_uuid=user_uuid,
+                user_id=user_id,
                 event_type="manual",
                 channel=channel,
                 notification_type=notification_type,
@@ -110,12 +114,10 @@ class NotificationService:
             .with_event_type(event.event_type)
             .with_channel("email")
             .with_notification_type("info")
-            .with_recipient(event.user_uuid)
+            .with_recipient(event.user_id)
             .with_variables(event.variables)
         )
-        from src.models.notification import Template
-
-        dummy = Template(
+        dummy = Tpl(
             code=event.event_type,
             locale=event.locale,
             subject=f"Event: {event.event_type}",
@@ -127,24 +129,20 @@ class NotificationService:
     def _build_from_template(
         self, template: object, event: NotificationPayload, channel: str
     ) -> Notification:
-        from src.models.notification import Template as Tpl
-
-        assert isinstance(template, Tpl)
+        assert isinstance(template, Tpl)  # noqa: S101 -- type narrowing, not input validation
         builder = (
             NotificationBuilder()
             .with_template(template)
             .with_variables(event.variables)
-            .with_recipient(event.user_uuid)
+            .with_recipient(event.user_id)
             .with_channel(channel)
             .with_event_type(event.event_type)
         )
         return builder.build()
 
     @staticmethod
-    def _resolve_channels(template: object, event: NotificationPayload) -> list[str]:
-        from src.models.notification import Template as Tpl
-
-        assert isinstance(template, Tpl)
+    def _resolve_channels(template: object) -> list[str]:
+        assert isinstance(template, Tpl)  # noqa: S101 -- type narrowing, not input validation
         if template.channels:
             if isinstance(template.channels, list):
                 return template.channels

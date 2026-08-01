@@ -4,12 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.core.database import get_async_session
 from src.depends import Inject
@@ -22,9 +19,7 @@ router = APIRouter(prefix="/query-sets", tags=["query-sets"])
 
 @router.post(
     "/",
-    response_model=QuerySetResponse,
     status_code=201,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Create query set",
 )
 async def create_query_set(
@@ -36,7 +31,7 @@ async def create_query_set(
     """Create a new query set for the authenticated seller."""
     qs = await service.create(
         session,
-        seller_id=uuid.UUID(token_payload.user_uuid),
+        seller_id=uuid.UUID(token_payload.user_id),
         name=body.name,
         data=body.data,
         displayed_fields=body.displayed_fields,
@@ -47,8 +42,6 @@ async def create_query_set(
 
 @router.get(
     "/{query_set_id}",
-    response_model=QuerySetResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Get query set by ID",
 )
 async def get_query_set(
@@ -65,8 +58,6 @@ async def get_query_set(
 
 @router.put(
     "/{query_set_id}",
-    response_model=QuerySetResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Update query set",
 )
 async def update_query_set(
@@ -90,7 +81,6 @@ async def update_query_set(
     "/{query_set_id}",
     status_code=204,
     response_model=None,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Delete query set",
 )
 async def delete_query_set(
@@ -106,8 +96,6 @@ async def delete_query_set(
 
 @router.post(
     "/{query_set_id}/favorite",
-    response_model=QuerySetResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Toggle query set favorite",
 )
 async def toggle_favorite(
@@ -124,8 +112,6 @@ async def toggle_favorite(
 
 @router.get(
     "/system/list",
-    response_model=list[QuerySetResponse],
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="List system query sets",
 )
 async def get_system_query_sets(
@@ -139,8 +125,6 @@ async def get_system_query_sets(
 
 @router.get(
     "/",
-    response_model=QuerySetListResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="List query sets",
 )
 async def list_query_sets(
@@ -153,7 +137,7 @@ async def list_query_sets(
     """List query sets for the authenticated seller with pagination."""
     items, total = await service.get_by_seller(
         session,
-        seller_id=uuid.UUID(token_payload.user_uuid),
+        seller_id=uuid.UUID(token_payload.user_id),
         page=page,
         page_size=page_size,
     )

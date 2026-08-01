@@ -1,3 +1,4 @@
+import math
 from collections.abc import Sequence
 from typing import Any, cast
 
@@ -44,9 +45,8 @@ def mark_deleted(instance: object, deleted: bool = True) -> None:
         NotImplementedError: If the instance's model has no soft-delete support.
     """
     if not supports_soft_delete(type(instance)):
-        raise NotImplementedError(
-            f"{type(instance).__name__} does not support soft delete"
-        )
+        msg = f"{type(instance).__name__} does not support soft delete"
+        raise NotImplementedError(msg)
     cast("SoftDeleteMixin", instance).is_delete = deleted
 
 
@@ -107,7 +107,11 @@ class BaseRepository[T: Base]:
         *,
         include_deleted: bool = False,
     ) -> T | None:
-        pk_col = getattr(self._model, "id", None) or getattr(self._model, "uuid")
+        # T is unbound, so mypy can't statically know every model has one of
+        # these two primary-key column names -- it's a deliberate runtime
+        # duck-typing fallback (auth-service models use "uuid", most others
+        # use "id").
+        pk_col = getattr(self._model, "id", None) or self._model.uuid  # type: ignore[attr-defined]
         stmt = select(self._model).where(pk_col == entity_id)
         stmt = self._apply_soft_delete_filter(stmt, include_deleted)
         result = await session.execute(stmt)
@@ -140,9 +144,8 @@ class BaseRepository[T: Base]:
             NotImplementedError: If the model has no soft-delete support.
         """
         if not self.supports_soft_delete:
-            raise NotImplementedError(
-                f"{self._model.__name__} does not support soft delete"
-            )
+            msg = f"{self._model.__name__} does not support soft delete"
+            raise NotImplementedError(msg)
         cast("SoftDeleteMixin", instance).is_delete = False
         await session.flush()
         return instance
@@ -182,8 +185,6 @@ class BaseRepository[T: Base]:
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[Sequence[T], int, int]:
-        import math
-
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total_result = await session.execute(count_stmt)
         total_items: int = total_result.scalar_one()

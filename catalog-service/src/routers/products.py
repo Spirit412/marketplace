@@ -4,12 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
+from src.auth_middleware import _get_auth_state
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.core.database import get_async_session
 from src.depends import Inject
@@ -27,9 +25,7 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 @router.post(
     "/",
-    response_model=ProductResponse,
     status_code=201,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Create product",
 )
 async def create_product(
@@ -41,7 +37,7 @@ async def create_product(
     """Create a new product with details and images."""
     product = await service.create(
         service_session,
-        seller_id=uuid.UUID(token_payload.user_uuid),
+        seller_id=uuid.UUID(token_payload.user_id),
         name=body.name,
         price=body.price,
         description=body.description,
@@ -56,8 +52,6 @@ async def create_product(
 
 @router.get(
     "/{product_id}",
-    response_model=ProductResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Get product by ID",
 )
 async def get_product(
@@ -74,20 +68,28 @@ async def get_product(
 
 @router.put(
     "/{product_id}",
-    response_model=ProductResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Update product",
 )
 async def update_product(
+    request: Request,
     product_id: uuid.UUID,
     body: UpdateProductRequest,
     service: Annotated[ProductService, Depends(Inject(ProductService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> ProductResponse:
-    """Update an existing product by ID."""
+    """Update an existing product by ID.
+
+    Owning seller, a moderator, or an admin only. CATALOG:PUT alone (RBAC)
+    does not imply "any product" — without this, any seller could edit any
+    other seller's listing.
+    """
+    auth_state = _get_auth_state(request)
     product = await service.update(
         session=session,
         product_id=product_id,
+        caller_id=uuid.UUID(token_payload.user_id),
+        caller_is_privileged=auth_state.is_admin or auth_state.role == "moderator",
         **body.model_dump(exclude_none=True),
     )
     if product is None:
@@ -99,24 +101,29 @@ async def update_product(
     "/{product_id}",
     status_code=204,
     response_model=None,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
     summary="Delete product",
 )
 async def delete_product(
+    request: Request,
     product_id: uuid.UUID,
     service: Annotated[ProductService, Depends(Inject(ProductService))],
     service_session: Annotated[AsyncSession, Depends(get_async_session)],
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> None:
-    """Delete a product by ID."""
-    deleted = await service.delete(service_session, product_id)
+    """Delete a product by ID — the owning seller or an admin only."""
+    auth_state = _get_auth_state(request)
+    deleted = await service.delete(
+        service_session,
+        product_id,
+        caller_id=uuid.UUID(token_payload.user_id),
+        caller_is_privileged=auth_state.is_admin,
+    )
     if not deleted:
         raise NotFoundError("Product not found")
 
 
 @router.get(
     "/",
-    response_model=ProductListResponse,
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
     summary="Search products",
 )
 async def search_products(
@@ -126,11 +133,10 @@ async def search_products(
     service_session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ProductListResponse:
     """Search and filter products with dynamic filters."""
-    dynamic_filters: dict[str, str] = {}
     reserved = ProductFilterParams.model_fields.keys()
-    for key, value in request.query_params.items():
-        if key not in reserved:
-            dynamic_filters[key] = value
+    dynamic_filters: dict[str, str] = {
+        key: value for key, value in request.query_params.items() if key not in reserved
+    }
 
     products, total = await service.search(
         service_session,

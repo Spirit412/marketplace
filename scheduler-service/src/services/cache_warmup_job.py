@@ -1,8 +1,8 @@
 import logging
 
 from src.config.settings import settings
-from src.engines.http_client import CatalogClient, InventoryClient
 from src.engines.redis import RedisCache, get_redis_client
+from src.facades import CatalogClient, InventoryClient
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +11,10 @@ async def cache_warmup_job() -> None:
     """Preload popular products and categories into Redis cache."""
     redis = RedisCache(get_redis_client())
 
-    inventory_client = InventoryClient(settings.INVENTORY_SERVICE_URL)
-    catalog_client = CatalogClient(settings.CATALOG_SERVICE_URL)
+    inventory_client = InventoryClient(
+        settings.INVENTORY_SERVICE_URL, settings.SYSTEM_TOKEN
+    )
+    catalog_client = CatalogClient(settings.CATALOG_SERVICE_URL, settings.SYSTEM_TOKEN)
 
     try:
         categories = await catalog_client.get_categories()

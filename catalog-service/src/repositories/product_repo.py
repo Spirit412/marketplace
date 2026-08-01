@@ -1,5 +1,4 @@
 import uuid
-
 from typing import Any
 
 from sqlalchemy import Select, func, select
@@ -42,6 +41,11 @@ class ProductRepo:
     async def update(self, session: AsyncSession, product: Product) -> Product:
         await session.merge(product)
         await session.flush()
+        # updated_at is server-side (onupdate=func.now()) — flush() alone
+        # leaves it expired on the Python object; the next (synchronous)
+        # attribute read, e.g. Pydantic serializing the response, would need
+        # to lazy-load it and fail with MissingGreenlet outside an await.
+        await session.refresh(product)
         return product
 
     async def delete(self, session: AsyncSession, product_id: uuid.UUID) -> bool:

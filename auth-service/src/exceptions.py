@@ -24,3 +24,7 @@ class ForbiddenError(DomainError):
 
 class ServiceUnavailableError(DomainError):
     """Downstream service unavailable → 503."""
+
+
+class RateLimitExceededError(DomainError):
+    """Too many requests from this client → 429."""

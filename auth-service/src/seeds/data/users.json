@@ -4,5 +4,6 @@
   {"email": "moderator@marketplace.dev", "password": "Moderator123!", "role": "moderator"},
   {"email": "seller@marketplace.dev", "password": "Seller123!", "role": "seller"},
   {"email": "customer@marketplace.dev", "password": "Customer123!", "role": "customer"},
-  {"email": "customer2@marketplace.dev", "password": "Customer123!", "role": "customer"}
+  {"email": "customer2@marketplace.dev", "password": "Customer123!", "role": "customer"},
+  {"email": "system@marketplace.internal", "password": "SystemInternalOnly!2026x", "role": "system"}
 ]

@@ -10,6 +10,7 @@ Safe to run multiple times — uses INSERT … ON CONFLICT (upsert) for every ro
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from pathlib import Path
@@ -165,8 +166,6 @@ async def run_all() -> dict[str, int]:
 
 
 if __name__ == "__main__":
-    import asyncio
-
     logging.basicConfig(
         level=logging.INFO,
         format="%(levelname)-5s %(name)s %(message)s",

@@ -7,8 +7,8 @@ Singleton infrastructure (settings, engines) uses rodi container.
 from rodi import Container
 
 from src.config.settings import Settings, settings
-from src.engines.http_client import CatalogClient, DictionaryClient
 from src.engines.rabbitmq import ImportPublisher
+from src.facades import CatalogClient, DictionaryClient
 from src.patterns.file_storage_registry import FileStorageRegistry
 from src.patterns.import_registry import ImportStrategyRegistry
 from src.repositories.import_repo import ImportRowRepository, ImportTaskRepository

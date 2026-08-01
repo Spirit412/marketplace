@@ -73,10 +73,17 @@ class ProductService:
         self,
         session: AsyncSession,
         product_id: uuid.UUID,
+        *,
+        caller_id: uuid.UUID,
+        caller_is_privileged: bool,
         **kwargs: object,
     ) -> Product | None:
         product = await self._repo.get_by_id(session, product_id)
         if product is None:
+            return None
+        if not caller_is_privileged and product.seller_id != caller_id:
+            # Same response as "not found" — a non-owner shouldn't be able to
+            # tell a product exists from a 403 vs 404 difference.
             return None
 
         changed_fields = {}
@@ -97,13 +104,28 @@ class ProductService:
             )
         return product
 
-    async def delete(self, session: AsyncSession, product_id: uuid.UUID) -> bool:
+    async def delete(
+        self,
+        session: AsyncSession,
+        product_id: uuid.UUID,
+        *,
+        caller_id: uuid.UUID,
+        caller_is_privileged: bool,
+    ) -> bool:
+        if not caller_is_privileged:
+            product = await self._repo.get_by_id(session, product_id)
+            if product is None:
+                return False
+            if product.seller_id != caller_id:
+                # Same response as "not found" — see update()'s note.
+                return False
+
         result = await self._repo.delete(session, product_id)
         if result:
             await self._redis.delete(f"product:{product_id}")
         return result
 
-    async def search(
+    async def search(  # noqa: PLR0913, PLR0917 -- one filter dimension per param, all optional
         self,
         session: AsyncSession,
         query: str | None = None,
@@ -158,7 +180,7 @@ class ProductService:
             "product_id": str(product.id),
             "seller_id": str(product.seller_id),
             "name": product.name,
-            "price": product.price,
+            "price": float(product.price),
             "category_id": str(product.category_id) if product.category_id else None,
         }
         if changed_fields:

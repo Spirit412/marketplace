@@ -1,7 +1,20 @@
+import asyncio
 import csv
 import io
 from abc import ABC, abstractmethod
 from pathlib import Path
+
+try:
+    from openpyxl import Workbook
+except ImportError:
+    Workbook = None
+
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+except ImportError:
+    colors = A4 = SimpleDocTemplate = Table = TableStyle = None
 
 from src.enums.report import ReportFormat
 from src.patterns.report_builder import ResultSet
@@ -23,16 +36,18 @@ class CsvFormat(FormatStrategy):
             writer.writerow(row)
 
         path = Path(file_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(output.getvalue())
+
+        def _write() -> None:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(output.getvalue())
+
+        await asyncio.to_thread(_write)
         return str(path)
 
 
 class XlsxFormat(FormatStrategy):
     async def export(self, data: ResultSet, file_path: str) -> str:
-        try:
-            from openpyxl import Workbook
-        except ImportError:
+        if Workbook is None:
             raise ImportError("openpyxl is required for XLSX export")
 
         wb = Workbook()
@@ -52,11 +67,7 @@ class XlsxFormat(FormatStrategy):
 
 class PdfFormat(FormatStrategy):
     async def export(self, data: ResultSet, file_path: str) -> str:
-        try:
-            from reportlab.lib import colors
-            from reportlab.lib.pagesizes import A4
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-        except ImportError:
+        if SimpleDocTemplate is None:
             raise ImportError("reportlab is required for PDF export")
 
         path = Path(file_path)
@@ -91,5 +102,6 @@ class FormatStrategyRegistry:
     def get(self, fmt: ReportFormat) -> FormatStrategy:
         strategy = self._strategies.get(fmt)
         if strategy is None:
-            raise ValueError(f"Unsupported report format: {fmt}")
+            msg = f"Unsupported report format: {fmt}"
+            raise ValueError(msg)
         return strategy

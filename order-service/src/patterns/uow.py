@@ -4,7 +4,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.engines.http_client import InventoryClient
+from src.facades import InventoryClient
 from src.models.order import Order
 from src.patterns.builder import OrderBuilder
 from src.repositories.order_repo import OrderRepo
@@ -28,7 +28,7 @@ class OrderUnitOfWork:
     async def commit(
         self,
         session: AsyncSession,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
         cart_items: dict[str, int],
         shipping_address: dict[str, Any],
         payment_method: str,
@@ -52,13 +52,13 @@ class OrderUnitOfWork:
             builder.add_items(cart_items)
             builder.calculate_subtotal()
             builder.apply_tax_strategy(tax_strategy)
-            builder.apply_discounts(user_uuid)
+            builder.apply_discounts(user_id)
             builder.calculate_total()
             builder.set_shipping_address(shipping_address)
             builder.set_payment_method(payment_method)
 
             order = builder.build()
-            order.user_uuid = user_uuid
+            order.user_id = user_id
             order.notes = notes
 
             return await self._order_repo.create(session, order)

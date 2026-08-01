@@ -41,20 +41,40 @@
   },
   {
     "name": "seller_access",
-    "description": "Продавец: CATALOG, INVENTORY, IMPORT (all), ORDER, REPORT (read)",
+    "description": "Продавец: CATALOG, INVENTORY, IMPORT (all), ORDER, REPORT (read), PAYMENT (read + refund)",
     "permissions": [
       "CATALOG:GET:/*", "CATALOG:POST:/*", "CATALOG:PUT:/*", "CATALOG:PATCH:/*", "CATALOG:DELETE:/*",
       "ORDER:GET:/*",
       "INVENTORY:GET:/*", "INVENTORY:POST:/*", "INVENTORY:PUT:/*", "INVENTORY:PATCH:/*", "INVENTORY:DELETE:/*",
       "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
-      "REPORT:GET:/*"
+      "REPORT:GET:/*",
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*"
     ]
   },
   {
     "name": "customer_orders",
-    "description": "Покупатель: только заказы (все методы)",
+    "description": "Покупатель: заказы (все методы) + чтение каталога/справочников + оплата своих заказов",
     "permissions": [
-      "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*"
+      "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*",
+      "CATALOG:GET:/*",
+      "DICTIONARY:GET:/*",
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*"
+    ]
+  },
+  {
+    "name": "system_full_access",
+    "description": "Межсервисные вызовы (SYSTEM_TOKEN) — полный доступ ко всем сервисам",
+    "permissions": [
+      "AUTH:GET:/*", "AUTH:POST:/*", "AUTH:PUT:/*", "AUTH:PATCH:/*", "AUTH:DELETE:/*",
+      "CATALOG:GET:/*", "CATALOG:POST:/*", "CATALOG:PUT:/*", "CATALOG:PATCH:/*", "CATALOG:DELETE:/*",
+      "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*",
+      "INVENTORY:GET:/*", "INVENTORY:POST:/*", "INVENTORY:PUT:/*", "INVENTORY:PATCH:/*", "INVENTORY:DELETE:/*",
+      "NOTIFICATION:GET:/*", "NOTIFICATION:POST:/*", "NOTIFICATION:PUT:/*", "NOTIFICATION:PATCH:/*", "NOTIFICATION:DELETE:/*",
+      "DICTIONARY:GET:/*", "DICTIONARY:POST:/*", "DICTIONARY:PUT:/*", "DICTIONARY:PATCH:/*", "DICTIONARY:DELETE:/*",
+      "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
+      "REPORT:GET:/*", "REPORT:POST:/*", "REPORT:PUT:/*", "REPORT:PATCH:/*", "REPORT:DELETE:/*",
+      "SCHEDULER:GET:/*", "SCHEDULER:POST:/*", "SCHEDULER:PUT:/*", "SCHEDULER:PATCH:/*", "SCHEDULER:DELETE:/*",
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*", "PAYMENT:PUT:/*", "PAYMENT:PATCH:/*", "PAYMENT:DELETE:/*"
     ]
   }
 ]

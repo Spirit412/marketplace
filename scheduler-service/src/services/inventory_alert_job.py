@@ -1,15 +1,15 @@
 import logging
 
 from src.config.settings import settings
-from src.engines.http_client import InventoryClient
 from src.engines.rabbitmq import publish_event
+from src.facades import InventoryClient
 
 logger = logging.getLogger(__name__)
 
 
 async def inventory_alert_job() -> None:
     """Check all warehouse stock levels, publish stock.depleted for low items."""
-    client = InventoryClient(settings.INVENTORY_SERVICE_URL)
+    client = InventoryClient(settings.INVENTORY_SERVICE_URL, settings.SYSTEM_TOKEN)
 
     low_stock_items = await client.get_low_stock_items(
         settings.STOCK_DEPLETION_THRESHOLD

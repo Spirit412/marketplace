@@ -1,11 +1,18 @@
+import contextlib
 import logging
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import redis.asyncio as redis_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
+from src.engines.rabbitmq import (
+    publish_payment_failed,
+    publish_payment_refunded,
+    publish_payment_succeeded,
+)
+from src.engines.redis import check_idempotency
 from src.enums.payment_status import (
     PAYMENT_STATE_MACHINE,
     PaymentMethod,
@@ -15,10 +22,12 @@ from src.enums.payment_status import (
 from src.exceptions import ConflictError, NotFoundError
 from src.models.payment import Payment, Transaction
 from src.patterns.gateway_registry import PaymentGatewayRegistry
-from src.patterns.gateway_strategy import BasePaymentGateway
 from src.patterns.payload_builder import PaymentPayloadBuilder
 from src.patterns.state_machine import InvalidTransitionError
 from src.repositories.payment_repo import PaymentRepo
+
+if TYPE_CHECKING:
+    from src.patterns.gateway_strategy import BasePaymentGateway
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +52,13 @@ class PaymentService:
         *,
         session: AsyncSession,
         order_id: uuid.UUID,
-        user_uuid: uuid.UUID,
+        user_id: uuid.UUID,
         amount: int,
         currency: str,
         payment_method: PaymentMethod,
         idempotency_key: str,
     ) -> Payment:
         """Create a payment and process it through the appropriate gateway."""
-        from src.engines.redis import check_idempotency
-
         is_new = await check_idempotency(self._redis, idempotency_key)
         if not is_new:
             existing = await self._repo.get_by_idempotency_key(
@@ -59,16 +66,15 @@ class PaymentService:
             )
             if existing:
                 return existing
-            raise ConflictError(
-                f"Idempotency key conflict but no payment found: {idempotency_key}"
-            )
+            msg = f"Idempotency key conflict but no payment found: {idempotency_key}"
+            raise ConflictError(msg)
 
         gateway: BasePaymentGateway = self._registry.get_gateway(payment_method)
 
         payment = Payment(
             id=uuid7(),
             order_id=order_id,
-            user_uuid=user_uuid,
+            user_id=user_id,
             amount=amount,
             currency=currency,
             status=PaymentStatus.PENDING,
@@ -120,12 +126,10 @@ class PaymentService:
                 )
         except Exception as exc:
             logger.exception("Payment creation failed for order %s", order_id)
-            try:
+            with contextlib.suppress(Exception):
                 payment = await self._transition_status(
                     session=session, payment=payment, new_status=PaymentStatus.FAILED
                 )
-            except Exception:
-                pass
             await self._publish_event(
                 "failed",
                 self._payload_builder.build_failed(payment, str(exc)),
@@ -146,9 +150,8 @@ class PaymentService:
         try:
             PAYMENT_STATE_MACHINE.assert_transition(current_status, new_status)
         except InvalidTransitionError as exc:
-            raise ConflictError(
-                f"Cannot transition payment from {payment.status} to {new_status}"
-            ) from exc
+            msg = f"Cannot transition payment from {payment.status} to {new_status}"
+            raise ConflictError(msg) from exc
         return await self._repo.update_status(
             session=session, payment=payment, new_status=new_status
         )
@@ -168,19 +171,20 @@ class PaymentService:
         """Refund a successful payment."""
         payment = await self._repo.get_by_uuid(session=session, uuid_value=payment_uuid)
         if payment is None:
-            raise NotFoundError(f"Payment not found: {payment_uuid}")
+            msg = f"Payment not found: {payment_uuid}"
+            raise NotFoundError(msg)
 
         if payment.status != PaymentStatus.SUCCEEDED:
-            raise ConflictError(f"Cannot refund payment with status {payment.status}")
+            msg = f"Cannot refund payment with status {payment.status}"
+            raise ConflictError(msg)
 
         if payment.gateway_payment_id is None:
             # Unreachable in practice: create_payment() always sets this
             # before a payment can reach SUCCEEDED. Guarded explicitly so a
             # future path that skips that assignment fails loudly here
             # instead of asking the gateway to refund "None".
-            raise ConflictError(
-                f"Payment {payment_uuid} has no gateway_payment_id to refund"
-            )
+            msg = f"Payment {payment_uuid} has no gateway_payment_id to refund"
+            raise ConflictError(msg)
 
         gateway: BasePaymentGateway = self._registry.get_gateway(
             PaymentMethod(payment.payment_method)
@@ -312,12 +316,6 @@ class PaymentService:
 
     async def _publish_event(self, event_type: str, payload: dict[str, Any]) -> None:
         """Publish an event to RabbitMQ."""
-        from src.engines.rabbitmq import (
-            publish_payment_failed,
-            publish_payment_refunded,
-            publish_payment_succeeded,
-        )
-
         try:
             if event_type == "succeeded":
                 await publish_payment_succeeded(payload)

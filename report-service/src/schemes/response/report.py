@@ -10,7 +10,7 @@ class ReportResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    user_uuid: uuid.UUID
+    user_id: uuid.UUID
     report_type: str
     format: str
     status: str

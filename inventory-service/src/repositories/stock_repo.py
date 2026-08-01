@@ -40,7 +40,9 @@ class StockRepo:
     async def get_or_create(
         self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
     ) -> StockItem:
-        item = await self.get_by_product_and_warehouse(session, product_id, warehouse_id)
+        item = await self.get_by_product_and_warehouse(
+            session, product_id, warehouse_id
+        )
         if item is None:
             item = StockItem(product_id=product_id, warehouse_id=warehouse_id)
             session.add(item)
@@ -70,7 +72,9 @@ class StockRepo:
     async def get_available_quantity(
         self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
     ) -> int:
-        item = await self.get_by_product_and_warehouse(session, product_id, warehouse_id)
+        item = await self.get_by_product_and_warehouse(
+            session, product_id, warehouse_id
+        )
         if item is None:
             return 0
         return item.quantity - item.reserved
@@ -88,6 +92,25 @@ class StockRepo:
             .offset(offset)
             .limit(limit),
             StockItem,
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def list_low_stock(
+        self, session: AsyncSession, threshold: int, limit: int = 500
+    ) -> list[StockItem]:
+        """Stock items at or below threshold.
+
+        Available quantity is (quantity - reserved). Threshold is
+        caller-supplied rather than a stored per-item column —
+        StockItem has no per-product minimum in this schema, so the alert
+        job passes its own STOCK_DEPLETION_THRESHOLD setting.
+        """
+        available = StockItem.quantity - StockItem.reserved
+        stmt = (
+            exclude_deleted(select(StockItem).where(available <= threshold), StockItem)
+            .order_by(available.asc())
+            .limit(limit)
         )
         result = await session.execute(stmt)
         return list(result.scalars().all())

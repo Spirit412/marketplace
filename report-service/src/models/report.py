@@ -23,7 +23,7 @@ class Report(TimestampMixin, SoftDeleteMixin, Base):
         default=uuid7,
         comment="Первичный ключ отчёта",
     )
-    user_uuid: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, comment="Пользователь, запросивший отчёт"
     )
     report_type: Mapped[str] = mapped_column(

@@ -73,7 +73,10 @@ def clients() -> Iterator[dict[str, httpx.Client]]:
     """One HTTP client per service, keyed by service name."""
     opened = {
         name: httpx.Client(
-            base_url=base_url(name), timeout=TIMEOUT, trust_env=TRUST_ENV
+            base_url=base_url(name),
+            timeout=TIMEOUT,
+            trust_env=TRUST_ENV,
+            follow_redirects=True,
         )
         for name in SERVICES
     }

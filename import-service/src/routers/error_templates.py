@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from typing import Annotated
 
-from src.config.settings import settings
-from src.core.auth import Permission, require_permission
+from fastapi import APIRouter, Query
+
 from src.schemes.response.import_dto import ErrorTemplateResponse
 
 router = APIRouter(prefix="/imports", tags=["error-templates"])
@@ -30,12 +30,10 @@ _ERROR_TEMPLATES = {
 
 @router.get(
     "/error-templates",
-    response_model=list[ErrorTemplateResponse],
     summary="Get error templates",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_error_templates(
-    locale: str = Query(default="ru"),
+    locale: Annotated[str, Query()] = "ru",
 ) -> list[ErrorTemplateResponse]:
     """Get error templates for the specified locale."""
     templates = _ERROR_TEMPLATES.get(locale, _ERROR_TEMPLATES["ru"])

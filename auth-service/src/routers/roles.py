@@ -5,8 +5,6 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
-from src.core.auth import Permission, require_permission
 from src.depends import Inject, _require_admin, get_service_session
 from src.schemes.rbac import (
     PaginationParams,
@@ -25,10 +23,8 @@ router = APIRouter(
 
 
 @router.get(
-    "/roles",
-    response_model=RoleListResponse,
+    "",
     summary="List roles",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def list_roles(
     params: Annotated[PaginationParams, Depends()],
@@ -40,11 +36,9 @@ async def list_roles(
 
 
 @router.post(
-    "/roles",
-    response_model=RoleResponse,
+    "",
     status_code=201,
     summary="Create role",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def create_role(
     body: RoleCreateRequest,
@@ -56,10 +50,8 @@ async def create_role(
 
 
 @router.get(
-    "/roles/{role_uuid}",
-    response_model=RoleResponse,
+    "/{role_uuid}",
     summary="Get role",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_role(
     role_uuid: uuid.UUID,
@@ -71,10 +63,8 @@ async def get_role(
 
 
 @router.put(
-    "/roles/{role_uuid}",
-    response_model=RoleResponse,
+    "/{role_uuid}",
     summary="Update role",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def update_role(
     role_uuid: uuid.UUID,
@@ -87,11 +77,8 @@ async def update_role(
 
 
 @router.delete(
-    "/roles/{role_uuid}",
-    status_code=204,
-    response_class=Response,
+    "/{role_uuid}",
     summary="Delete role",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.ALL))],
 )
 async def delete_role(
     role_uuid: uuid.UUID,

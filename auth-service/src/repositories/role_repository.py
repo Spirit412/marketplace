@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -69,8 +69,6 @@ class RoleRepository(BaseRepository[Role]):
         to_remove = existing - group_uuids
 
         if to_remove:
-            from sqlalchemy import delete
-
             stmt = delete(RoleGroupAssociation).where(
                 RoleGroupAssociation.role_uuid == role_uuid,
                 RoleGroupAssociation.group_uuid.in_(to_remove),
@@ -91,4 +89,4 @@ class RoleRepository(BaseRepository[Role]):
             RoleGroupAssociation.role_uuid == role_uuid
         )
         result = await session.execute(stmt)
-        return {row for row in result.scalars().all()}
+        return set(result.scalars().all())

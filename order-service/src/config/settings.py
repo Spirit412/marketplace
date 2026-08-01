@@ -2,12 +2,14 @@
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.core.config import configure as _configure_core
+
 
 class PostgresSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="POSTGRES_")
 
     USER: str = "marketplace"
-    PASSWORD: str = "marketplace"
+    PASSWORD: str = "marketplace"  # noqa: S105 -- local-dev default, overridden by env in real deployments
     HOST: str = "mp-postgres"
     PORT: int = 5432
     DB: str = "marketplace"
@@ -43,7 +45,7 @@ class RabbitMQSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
 
     USER: str = "marketplace"
-    PASSWORD: str = "marketplace"
+    PASSWORD: str = "marketplace"  # noqa: S105 -- local-dev default, overridden by env in real deployments
     HOST: str = "mp-rabbitmq"
     PORT: int = 5672
 
@@ -55,7 +57,7 @@ class RabbitMQSettings(BaseSettings):
 class JWTSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="JWT_")
 
-    SECRET_KEY: str = "change-me"
+    SECRET_KEY: str = "change-me"  # noqa: S105 -- local-dev default, overridden by env in real deployments
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -93,6 +95,7 @@ class Settings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()
     redis: RedisSettings = RedisSettings()
     jwt: JWTSettings = JWTSettings()
+    rabbitmq: RabbitMQSettings = RabbitMQSettings()
 
     SYSTEM_TOKEN: str = ""
 
@@ -102,9 +105,11 @@ class Settings(BaseSettings):
     ORDER_EXPIRATION_MINUTES: int = 30
     CART_TTL_DAYS: int = 7
 
+    REDIS_KEY_PREFIX: str = "mp-order"
+    RATE_LIMIT_MAX_REQUESTS: int = 30
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
+
 
 settings = Settings()
-
-from src.core.config import configure as _configure_core
 
 _configure_core(settings)

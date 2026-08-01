@@ -5,6 +5,25 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.enums.product import ProductStatus
 
+# Pydantic-core's serializer treats sufficiently deep-but-non-circular JSON as
+# a circular reference once it exceeds its internal recursion guard, crashing
+# the *next* read of the row with 500 instead of rejecting the bad input up
+# front. custom_properties_config/images are free-form client JSON with no
+# other size limit, so cap nesting depth at write time.
+_MAX_JSON_DEPTH = 20
+
+
+def _check_json_depth(value: Any, *, depth: int = 0) -> None:
+    if depth > _MAX_JSON_DEPTH:
+        msg = f"exceeds maximum nesting depth of {_MAX_JSON_DEPTH}"
+        raise ValueError(msg)
+    if isinstance(value, dict):
+        for item in value.values():
+            _check_json_depth(item, depth=depth + 1)
+    elif isinstance(value, list):
+        for item in value:
+            _check_json_depth(item, depth=depth + 1)
+
 
 class CreateProductRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -23,6 +42,12 @@ class CreateProductRequest(BaseModel):
     def _validate_category_id(cls, v: str | None) -> str | None:
         if v is not None:
             _uuid.UUID(v)
+        return v
+
+    @field_validator("custom_properties_config", "images")
+    @classmethod
+    def _validate_json_depth(cls, v: dict[str, Any]) -> dict[str, Any]:
+        _check_json_depth(v)
         return v
 
 
@@ -47,11 +72,19 @@ class UpdateProductRequest(BaseModel):
             _uuid.UUID(v)
         return v
 
+    @field_validator("custom_properties_config", "images")
+    @classmethod
+    def _validate_json_depth(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        if v is not None:
+            _check_json_depth(v)
+        return v
+
     @field_validator("status")
     @classmethod
     def _validate_status(cls, v: str | None) -> str | None:
         if v is not None and v not in {stat.value for stat in ProductStatus}:
-            raise ValueError(f"Invalid status: {v}")
+            msg = f"Invalid status: {v}"
+            raise ValueError(msg)
         return v
 
 
@@ -78,5 +111,6 @@ class ProductFilterParams(BaseModel):
     @classmethod
     def _validate_status(cls, v: str | None) -> str | None:
         if v is not None and v not in {stat.value for stat in ProductStatus}:
-            raise ValueError(f"Invalid status: {v}")
+            msg = f"Invalid status: {v}"
+            raise ValueError(msg)
         return v

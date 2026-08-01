@@ -35,6 +35,17 @@ class StockMovementResponse(BaseModel):
     created_at: datetime
 
 
+class LowStockItemResponse(BaseModel):
+    product_id: uuid.UUID
+    warehouse_id: uuid.UUID
+    stock: int
+
+
+class PopularProductResponse(BaseModel):
+    product_id: uuid.UUID
+    total_quantity: int
+
+
 class WarehouseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

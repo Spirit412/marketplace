@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.engines.rabbitmq import get_broker
@@ -17,10 +19,27 @@ from src.schemes.request.inventory import (
     StockCheckByProductRequest,
     StockCheckRequest,
 )
-from src.schemes.response.inventory import StockResponse
+from src.schemes.response.inventory import LowStockItemResponse, StockResponse
+
+logger = logging.getLogger(__name__)
 
 
 class InventoryService:
+    async def get_low_stock_items(
+        self, *, session: AsyncSession, threshold: int
+    ) -> list[LowStockItemResponse]:
+        """Stock items at or below threshold — backs scheduler's alert job."""
+        stock_repo = StockRepo()
+        items = await stock_repo.list_low_stock(session, threshold)
+        return [
+            LowStockItemResponse(
+                product_id=item.product_id,
+                warehouse_id=item.warehouse_id,
+                stock=item.available,
+            )
+            for item in items
+        ]
+
     async def check_stock_by_product(
         self, *, session: AsyncSession, request: StockCheckByProductRequest
     ) -> StockResponse | None:
@@ -67,10 +86,11 @@ class InventoryService:
                         reference_id=request.reference_id,
                     ),
                 )
-        raise ConflictError(
+        msg = (
             f"Insufficient stock for product {request.product_id}: "
             f"no single warehouse has {request.quantity} available"
         )
+        raise ConflictError(msg)
 
     async def check_stock(
         self, *, session: AsyncSession, request: StockCheckRequest
@@ -132,10 +152,12 @@ class InventoryService:
                         routing_key="stock.insufficient",
                     )
                 except Exception:
-                    pass
-                raise ConflictError(
-                    f"Insufficient stock: requested {request.quantity}, available {available}"
+                    logger.exception("Failed to publish stock.insufficient")
+                msg = (
+                    f"Insufficient stock: requested {request.quantity}, "
+                    f"available {available}"
                 )
+                raise ConflictError(msg)
 
             updated = await stock_repo.update_quantity(
                 session,
@@ -154,6 +176,16 @@ class InventoryService:
             )
             await movement_repo.create(session, movement)
 
+            # Commit before releasing the lock (in the `finally` below), not
+            # after: get_async_session()'s own commit only runs once this
+            # whole request unwinds back up through the router, well after
+            # the lock is released. That gap let a second concurrent
+            # reservation acquire the lock and read this row before the first
+            # reservation's UPDATE was durable — both would see the
+            # pre-reservation quantity and both would succeed, over-reserving
+            # stock beyond what physically exists.
+            await session.commit()
+
             try:
                 broker = get_broker()
                 await broker.publish(
@@ -166,7 +198,7 @@ class InventoryService:
                     routing_key="stock.reserved",
                 )
             except Exception:
-                pass
+                logger.exception("Failed to publish stock.reserved")
 
             new_available = updated.quantity - updated.reserved
             if new_available == 0:
@@ -182,7 +214,7 @@ class InventoryService:
                         routing_key="stock.depleted",
                     )
                 except Exception:
-                    pass
+                    logger.exception("Failed to publish stock.depleted")
 
             return StockResponse(
                 product_id=updated.product_id,
@@ -223,9 +255,10 @@ class InventoryService:
                 raise NotFoundError("Stock item not found")
 
             if item.reserved < request.quantity:
-                raise ConflictError(
+                msg = (
                     f"Cannot release {request.quantity}: only {item.reserved} reserved"
                 )
+                raise ConflictError(msg)
 
             updated = await stock_repo.update_quantity(
                 session,
@@ -244,6 +277,11 @@ class InventoryService:
             )
             await movement_repo.create(session, movement)
 
+            # See the matching comment in reserve() — commit before the lock
+            # releases in `finally`, not after, so a second concurrent
+            # request can't read this row before the update is durable.
+            await session.commit()
+
             try:
                 broker = get_broker()
                 await broker.publish(
@@ -256,7 +294,7 @@ class InventoryService:
                     routing_key="stock.released",
                 )
             except Exception:
-                pass
+                logger.exception("Failed to publish stock.released")
 
             return StockResponse(
                 product_id=updated.product_id,
@@ -315,7 +353,7 @@ class InventoryService:
                 routing_key="stock.changed",
             )
         except Exception:
-            pass
+            logger.exception("Failed to publish stock.changed (receipt)")
 
         return StockResponse(
             product_id=updated.product_id,
@@ -339,9 +377,11 @@ class InventoryService:
             raise NotFoundError("Stock item not found")
 
         if item.quantity < request.quantity:
-            raise ConflictError(
-                f"Insufficient stock: requested {request.quantity}, have {item.quantity}"
+            msg = (
+                f"Insufficient stock: requested {request.quantity}, "
+                f"have {item.quantity}"
             )
+            raise ConflictError(msg)
 
         reserved_delta = 0
         if item.reserved >= request.quantity:
@@ -381,7 +421,7 @@ class InventoryService:
                 routing_key="stock.changed",
             )
         except Exception:
-            pass
+            logger.exception("Failed to publish stock.changed (shipment)")
 
         return StockResponse(
             product_id=updated.product_id,
@@ -436,7 +476,7 @@ class InventoryService:
                 routing_key="stock.changed",
             )
         except Exception:
-            pass
+            logger.exception("Failed to publish stock.changed (adjustment)")
 
         return StockResponse(
             product_id=updated.product_id,

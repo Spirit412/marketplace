@@ -7,15 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.settings import settings
 from src.core.access import ResolvedAccess
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.depends import get_service_session
+from src.exceptions import NotFoundError
 from src.repositories.session_repository import SessionRepository
-from src.repositories.user_repository import UserRepository
 from src.repositories.user_access_repository import UserAccessRepository
+from src.repositories.user_repository import UserRepository
 from src.schemes.rbac import UserAccessAssignRequest, UserAccessResponse
 from src.services.auth_service import AuthService
 
@@ -23,13 +22,11 @@ router = APIRouter(prefix="/auth", tags=["user-access"])
 
 
 @router.put(
-    "/users/{user_uuid}/access",
-    response_model=UserAccessResponse,
+    "/users/{user_id}/access",
     summary="Assign user access",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def assign_user_access(
-    user_uuid: uuid.UUID,
+    user_id: uuid.UUID,
     body: UserAccessAssignRequest,
     session: Annotated[AsyncSession, Depends(get_service_session)],
     _token: Annotated[TokenPayload, Depends(get_token_payload)],
@@ -38,7 +35,7 @@ async def assign_user_access(
     repo = UserAccessRepository()
     result = await repo.create_or_update(
         session,
-        user_uuid=user_uuid,
+        user_id=user_id,
         role_uuid=body.role_uuid,
         additional_permissions=body.additional_permissions,
     )
@@ -46,33 +43,29 @@ async def assign_user_access(
 
 
 @router.get(
-    "/users/{user_uuid}/access",
-    response_model=UserAccessResponse,
+    "/users/{user_id}/access",
     summary="Get user access",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_user_access(
-    user_uuid: uuid.UUID,
+    user_id: uuid.UUID,
     session: Annotated[AsyncSession, Depends(get_service_session)],
     _token: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> UserAccessResponse:
     """Get the assigned role and permissions for a user."""
     repo = UserAccessRepository()
-    result = await repo.get_by_user(session, user_uuid)
+    result = await repo.get_by_user(session, user_id)
     if not result:
-        from src.exceptions import NotFoundError
-
-        raise NotFoundError(f"UserAccess for {user_uuid} not found")
+        msg = f"UserAccess for {user_id} not found"
+        raise NotFoundError(msg)
     return UserAccessResponse.model_validate(result)
 
 
 @router.get(
-    "/users/{user_uuid}/permissions",
+    "/users/{user_id}/permissions",
     summary="Get user permissions",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_user_permissions(
-    user_uuid: uuid.UUID,
+    user_id: uuid.UUID,
     session: Annotated[AsyncSession, Depends(get_service_session)],
     _token: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> ResolvedAccess:
@@ -82,4 +75,4 @@ async def get_user_permissions(
         session_repo=SessionRepository(),
         settings=settings,
     )
-    return await auth_svc.get_user_permissions(session, user_uuid)
+    return await auth_svc.get_user_permissions(session, user_id)

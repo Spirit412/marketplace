@@ -5,11 +5,9 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
 from src.core.auth import (
-    Permission,
     TokenPayload,
-    require_permission,
+    get_token_payload,
 )
 from src.core.database import get_async_session
 from src.depends import Inject
@@ -20,35 +18,27 @@ from src.services.report_service import ReportService
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-@router.post(
-    "/", response_model=ReportResponse, status_code=202, summary="Generate report"
-)
+@router.post("/", status_code=202, summary="Generate report")
 async def generate_report(
     request: GenerateReportRequest,
     service: Annotated[ReportService, Depends(Inject(ReportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    token_payload: Annotated[
-        TokenPayload,
-        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
-    ],
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> ReportResponse:
     """Generate a new report asynchronously."""
     return await service.generate(
         session=session,
         request=request,
-        user_uuid=uuid.UUID(token_payload.user_uuid),
+        user_id=uuid.UUID(token_payload.user_id),
     )
 
 
-@router.get("/{report_id}", response_model=ReportResponse, summary="Get report by ID")
+@router.get("/{report_id}", summary="Get report by ID")
 async def get_report(
     report_id: uuid.UUID,
     service: Annotated[ReportService, Depends(Inject(ReportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    token_payload: Annotated[
-        TokenPayload,
-        Depends(require_permission(settings.APP_ID, Permission.READ)),
-    ],
+    _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> ReportResponse:
     """Get report details by ID."""
     return await service.get_report(
@@ -62,10 +52,7 @@ async def download_report(
     report_id: uuid.UUID,
     service: Annotated[ReportService, Depends(Inject(ReportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    token_payload: Annotated[
-        TokenPayload,
-        Depends(require_permission(settings.APP_ID, Permission.READ)),
-    ],
+    _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
 ) -> StreamingResponse:
     """Download a generated report file."""
     content, filename, media_type = await service.download(
@@ -79,21 +66,18 @@ async def download_report(
     )
 
 
-@router.get("/", response_model=ReportListResponse, summary="List reports")
+@router.get("/", summary="List reports")
 async def list_reports(
     service: Annotated[ReportService, Depends(Inject(ReportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    token_payload: Annotated[
-        TokenPayload,
-        Depends(require_permission(settings.APP_ID, Permission.READ)),
-    ],
-    offset: int = Query(default=0, ge=0),
-    limit: int = Query(default=50, ge=1, le=100),
+    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> ReportListResponse:
     """List reports for the authenticated user with pagination."""
     return await service.list_reports(
         session=session,
-        user_uuid=uuid.UUID(token_payload.user_uuid),
+        user_id=uuid.UUID(token_payload.user_id),
         offset=offset,
         limit=limit,
     )

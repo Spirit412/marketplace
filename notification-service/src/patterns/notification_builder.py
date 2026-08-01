@@ -8,7 +8,10 @@ from src.models.notification import Notification, Template
 
 
 class NotificationBuilder:
-    """Fluent builder that assembles a Notification ORM object from a template + variables."""
+    """Fluent builder that assembles a Notification ORM object.
+
+    Combines a template with variables.
+    """
 
     def __init__(self) -> None:
         self._template: Template | None = None
@@ -26,8 +29,8 @@ class NotificationBuilder:
         self._variables = variables
         return self
 
-    def with_recipient(self, user_uuid: uuid.UUID) -> "NotificationBuilder":
-        self._recipient_uuid = user_uuid
+    def with_recipient(self, user_id: uuid.UUID) -> "NotificationBuilder":
+        self._recipient_uuid = user_id
         return self
 
     def with_channel(self, channel: str) -> "NotificationBuilder":
@@ -46,16 +49,22 @@ class NotificationBuilder:
         if self._template is None:
             raise ValueError("Template is required")
 
-        jinja_env = Environment(loader=BaseLoader())
-        subject_tpl = jinja_env.from_string(self._template.subject)
-        body_tpl = jinja_env.from_string(self._template.body_template)
+        # Body renders as HTML (EmailChannel sends it as text/html) and can
+        # embed variables a seller/buyer controls (product names, addresses,
+        # ...) — autoescape so those can't inject markup into the email.
+        # Subject is plain text, where HTML-escaping would just corrupt
+        # ordinary characters like "&", so it gets its own non-escaping env.
+        plain_env = Environment(loader=BaseLoader(), autoescape=False)  # noqa: S701 -- plain-text subject, not HTML
+        html_env = Environment(loader=BaseLoader(), autoescape=True)
+        subject_tpl = plain_env.from_string(self._template.subject)
+        body_tpl = html_env.from_string(self._template.body_template)
 
         subject = subject_tpl.render(**self._variables)
         body = body_tpl.render(**self._variables)
 
         return Notification(
             id=uuid7(),
-            user_uuid=self._recipient_uuid or uuid7(),
+            user_id=self._recipient_uuid or uuid7(),
             event_type=self._event_type or self._template.code,
             channel=self._channel or "",
             notification_type=self._notification_type,

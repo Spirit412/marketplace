@@ -6,14 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
 from src.core.auth import (
-    Permission,
     TokenPayload,
     get_token_payload,
-    require_permission,
 )
 from src.depends import (
     _require_admin,
     _user_role_name,
+    enforce_login_rate_limit,
     get_auth_service,
     get_service_session,
 )
@@ -37,9 +36,7 @@ from src.services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post(
-    "/register", response_model=UserResponse, status_code=201, summary="Register user"
-)
+@router.post("/register", status_code=201, summary="Register user")
 async def register(
     request: RegisterRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -56,7 +53,11 @@ async def register(
     return response
 
 
-@router.post("/login", response_model=TokenResponse, summary="Login")
+@router.post(
+    "/login",
+    dependencies=[Depends(enforce_login_rate_limit)],
+    summary="Login",
+)
 async def login(
     login_request: LoginRequest,
     http_request: Request,
@@ -67,7 +68,7 @@ async def login(
     device_info = http_request.headers.get("User-Agent")
     ip_address = http_request.client.host if http_request.client else None
 
-    user, access_token, refresh_token = await service.login(
+    _user, access_token, refresh_token = await service.login(
         session=session,
         email=login_request.email,
         password=login_request.password,
@@ -80,7 +81,7 @@ async def login(
     )
 
 
-@router.post("/refresh", response_model=TokenResponse, summary="Refresh tokens")
+@router.post("/refresh", summary="Refresh tokens")
 async def refresh(
     refresh_request: RefreshRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -102,7 +103,6 @@ async def refresh(
     status_code=204,
     response_model=None,
     summary="Logout",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def logout(
     refresh_request: RefreshRequest,
@@ -120,10 +120,7 @@ async def logout(
     "/logout-all",
     status_code=204,
     response_model=None,
-    dependencies=[
-        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
-        Depends(get_token_payload),
-    ],
+    dependencies=[Depends(get_token_payload)],
     summary="Logout from all sessions",
 )
 async def logout_all(
@@ -134,15 +131,13 @@ async def logout_all(
     """Revoke all refresh tokens to log out from every session."""
     await service.logout_all(
         session=session,
-        user_uuid=uuid.UUID(token_payload.user_uuid),
+        user_id=uuid.UUID(token_payload.user_id),
     )
 
 
 @router.get(
     "/sessions",
-    response_model=list[SessionResponse],
     summary="List active sessions",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.READ))],
 )
 async def get_sessions(
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
@@ -152,42 +147,47 @@ async def get_sessions(
     """List all active sessions for the authenticated user."""
     sessions = await service.get_sessions(
         session=session,
-        user_uuid=uuid.UUID(token_payload.user_uuid),
+        user_id=uuid.UUID(token_payload.user_id),
     )
     return [SessionResponse.model_validate(s) for s in sessions]
 
 
 @router.post(
     "/check_credentials",
-    response_model=CheckCredentialsResponse,
     summary="Check credentials",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def check_credentials(
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> CheckCredentialsResponse:
     """Validate the token payload and return credential status."""
+    credentials = await service.resolve_credentials(
+        session, uuid.UUID(token_payload.user_id), token_payload.iat
+    )
     return CheckCredentialsResponse(
         valid=True,
-        user_uuid=token_payload.user_uuid,
-        role=token_payload.role,
-        is_admin=token_payload.is_admin,
+        user_id=token_payload.user_id,
+        role=credentials.role_name,
+        is_admin=credentials.is_admin,
     )
 
 
 @router.post(
     "/check-access",
-    response_model=CheckAccessResponse,
     summary="Check access",
-    dependencies=[Depends(require_permission(settings.APP_ID, Permission.WRITE))],
 )
 async def check_access(
     body: CheckAccessRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> CheckAccessResponse:
-    """Check whether a user has access to a given resource and action."""
-    allowed, user_uuid, role, is_admin = await service.check_access(
+    """Check whether a user has access to a given resource and action.
+
+    Called by AuthMiddleware in every service on each request.
+    Token is passed in the body — no Authorization header required.
+    """
+    allowed, user_id, role, is_admin = await service.check_access(
         session=session,
         token=body.token,
         method=body.method,
@@ -196,7 +196,7 @@ async def check_access(
     )
     return CheckAccessResponse(
         allowed=allowed,
-        user_uuid=user_uuid,
+        user_id=user_id,
         role=role,
         is_admin=is_admin,
     )
@@ -204,11 +204,7 @@ async def check_access(
 
 @router.post(
     "/users/{user_id}/block",
-    response_model=UserResponse,
-    dependencies=[
-        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
-        Depends(_require_admin),
-    ],
+    dependencies=[Depends(_require_admin)],
     summary="Block user",
 )
 async def block_user(
@@ -222,7 +218,7 @@ async def block_user(
     user = await service.block_user(
         session=session,
         user_id=user_id,
-        blocked_by=uuid.UUID(token_payload.user_uuid),
+        blocked_by=uuid.UUID(token_payload.user_id),
         reason=block_request.reason,
     )
     return UserResponse.model_validate(user)
@@ -230,16 +226,14 @@ async def block_user(
 
 @router.post(
     "/users/{user_id}/unblock",
-    response_model=UserResponse,
     dependencies=[
-        Depends(require_permission(settings.APP_ID, Permission.WRITE)),
         Depends(_require_admin),
     ],
     summary="Unblock user",
 )
 async def unblock_user(
     user_id: uuid.UUID,
-    token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
+    _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[AuthService, Depends(get_auth_service)],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> UserResponse:

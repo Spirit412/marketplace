@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["websocket"])
 
 
-@router.websocket("/ws/{user_uuid}")
+@router.websocket("/ws/{user_id}")
 async def websocket_endpoint(
-    user_uuid: str,
+    user_id: str,
     ws: WebSocket,
     token: str = "",
     manager: WebSocketManager = Depends(get_ws_manager),
@@ -23,12 +23,12 @@ async def websocket_endpoint(
     if token:
         try:
             payload = decode_jwt(token, settings.jwt.SECRET_KEY, settings.jwt.ALGORITHM)
-            user_uuid = payload.user_uuid
+            user_id = payload.user_id
         except Exception:
             await ws.close(code=4003, reason="Invalid token")
             return
 
-    await manager.connect(user_uuid, ws)
+    await manager.connect(user_id, ws)
     try:
         while True:
             data = await ws.receive_text()
@@ -37,6 +37,6 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         pass
     except Exception as exc:
-        logger.warning("WebSocket error for user=%s: %s", user_uuid, exc)
+        logger.warning("WebSocket error for user=%s: %s", user_id, exc)
     finally:
-        await manager.disconnect(user_uuid, ws)
+        await manager.disconnect(user_id, ws)

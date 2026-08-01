@@ -46,19 +46,24 @@ def customer_token() -> str:
     return token
 
 
-def test_admin_permissions_cover_every_application(admin_token: str) -> None:
-    """The super-admin token carries a permission level for each application."""
-    import base64
-    import json
+def test_admin_permissions_cover_every_application(
+    admin_token: str, clients: dict[str, httpx.Client]
+) -> None:
+    """The super-admin reaches every application, resolved server-side per request.
 
-    payload = admin_token.split(".")[1]
-    payload += "=" * (-len(payload) % 4)
-    claims = json.loads(base64.urlsafe_b64decode(payload))
-    assert claims["permissions"], "token carries no permissions claim"
-    assert all(level > 0 for level in claims["permissions"].values())
+    Permissions no longer travel in the JWT (see "Auth Service — Ролевая
+    модель" §2.1): the token carries identity only, and access is resolved
+    fresh from the RBAC tables on each call via /auth/check-access. This
+    checks the resolved outcome instead of a claim the token stopped
+    carrying.
+    """
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    for service, path in FORBIDDEN_FOR_CUSTOMER:
+        code = clients[service].get(path, headers=headers).status_code
+        assert code == 200, f"admin should reach {service}{path}, got {code}"
 
 
-@pytest.mark.parametrize("service,path", FORBIDDEN_FOR_CUSTOMER)
+@pytest.mark.parametrize(("service", "path"), FORBIDDEN_FOR_CUSTOMER)
 def test_low_privilege_user_is_forbidden(
     service: str, path: str, customer_token: str, clients: dict[str, httpx.Client]
 ) -> None:
@@ -79,7 +84,7 @@ def test_low_privilege_user_keeps_its_own_application(
     assert clients["order"].get("/orders/", headers=headers).status_code == 200
 
 
-@pytest.mark.parametrize("service,path", PUBLIC)
+@pytest.mark.parametrize(("service", "path"), PUBLIC)
 def test_public_endpoints_stay_anonymous(
     service: str, path: str, clients: dict[str, httpx.Client]
 ) -> None:
