@@ -24,6 +24,7 @@ SERVICES: dict[str, int] = {
     "inventory": 8180,
     "dictionary": 8190,
     "import": 8101,
+    "api": 8100,
 }
 
 HOST = os.getenv("E2E_HOST", "127.0.0.1")

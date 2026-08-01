@@ -157,9 +157,48 @@ class PaymentService:
         )
 
     async def get_payment(
-        self, *, session: AsyncSession, payment_uuid: uuid.UUID
+        self,
+        *,
+        session: AsyncSession,
+        payment_uuid: uuid.UUID,
+        caller_id: uuid.UUID,
+        caller_is_privileged: bool = False,
     ) -> Payment | None:
-        return await self._repo.get_by_uuid(session=session, uuid_value=payment_uuid)
+        """Fetch a payment by id — the payment's own buyer, or an admin.
+
+        Returns None (not a distinct "forbidden" outcome) on an ownership
+        mismatch, same as order-service's get_order() — the router turns
+        that into 404, so a payment ID belonging to someone else isn't
+        distinguishable from one that doesn't exist at all.
+        """
+        payment = await self._repo.get_by_uuid(session=session, uuid_value=payment_uuid)
+        if payment is None:
+            return None
+        if not caller_is_privileged and payment.user_id != caller_id:
+            return None
+        return payment
+
+    async def get_payment_by_order(
+        self,
+        *,
+        session: AsyncSession,
+        order_id: uuid.UUID,
+        caller_id: uuid.UUID,
+        caller_is_privileged: bool = False,
+    ) -> Payment | None:
+        """Fetch the payment for an order — same ownership rule as get_payment().
+
+        A `None` return also covers the ordinary case of "order exists,
+        payment hasn't been created yet" — not just ownership mismatches or
+        a nonexistent order. The router doesn't need to (and can't cheaply)
+        tell those apart from here.
+        """
+        payment = await self._repo.get_by_order_id(session=session, order_id=order_id)
+        if payment is None:
+            return None
+        if not caller_is_privileged and payment.user_id != caller_id:
+            return None
+        return payment
 
     async def refund(
         self,

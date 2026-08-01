@@ -163,6 +163,22 @@ services:
     networks:
       - proxynet
 
+  mp-api-service:
+    command: uvicorn src.main:app --host 0.0.0.0 --port ${API_PORT}
+    build:
+      context: ./api-service
+      dockerfile: Dockerfile
+    container_name: mp-${API_APP_NAME}
+    hostname: mp-${API_APP_NAME}
+    restart: on-failure
+    tty: true
+    env_file:
+      - api-service/.env
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - proxynet
+
   mp-postgres:
     image: postgres:16-alpine
     container_name: mp-postgres

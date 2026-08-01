@@ -57,5 +57,9 @@
   {"name": "PAYMENT:POST:/*", "app_id": "PAYMENT", "method": "POST", "path": "/*"},
   {"name": "PAYMENT:PUT:/*", "app_id": "PAYMENT", "method": "PUT", "path": "/*"},
   {"name": "PAYMENT:PATCH:/*", "app_id": "PAYMENT", "method": "PATCH", "path": "/*"},
-  {"name": "PAYMENT:DELETE:/*", "app_id": "PAYMENT", "method": "DELETE", "path": "/*"}
+  {"name": "PAYMENT:DELETE:/*", "app_id": "PAYMENT", "method": "DELETE", "path": "/*"},
+
+  {"name": "API:GET:/*", "app_id": "API", "method": "GET", "path": "/*"},
+
+  {"name": "INVENTORY:GET:/stock/by-product/*", "app_id": "INVENTORY", "method": "GET", "path": "/stock/by-product/*"}
 ]

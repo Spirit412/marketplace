@@ -1,0 +1,111 @@
+[project]
+name = "api-service"
+version = "0.1.0"
+description = "API Service (BFF + composition) — Multi-Vendor Marketplace"
+authors = [
+    { name = "Доманский Александр", email = "89213688247@yandex.ru" }
+]
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "uvicorn[standard] (==0.30.1)",
+    "fastapi[all] (==0.111.0)",
+    "redis (>=5.0.0)",
+    "python-dotenv (==1.0.1)",
+    "pydantic-settings (>=2.0.0)",
+    "orjson (==3.11.7)",
+    "backoff (==2.2.1)",
+    "rodi (>=2.0.0)",
+    "aiohttp (>=3.9.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+]
+
+[dependency-groups]
+dev = [
+    "ruff (==0.15.12)",
+    "mypy (==1.20.2)",
+    "pre-commit (==4.5.1)",
+    "pytest (>=8.0.0,<9.0.0)",
+    "pytest-asyncio (>=0.24.0,<1.0.0)",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+package-mode = false
+
+[tool.ruff]
+target-version = "py312"
+include = ["src/**/*.py"]
+exclude = [".venv", ".git", "migrations", "scripts", "alembic"]
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+docstring-code-line-length = 80
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN", "COM", "C90", "DJ", "EXE", "T10", "TID",
+    "RUF001", "RUF002", "RUF003", "TD003", "FIX002",
+    "D100", "D101", "D102", "D103", "D104", "D105", "D107",
+    "EM101", "EM102", "TRY003",
+    # Boolean args are pervasive in this codebase's internal service/DI
+    # methods (include_deleted, caller_is_privileged, ...). None of these
+    # are public-library entry points where the "boolean trap" actually
+    # bites an unaware caller, so the rule isn't worth the churn here.
+    "FBT001", "FBT002", "FBT003",
+    # Every service's business logic deliberately catches broadly at I/O
+    # boundaries (HTTP calls to other services, RMQ publish, SMTP/JMS,
+    # JWT decode) and either logs-and-degrades or converts to a domain
+    # error — narrowing to specific exception types would just chase each
+    # third-party library's exception hierarchy without adding safety.
+    "BLE001",
+    # no copyright headers in this project
+    "CPY001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Byte-identical across every service (see core-shared-package convention).
+# init_auth() intentionally mutates module-level singleton state instead of
+# a class (the whole file is meant to be self-contained, importable as-is
+# into any service without its own DI container), and the dispatch/cache
+# lookup naturally has more early-return branches than the default limit.
+"src/auth_middleware.py" = ["PLW0603", "PLR0911"]
+# pytest convention: assert is the whole point, HTTP status codes
+# (200/201/404/...) are self-explanatory without a named constant, dummy
+# credentials/"bearer" discriminators in fixtures aren't real secrets, and
+# reaching into a module's private state for test cleanup is normal here.
+"tests/**/*.py" = ["S101", "PLR2004", "S105", "S106", "SLF001"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's own DI pattern is a function call as a default value -- that's
+# not the mutable-default footgun B008 exists to catch.
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.Query", "fastapi.Body",
+    "fastapi.Header", "fastapi.Path", "fastapi.Security",
+]
+
+[tool.ruff.lint.pylint]
+max-args = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-third-party = ["fastapi", "pydantic", "starlette"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["src"]
+exclude = ['\.venv', 'migration', 'alembic', 'tests', 'scripts']

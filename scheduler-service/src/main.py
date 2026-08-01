@@ -53,6 +53,12 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
     lifespan=lifespan,
+    # Interactive docs are api-service's job (the intended discovery
+    # path for consumers) -- disabling them here shrinks the attack
+    # surface for anyone who reaches this service's port directly
+    # without losing any actual functionality (HTTP/RMQ unaffected).
+    docs_url=None,
+    redoc_url=None,
 )
 
 app.add_middleware(

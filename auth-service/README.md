@@ -123,11 +123,14 @@ poetry run python -m src.seeds.rbac
 
 | Роль | Группа | Сервисы |
 |------|--------|---------|
-| super_admin | super_admin_full_access | Все 10 сервисов, все методы |
-| admin | admin_full_access | Все сервисы, DICTIONARY без DELETE, PAYMENT без DELETE |
-| moderator | moderator_access | CATALOG (GET/POST/PUT/PATCH), ORDER (GET) |
-| seller | seller_access | CATALOG (all), ORDER (GET), INVENTORY (all), IMPORT (all), REPORT (GET) |
-| customer | customer_orders | ORDER (all) |
+| super_admin | super_admin_full_access | Все 11 сервисов (10 доменных + `api-service`), все методы |
+| admin | admin_full_access | Все сервисы, DICTIONARY без DELETE, PAYMENT без DELETE + `API:GET:/*` |
+| moderator | moderator_access | CATALOG (GET/POST/PUT/PATCH), ORDER (GET) — без доступа к `api-service` |
+| seller | seller_access | CATALOG (all), ORDER (GET), INVENTORY (all), IMPORT (all), REPORT (GET), PAYMENT (GET/POST) + `API:GET:/*` |
+| customer | customer_orders | ORDER (all), CATALOG (GET), DICTIONARY (GET), PAYMENT (GET/POST), `INVENTORY:GET:/stock/by-product/*` (проверка наличия товара для витрины `api-service`) + `API:GET:/*` |
+| system | system_full_access | Все 11 сервисов, все методы — только через `SYSTEM_TOKEN` для межсервисных вызовов |
+
+`API:GET:/*` — доступ к composed-эндпоинтам `api-service` (`/storefront/*`, `/orders/*/full`); выдан всем группам, кроме `moderator_access`.
 
 ## Запуск
 

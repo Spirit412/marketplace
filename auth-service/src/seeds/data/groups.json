@@ -12,7 +12,8 @@
       "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
       "REPORT:GET:/*", "REPORT:POST:/*", "REPORT:PUT:/*", "REPORT:PATCH:/*", "REPORT:DELETE:/*",
       "SCHEDULER:GET:/*", "SCHEDULER:POST:/*", "SCHEDULER:PUT:/*", "SCHEDULER:PATCH:/*", "SCHEDULER:DELETE:/*",
-      "PAYMENT:GET:/*", "PAYMENT:POST:/*", "PAYMENT:PUT:/*", "PAYMENT:PATCH:/*", "PAYMENT:DELETE:/*"
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*", "PAYMENT:PUT:/*", "PAYMENT:PATCH:/*", "PAYMENT:DELETE:/*",
+      "API:GET:/*"
     ]
   },
   {
@@ -28,7 +29,8 @@
       "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
       "REPORT:GET:/*", "REPORT:POST:/*", "REPORT:PUT:/*", "REPORT:PATCH:/*", "REPORT:DELETE:/*",
       "SCHEDULER:GET:/*", "SCHEDULER:POST:/*", "SCHEDULER:PUT:/*", "SCHEDULER:PATCH:/*", "SCHEDULER:DELETE:/*",
-      "PAYMENT:GET:/*", "PAYMENT:POST:/*"
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*",
+      "API:GET:/*"
     ]
   },
   {
@@ -48,17 +50,20 @@
       "INVENTORY:GET:/*", "INVENTORY:POST:/*", "INVENTORY:PUT:/*", "INVENTORY:PATCH:/*", "INVENTORY:DELETE:/*",
       "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
       "REPORT:GET:/*",
-      "PAYMENT:GET:/*", "PAYMENT:POST:/*"
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*",
+      "API:GET:/*"
     ]
   },
   {
     "name": "customer_orders",
-    "description": "Покупатель: заказы (все методы) + чтение каталога/справочников + оплата своих заказов",
+    "description": "Покупатель: заказы (все методы) + чтение каталога/справочников + оплата своих заказов + проверка наличия товара",
     "permissions": [
       "ORDER:GET:/*", "ORDER:POST:/*", "ORDER:PUT:/*", "ORDER:PATCH:/*", "ORDER:DELETE:/*",
       "CATALOG:GET:/*",
       "DICTIONARY:GET:/*",
-      "PAYMENT:GET:/*", "PAYMENT:POST:/*"
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*",
+      "INVENTORY:GET:/stock/by-product/*",
+      "API:GET:/*"
     ]
   },
   {
@@ -74,7 +79,8 @@
       "IMPORT:GET:/*", "IMPORT:POST:/*", "IMPORT:PUT:/*", "IMPORT:PATCH:/*", "IMPORT:DELETE:/*",
       "REPORT:GET:/*", "REPORT:POST:/*", "REPORT:PUT:/*", "REPORT:PATCH:/*", "REPORT:DELETE:/*",
       "SCHEDULER:GET:/*", "SCHEDULER:POST:/*", "SCHEDULER:PUT:/*", "SCHEDULER:PATCH:/*", "SCHEDULER:DELETE:/*",
-      "PAYMENT:GET:/*", "PAYMENT:POST:/*", "PAYMENT:PUT:/*", "PAYMENT:PATCH:/*", "PAYMENT:DELETE:/*"
+      "PAYMENT:GET:/*", "PAYMENT:POST:/*", "PAYMENT:PUT:/*", "PAYMENT:PATCH:/*", "PAYMENT:DELETE:/*",
+      "API:GET:/*"
     ]
   }
 ]
