@@ -1,5 +1,7 @@
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 
 import aiohttp
 from fastapi import FastAPI, Request
@@ -8,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from src.auth_middleware import AuthMiddleware, init_auth
 from src.config.settings import settings
+from src.core.logging import configure_logging
 from src.depends import init_container
 from src.exceptions import (
     DomainError,
@@ -19,6 +22,13 @@ from src.exceptions import (
 )
 from src.routers import routers
 
+# Must run before uvicorn imports this module further and before `app` is
+# built — see configure_logging()'s docstring for why this still wins over
+# uvicorn's own default logging setup despite running "second".
+configure_logging(settings.APP_NAME, settings.LOG_FORMAT, settings.LOG_LEVEL)
+
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
@@ -26,11 +36,23 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
+def _log_error(request: Request, status_code: int, detail: object) -> None:
+    is_server_error = status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
+    level = logging.ERROR if is_server_error else logging.WARNING
+    logger.log(
+        level,
+        "%s %s -> %s: %s",
+        request.method,
+        request.url.path,
+        status_code,
+        detail,
+        exc_info=is_server_error,
+    )
+
+
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(
-        _request: Request, exc: DomainError
-    ) -> JSONResponse:
+    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ValidationError: 400,
@@ -39,22 +61,50 @@ def _register_exception_handlers(app: FastAPI) -> None:
             ServiceUnavailableError: 503,
         }
         status_code = status_map.get(type(exc), 500)
-        return JSONResponse(
-            status_code=status_code,
-            content={"detail": str(exc)},
+        detail = str(exc)
+        _log_error(request, status_code, detail)
+        return JSONResponse(status_code=status_code, content={"detail": detail})
+
+    @app.exception_handler(aiohttp.ClientResponseError)
+    async def _downstream_response_error_handler(
+        request: Request, exc: aiohttp.ClientResponseError
+    ) -> JSONResponse:
+        """A downstream non-2xx response that slipped past a facade's own 404 handling.
+
+        A genuine 4xx (e.g. an RBAC gap on the downstream side) is passed
+        through as-is rather than folded into 503, since "downstream
+        unavailable, retry later" would be actively misleading for
+        something retrying won't fix. Only a downstream 5xx becomes our own
+        503: the fault is a dependency, not this service's own logic, and
+        503 says that honestly.
+        """
+        status_code = (
+            exc.status if exc.status < HTTPStatus.INTERNAL_SERVER_ERROR else 503
         )
+        detail = f"Downstream service error ({exc.status}): {exc.message}"
+        _log_error(request, status_code, detail)
+        return JSONResponse(status_code=status_code, content={"detail": detail})
 
     @app.exception_handler(aiohttp.ClientError)
-    async def _downstream_error_handler(
-        _request: Request, exc: aiohttp.ClientError
+    async def _downstream_connection_error_handler(
+        request: Request, exc: aiohttp.ClientError
     ) -> JSONResponse:
-        # A composed endpoint's non-404 downstream failure (connection
-        # refused, 5xx, timeout) — surfacing 503 here is more honest than
-        # FastAPI's default 500, since the fault is a dependency, not this
-        # service's own logic.
+        # Connection refused, DNS failure, timeout -- no HTTP response to
+        # read a status from at all, so this is unambiguously "the
+        # dependency is unreachable", unlike the response-error case above.
+        detail = f"Downstream service unavailable: {exc}"
+        _log_error(request, 503, detail)
+        return JSONResponse(status_code=503, content={"detail": detail})
+
+    @app.exception_handler(Exception)
+    async def _unhandled_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
+        # A genuine bug, not a DomainError/downstream failure covered above
+        # -- log the full traceback but never leak it to the caller.
+        _log_error(request, 500, str(exc))
         return JSONResponse(
-            status_code=503,
-            content={"detail": f"Downstream service unavailable: {exc}"},
+            status_code=500, content={"detail": "Internal server error"}
         )
 
 

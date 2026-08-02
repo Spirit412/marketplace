@@ -91,6 +91,7 @@ class Settings(BaseSettings):
     APP_PORT: int = 8130
     AUTH_SERVICE_URL: str = "http://mp-auth-service:8110"
     LOG_LEVEL: str = "debug"
+    LOG_FORMAT: str = "text"  # "text" | "json" (for ELK/Loki/etc.)
 
     postgres: PostgresSettings = PostgresSettings()
     redis: RedisSettings = RedisSettings()

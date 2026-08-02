@@ -1,11 +1,14 @@
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.config.settings import settings
+from src.core.logging import configure_logging
 from src.depends import init_container
 from src.exceptions import (
     ConflictError,
@@ -19,6 +22,24 @@ from src.exceptions import (
 )
 from src.routers import routers
 
+configure_logging(settings.APP_NAME, settings.LOG_FORMAT, settings.LOG_LEVEL)
+
+logger = logging.getLogger(__name__)
+
+
+def _log_error(request: Request, status_code: int, detail: object) -> None:
+    is_server_error = status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
+    level = logging.ERROR if is_server_error else logging.WARNING
+    logger.log(
+        level,
+        "%s %s -> %s: %s",
+        request.method,
+        request.url.path,
+        status_code,
+        detail,
+        exc_info=is_server_error,
+    )
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
@@ -28,9 +49,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(
-        _request: Request, exc: DomainError
-    ) -> JSONResponse:
+    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ConflictError: 409,
@@ -41,9 +60,19 @@ def _register_exception_handlers(app: FastAPI) -> None:
             RateLimitExceededError: 429,
         }
         status_code = status_map.get(type(exc), 500)
+        detail = str(exc)
+        _log_error(request, status_code, detail)
+        return JSONResponse(status_code=status_code, content={"detail": detail})
+
+    @app.exception_handler(Exception)
+    async def _unhandled_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
+        # A genuine bug, not a DomainError covered above -- log the full
+        # traceback but never leak it to the caller.
+        _log_error(request, 500, str(exc))
         return JSONResponse(
-            status_code=status_code,
-            content={"detail": str(exc)},
+            status_code=500, content={"detail": "Internal server error"}
         )
 
 

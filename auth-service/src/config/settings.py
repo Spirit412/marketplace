@@ -87,6 +87,7 @@ class Settings(BaseSettings):
     AUTH_SERVICE_URL: str = "http://mp-auth-service:8110"
     APP_PORT: int = 8110
     LOG_LEVEL: str = "debug"
+    LOG_FORMAT: str = "text"  # "text" | "json" (for ELK/Loki/etc.)
 
     DB_SCHEMA: str = "auth"
 
