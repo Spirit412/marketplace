@@ -1,6 +1,6 @@
 # Multi-Vendor Marketplace Backend
 
-> **Портфолийный проект** — демонстрация владения FastAPI, архитектурными паттернами, микросервисами, RabbitMQ, Redis, JSONB.
+> Демонстрационный проект на FastAPI.
 >
 > Полнофункциональный бекенд маркетплейса с разделением на продавцов и покупателей, складским учётом, платежами, уведомлениями, отчётами и CSV-импортом.
 
@@ -68,7 +68,7 @@
 | **Тестирование** | pytest, pytest-asyncio, httpx (E2E) |
 | **Качество кода** | ruff, mypy (strict), pre-commit |
 | **Контейнеризация** | Docker, docker compose |
-| **CI/CD** | GitHub Actions (planned) |
+| **CI/CD** | GitHub Actions (в планах) |
 
 ## Архитектурные паттерны
 
@@ -149,15 +149,6 @@ service-name/
 └── README.md
 ```
 
-## Почему это интересно для портфолио
-
-- **10 изолированных микросервисов** с чистой слоистой архитектурой
-- **Event-driven**: RabbitMQ с 20+ типами событий, FastStream, Pydantic-валидация
-- **Безопасность**: JWT + refresh rotation, bcrypt, RBAC с path-level проверками, Redis rate-limit, idempotency keys
-- **Продвинутый PostgreSQL**: JSONB для динамических атрибутов, полнотекстовый поиск, UUID7 PK
-- **GoF-паттерны**: Strategy, Registry, Builder, Unit of Work, State Machine
-- **202 E2E-теста**: полные бизнес-сценарии + security (IDOR, RBAC)
-- **Готов к production**: health checks, graceful degradation, circuit breaker ready
 
 ## Лицензия
 
