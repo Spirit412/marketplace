@@ -7,9 +7,9 @@ from rodi import Container
 from src.config.settings import settings
 from src.services.cache_warmup_job import cache_warmup_job
 from src.services.cancel_unpaid_orders_job import cancel_unpaid_orders_job
-from src.services.cart_cleanup_job import cart_cleanup_job
 from src.services.daily_report_job import daily_report_job
 from src.services.inventory_alert_job import inventory_alert_job
+from src.services.scheduler_job_service import SchedulerJobService
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ JOB_REGISTRY = {
         "Daily seller report",
     ),
     "cache_warmup": (cache_warmup_job, settings.CACHE_WARMUP_CRON, "Cache warmup"),
-    "cart_cleanup": (cart_cleanup_job, settings.CART_CLEANUP_CRON, "Cart cleanup"),
     "inventory_alert": (
         inventory_alert_job,
         settings.INVENTORY_ALERT_CRON,
@@ -51,7 +50,10 @@ def set_scheduler(scheduler: AsyncIOScheduler) -> None:
 
 
 def start_scheduler() -> AsyncIOScheduler:
-    """Register all recurring jobs and start the scheduler. Called once from lifespan."""
+    """Register all recurring jobs and start the scheduler.
+
+    Called once from lifespan.
+    """
     scheduler = get_scheduler()
     for job_id, (func, cron_expr, name) in JOB_REGISTRY.items():
         scheduler.add_job(
@@ -70,3 +72,7 @@ def shutdown_scheduler() -> None:
     global _scheduler
     if _scheduler is not None and _scheduler.running:
         _scheduler.shutdown(wait=False)
+
+
+def get_scheduler_job_service() -> SchedulerJobService:
+    return SchedulerJobService(get_scheduler())

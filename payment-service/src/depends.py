@@ -3,9 +3,9 @@
 from src.config.settings import Settings, settings
 from src.dependencies import container
 from src.engines.redis import get_redis_client
-from src.patterns.gateway_registry import PaymentGatewayRegistry
-from src.patterns.payload_builder import PaymentPayloadBuilder
 from src.repositories.payment_repo import PaymentRepo
+from src.services.gateway_registry import PaymentGatewayRegistry
+from src.services.payload_builder import PaymentPayloadBuilder
 from src.services.payment_service import PaymentService
 
 

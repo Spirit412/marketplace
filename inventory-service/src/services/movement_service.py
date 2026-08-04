@@ -1,5 +1,5 @@
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,11 +28,11 @@ class MovementService:
         self,
         *,
         session: AsyncSession,
-        stock_item_id: uuid.UUID,
+        stock_item_id: UUID,
         movement_type: MovementType,
         quantity: int,
         reference_type: str | None = None,
-        reference_id: uuid.UUID | None = None,
+        reference_id: UUID | None = None,
     ) -> StockMovement:
         movement_repo = MovementRepo()
         movement = StockMovement(
@@ -48,7 +48,7 @@ class MovementService:
         self,
         *,
         session: AsyncSession,
-        stock_item_id: uuid.UUID,
+        stock_item_id: UUID,
         movement_type: str | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
@@ -71,7 +71,7 @@ class MovementService:
         self,
         *,
         session: AsyncSession,
-        warehouse_id: uuid.UUID,
+        warehouse_id: UUID,
         offset: int = 0,
         limit: int = 100,
     ) -> list[StockMovementResponse]:

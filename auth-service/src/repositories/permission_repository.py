@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.repository import BaseRepository
@@ -40,7 +40,7 @@ class PermissionRepository(BaseRepository[Permission]):
     async def search_count_only(
         self, session: AsyncSession, search_value: str | None = None
     ) -> int:
-        stmt = select(func.count(Permission.uuid))
+        stmt = select(func.count(Permission.id))
         if search_value:
             stmt = stmt.where(
                 or_(
@@ -51,32 +51,9 @@ class PermissionRepository(BaseRepository[Permission]):
         result = await session.execute(stmt)
         return result.scalar_one() or 0
 
-    async def check_by_uuids(
-        self, session: AsyncSession, uuids: set[UUID]
+    async def check_by_ids(
+        self, session: AsyncSession, ids: set[UUID]
     ) -> list[Permission]:
-        stmt = select(Permission).where(Permission.uuid.in_(uuids))
+        stmt = select(Permission).where(Permission.id.in_(ids))
         result = await session.execute(stmt)
         return list(result.scalars().all())
-
-    async def check_additional_access(
-        self,
-        session: AsyncSession,
-        *,
-        path: str,
-        method: str,
-        app_id: str,
-        additional_uuids: list[UUID],
-    ) -> bool:
-        """Check if any of the additional permission UUIDs grant access."""
-        if not additional_uuids:
-            return False
-        stmt = select(Permission.uuid).where(
-            and_(
-                Permission.uuid.in_(additional_uuids),
-                Permission.app_id == app_id,
-                Permission.method == method,
-                Permission.path == "/*",
-            )
-        )
-        result = await session.execute(stmt)
-        return result.scalar_one_or_none() is not None

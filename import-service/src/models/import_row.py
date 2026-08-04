@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import UUID as PyUUID
 
 from sqlalchemy import Boolean, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSON, UUID
@@ -16,13 +16,13 @@ class ImportRow(Base):
         "comment": "Строка исходного CSV-файла и результат её валидации",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,
         comment="Первичный ключ строки",
     )
-    task_id: Mapped[uuid.UUID] = mapped_column(
+    task_id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("import_service.import_tasks.id", ondelete="CASCADE"),
         nullable=False,

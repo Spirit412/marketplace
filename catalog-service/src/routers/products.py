@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_middleware import _get_auth_state
@@ -22,6 +22,14 @@ from src.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["products"])
 
+ProductIdPath = Annotated[
+    UUID,
+    Path(
+        description="Product id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000050"],
+    ),
+]
+
 
 @router.post(
     "/",
@@ -37,13 +45,13 @@ async def create_product(
     """Create a new product with details and images."""
     product = await service.create(
         service_session,
-        seller_id=uuid.UUID(token_payload.user_id),
+        seller_id=UUID(token_payload.user_id),
         name=body.name,
         price=body.price,
         description=body.description,
         sku=body.sku,
         stock=body.stock,
-        category_id=uuid.UUID(body.category_id) if body.category_id else None,
+        category_id=body.category_id,
         custom_properties_config=body.custom_properties_config,
         images=body.images,
     )
@@ -55,7 +63,7 @@ async def create_product(
     summary="Get product by ID",
 )
 async def get_product(
-    product_id: uuid.UUID,
+    product_id: ProductIdPath,
     service: Annotated[ProductService, Depends(Inject(ProductService))],
     service_session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ProductResponse:
@@ -72,7 +80,7 @@ async def get_product(
 )
 async def update_product(
     request: Request,
-    product_id: uuid.UUID,
+    product_id: ProductIdPath,
     body: UpdateProductRequest,
     service: Annotated[ProductService, Depends(Inject(ProductService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -88,8 +96,9 @@ async def update_product(
     product = await service.update(
         session=session,
         product_id=product_id,
-        caller_id=uuid.UUID(token_payload.user_id),
-        caller_is_privileged=auth_state.is_admin or auth_state.role == "moderator",
+        caller_id=UUID(token_payload.user_id),
+        caller_is_admin=auth_state.is_admin,
+        caller_role=auth_state.role,
         **body.model_dump(exclude_none=True),
     )
     if product is None:
@@ -105,7 +114,7 @@ async def update_product(
 )
 async def delete_product(
     request: Request,
-    product_id: uuid.UUID,
+    product_id: ProductIdPath,
     service: Annotated[ProductService, Depends(Inject(ProductService))],
     service_session: Annotated[AsyncSession, Depends(get_async_session)],
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
@@ -115,8 +124,8 @@ async def delete_product(
     deleted = await service.delete(
         service_session,
         product_id,
-        caller_id=uuid.UUID(token_payload.user_id),
-        caller_is_privileged=auth_state.is_admin,
+        caller_id=UUID(token_payload.user_id),
+        caller_is_admin=auth_state.is_admin,
     )
     if not deleted:
         raise NotFoundError("Product not found")
@@ -141,8 +150,8 @@ async def search_products(
     products, total = await service.search(
         service_session,
         query=filters.search,
-        category_id=uuid.UUID(filters.category_id) if filters.category_id else None,
-        seller_id=uuid.UUID(filters.seller_id) if filters.seller_id else None,
+        category_id=filters.category_id,
+        seller_id=filters.seller_id,
         price_min=filters.price_min,
         price_max=filters.price_max,
         sort=filters.sort,

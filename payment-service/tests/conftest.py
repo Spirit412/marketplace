@@ -60,6 +60,6 @@ def auth_headers() -> dict:
 @pytest.fixture
 def mock_gateway():
     """Mock gateway instance."""
-    from src.patterns.gateway_strategy import MockGateway
+    from src.services.gateway_strategy import MockGateway
 
     return MockGateway()

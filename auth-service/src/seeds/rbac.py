@@ -23,7 +23,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.settings import settings
 from src.database.session import ServiceSessionMaker
 from src.engines.redis_client import get_redis_client
-from src.patterns.password_hasher import PasswordHasher
 from src.repositories.group_repository import GroupRepository
 from src.repositories.permission_repository import PermissionRepository
 from src.repositories.role_repository import RoleRepository
@@ -39,6 +38,7 @@ from src.schemes.rbac import (
 )
 from src.services.auth_service import AuthService
 from src.services.group_service import GroupService
+from src.services.password_hasher import PasswordHasher
 from src.services.permission_service import PermissionService
 from src.services.role_service import RoleService
 
@@ -70,7 +70,7 @@ async def seed_rbac(session: AsyncSession) -> None:
 
     print("[1/6] Permissions...")
     permissions_data: list[dict[str, Any]] = _load_json("permissions.json")
-    perm_name_to_uuid: dict[str, uuid.UUID] = {}
+    perm_name_to_id: dict[str, uuid.UUID] = {}
     for entry in permissions_data:
         existing_permission = await perm_repo.get_by(
             session, app_id=entry["app_id"], method=entry["method"], path=entry["path"]
@@ -85,14 +85,14 @@ async def seed_rbac(session: AsyncSession) -> None:
                     path=entry["path"],
                 ),
             )
-            perm_name_to_uuid[entry["name"]] = created_permission.uuid
+            perm_name_to_id[entry["name"]] = created_permission.id
         else:
-            perm_name_to_uuid[entry["name"]] = existing_permission.uuid
-    print(f"  {len(perm_name_to_uuid)} permissions")
+            perm_name_to_id[entry["name"]] = existing_permission.id
+    print(f"  {len(perm_name_to_id)} permissions")
 
     print("[2/6] Groups...")
     groups_data: list[dict[str, Any]] = _load_json("groups.json")
-    group_name_to_uuid: dict[str, uuid.UUID] = {}
+    group_name_to_id: dict[str, uuid.UUID] = {}
     for entry in groups_data:
         existing_group = await group_repo.get_by(session, name=entry["name"])
         if existing_group is None:
@@ -103,27 +103,27 @@ async def seed_rbac(session: AsyncSession) -> None:
                     description=entry["description"],
                 ),
             )
-            group_name_to_uuid[entry["name"]] = created_group.uuid
+            group_name_to_id[entry["name"]] = created_group.id
         else:
-            group_name_to_uuid[entry["name"]] = existing_group.uuid
-    print(f"  {len(group_name_to_uuid)} groups")
+            group_name_to_id[entry["name"]] = existing_group.id
+    print(f"  {len(group_name_to_id)} groups")
 
     print("[3/6] Linking groups → permissions...")
     for entry in groups_data:
-        group_uuid = group_name_to_uuid[entry["name"]]
-        perm_uuids = [
-            perm_name_to_uuid[p] for p in entry["permissions"] if p in perm_name_to_uuid
+        group_id = group_name_to_id[entry["name"]]
+        perm_ids = [
+            perm_name_to_id[p] for p in entry["permissions"] if p in perm_name_to_id
         ]
         await group_svc.update(
             session,
-            group_uuid,
-            GroupUpdateRequest(permission_uuids=perm_uuids),
+            group_id,
+            GroupUpdateRequest(permission_ids=perm_ids),
         )
     print("  done")
 
     print("[4/6] Roles...")
     roles_data: list[dict[str, Any]] = _load_json("roles.json")
-    role_name_to_uuid: dict[str, uuid.UUID] = {}
+    role_name_to_id: dict[str, uuid.UUID] = {}
     for entry in roles_data:
         existing_role = await role_repo.get_by(session, name=entry["name"])
         if existing_role is None:
@@ -135,22 +135,22 @@ async def seed_rbac(session: AsyncSession) -> None:
                     is_admin=entry.get("is_admin", False),
                 ),
             )
-            role_name_to_uuid[entry["name"]] = created_role.uuid
+            role_name_to_id[entry["name"]] = created_role.id
         else:
-            role_name_to_uuid[entry["name"]] = existing_role.uuid
-    print(f"  {len(role_name_to_uuid)} roles")
+            role_name_to_id[entry["name"]] = existing_role.id
+    print(f"  {len(role_name_to_id)} roles")
 
     print("[5/6] Linking roles → groups...")
     role_groups_data: dict[str, list[str]] = _load_json("role_groups.json")
     for role_name, group_names in role_groups_data.items():
-        role_uuid = role_name_to_uuid.get(role_name)
-        if role_uuid is None:
+        role_id = role_name_to_id.get(role_name)
+        if role_id is None:
             continue
-        gids = [group_name_to_uuid[g] for g in group_names if g in group_name_to_uuid]
+        gids = [group_name_to_id[g] for g in group_names if g in group_name_to_id]
         await role_svc.update(
             session,
-            role_uuid,
-            RoleUpdateRequest(group_uuids=gids),
+            role_id,
+            RoleUpdateRequest(group_ids=gids),
         )
     print("  done")
 
@@ -169,13 +169,13 @@ async def seed_rbac(session: AsyncSession) -> None:
     for entry in users_data:
         existing_user = await auth_svc.user_repo.get_by_email(session, entry["email"])
         if existing_user is not None:
-            role_uuid = role_name_to_uuid.get(entry["role"])
-            if role_uuid:
+            role_id = role_name_to_id.get(entry["role"])
+            if role_id:
                 ua_repo = UserAccessRepository()
                 await ua_repo.create_or_update(
                     session,
                     user_id=existing_user.id,
-                    role_uuid=role_uuid,
+                    role_id=role_id,
                 )
             continue
 
@@ -184,13 +184,13 @@ async def seed_rbac(session: AsyncSession) -> None:
             email=entry["email"],
             password=entry["password"],
         )
-        role_uuid = role_name_to_uuid.get(entry["role"])
-        if role_uuid:
+        role_id = role_name_to_id.get(entry["role"])
+        if role_id:
             ua_repo = UserAccessRepository()
             await ua_repo.create_or_update(
                 session,
                 user_id=user.id,
-                role_uuid=role_uuid,
+                role_id=role_id,
             )
     print(f"  {len(users_data)} users")
 

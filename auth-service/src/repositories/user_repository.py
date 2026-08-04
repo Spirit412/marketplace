@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +18,7 @@ class UserRepository(BaseRepository[User]):
         return await self.get_by(session, email=email)
 
     async def get_with_access(
-        self, session: AsyncSession, user_id: uuid.UUID
+        self, session: AsyncSession, user_id: UUID
     ) -> User | None:
         stmt = (
             select(User)
@@ -36,8 +36,8 @@ class UserRepository(BaseRepository[User]):
     async def block(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
-        blocked_by: uuid.UUID,
+        user_id: UUID,
+        blocked_by: UUID,
         reason: str,
     ) -> User | None:
         stmt = (
@@ -49,7 +49,7 @@ class UserRepository(BaseRepository[User]):
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def unblock(self, session: AsyncSession, user_id: uuid.UUID) -> User | None:
+    async def unblock(self, session: AsyncSession, user_id: UUID) -> User | None:
         stmt = (
             update(User)
             .where(User.id == user_id)

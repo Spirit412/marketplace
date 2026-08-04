@@ -40,7 +40,7 @@ DEFAULT_SELLER_EMAIL = "seller@marketplace.dev"
 
 
 def _load_json(name: str) -> list[dict[str, Any]]:
-    with open(DATA_DIR / name, encoding="utf-8") as fh:
+    with (DATA_DIR / name).open(encoding="utf-8") as fh:
         data: list[dict[str, Any]] = json.load(fh)
         return data
 
@@ -105,7 +105,8 @@ async def seed_products(
 
     await session.commit()
     print(
-        f"Products: {created} created, {skipped} already existed (seller={seller_email})"
+        f"Products: {created} created, {skipped} already existed "
+        f"(seller={seller_email})"
     )
 
 

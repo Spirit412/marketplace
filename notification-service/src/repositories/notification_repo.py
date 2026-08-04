@@ -1,5 +1,5 @@
-import uuid
 from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,7 @@ class NotificationRepository:
         return notification
 
     async def get_by_id(
-        self, session: AsyncSession, notification_id: uuid.UUID
+        self, session: AsyncSession, notification_id: UUID
     ) -> Notification | None:
         stmt = exclude_deleted(
             select(Notification).where(Notification.id == notification_id),
@@ -31,7 +31,7 @@ class NotificationRepository:
     async def get_unread(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Notification]:
@@ -49,7 +49,7 @@ class NotificationRepository:
     async def get_history(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Notification]:
@@ -65,7 +65,7 @@ class NotificationRepository:
         return list(result.scalars().all())
 
     async def mark_read(
-        self, session: AsyncSession, notification_id: uuid.UUID
+        self, session: AsyncSession, notification_id: UUID
     ) -> Notification | None:
         stmt = (
             update(Notification)
@@ -77,7 +77,7 @@ class NotificationRepository:
         return result.scalar_one_or_none()
 
     async def update_status(
-        self, session: AsyncSession, notification_id: uuid.UUID, status: str
+        self, session: AsyncSession, notification_id: UUID, status: str
     ) -> Notification | None:
         stmt = (
             update(Notification)

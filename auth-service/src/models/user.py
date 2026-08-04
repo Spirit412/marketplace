@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,7 +21,7 @@ class User(TimestampMixin, SoftDeleteMixin, Base):
         "comment": "Пользователь (покупатель, продавец, модератор, админ)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ пользователя"
     )
     email: Mapped[str] = mapped_column(
@@ -43,7 +43,7 @@ class User(TimestampMixin, SoftDeleteMixin, Base):
     blocked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, comment="Дата и время блокировки"
     )
-    blocked_by: Mapped[uuid.UUID | None] = mapped_column(
+    blocked_by: Mapped[UUID | None] = mapped_column(
         ForeignKey("auth.users.id"),
         nullable=True,
         comment="Кто заблокировал пользователя (fk на users.id)",
@@ -66,10 +66,10 @@ class SessionLog(TimestampMixin, Base):
         "comment": "История сессий входа пользователя (для аудита и статистики)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ записи сессии"
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         ForeignKey("auth.users.id", ondelete="CASCADE"),
         nullable=False,
         comment="Пользователь, которому принадлежит сессия",

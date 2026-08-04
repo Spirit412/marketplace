@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,19 +19,19 @@ class PaymentRepo:
         await session.refresh(payment, attribute_names=["transactions"])
         return payment
 
-    async def get_by_uuid(
-        self, session: AsyncSession, uuid_value: uuid.UUID
+    async def get_by_id(
+        self, session: AsyncSession, payment_id: UUID
     ) -> Payment | None:
         stmt = (
             select(Payment)
-            .where(Payment.id == uuid_value, Payment.is_delete.is_(False))
+            .where(Payment.id == payment_id, Payment.is_delete.is_(False))
             .options(selectinload(Payment.transactions))
         )
         result = await session.execute(stmt)
         return result.scalars().first()
 
     async def get_by_order_id(
-        self, session: AsyncSession, order_id: uuid.UUID
+        self, session: AsyncSession, order_id: UUID
     ) -> Payment | None:
         stmt = (
             select(Payment)

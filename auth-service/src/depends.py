@@ -1,6 +1,6 @@
-import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, Request
 from rodi import Container
@@ -11,7 +11,6 @@ from src.database.session import ServiceAsyncSession, ServiceSessionMaker
 from src.database.transaction import get_async_session
 from src.engines.redis_client import get_redis_client
 from src.exceptions import ForbiddenError, RateLimitExceededError
-from src.patterns.password_hasher import PasswordHasher
 from src.repositories.group_repository import GroupRepository
 from src.repositories.permission_repository import PermissionRepository
 from src.repositories.role_repository import RoleRepository
@@ -20,8 +19,11 @@ from src.repositories.user_access_repository import UserAccessRepository
 from src.repositories.user_repository import UserRepository
 from src.services.auth_service import AuthService
 from src.services.group_service import GroupService
+from src.services.password_hasher import PasswordHasher
 from src.services.permission_service import PermissionService
+from src.services.rate_limit_service import RateLimitService
 from src.services.role_service import RoleService
+from src.services.user_access_service import UserAccessService
 
 container = Container()
 
@@ -56,8 +58,9 @@ def init_container() -> None:
     container.add_transient(RoleService)
     container.add_transient(PermissionService)
     container.add_transient(GroupService)
+    container.add_transient(UserAccessService)
 
-    container.add_scoped(AuthService)
+    container.add_scoped(RateLimitService)
 
 
 async def get_service_session() -> AsyncGenerator[ServiceAsyncSession, None]:
@@ -112,7 +115,7 @@ async def _require_admin(
 ) -> TokenPayload:
     """Dependency: only admins pass. Resolves role from DB, not JWT."""
     credentials = await get_auth_service().resolve_credentials(
-        session, uuid.UUID(token_payload.user_id), token_payload.iat
+        session, UUID(token_payload.user_id), token_payload.iat
     )
     if not credentials.is_admin:
         raise ForbiddenError("Admin access required")

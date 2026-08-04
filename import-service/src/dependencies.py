@@ -9,9 +9,10 @@ from rodi import Container
 from src.config.settings import Settings, settings
 from src.engines.rabbitmq import ImportPublisher
 from src.facades import CatalogClient, DictionaryClient
-from src.patterns.file_storage_registry import FileStorageRegistry
-from src.patterns.import_registry import ImportStrategyRegistry
 from src.repositories.import_repo import ImportRowRepository, ImportTaskRepository
+from src.services.error_template_service import ErrorTemplateService
+from src.services.file_storage_registry import FileStorageRegistry
+from src.services.import_registry import ImportStrategyRegistry
 from src.services.import_service import ImportService
 
 container = Container()
@@ -42,3 +43,4 @@ def init_container() -> None:
     container.add_scoped(ImportRowRepository)
 
     container.add_scoped(ImportService)
+    container.add_scoped(ErrorTemplateService)

@@ -25,41 +25,41 @@ class GroupService:
     async def create(
         self, session: AsyncSession, body: GroupCreateRequest
     ) -> GroupResponse:
-        if body.permission_uuids:
-            existing = await self._permission_repo.check_by_uuids(
-                session, set(body.permission_uuids)
+        if body.permission_ids:
+            existing = await self._permission_repo.check_by_ids(
+                session, set(body.permission_ids)
             )
-            found_uuids = {p.uuid for p in existing}
-            missing = set(body.permission_uuids) - found_uuids
+            found_ids = {p.id for p in existing}
+            missing = set(body.permission_ids) - found_ids
             if missing:
                 raise NotFoundError(f"Permissions not found: {missing}")
 
         group = Group(name=body.name, description=body.description)
         result = await self._repo.create(session, group)
 
-        if body.permission_uuids:
+        if body.permission_ids:
             await self._repo.assign_permissions(
-                session, result.uuid, set(body.permission_uuids)
+                session, result.id, set(body.permission_ids)
             )
 
         return GroupResponse(
-            uuid=result.uuid,
+            id=result.id,
             name=result.name,
             description=result.description,
-            permission_uuids=body.permission_uuids,
+            permission_ids=body.permission_ids,
             created_at=result.created_at,
             updated_at=result.updated_at,
         )
 
-    async def get_by(self, session: AsyncSession, uuid: UUID) -> GroupResponse:
-        group = await self._repo.get_with_permissions(session, uuid)
+    async def get_by(self, session: AsyncSession, group_id: UUID) -> GroupResponse:
+        group = await self._repo.get_with_permissions(session, group_id)
         if not group:
-            raise NotFoundError(f"Group {uuid} not found")
+            raise NotFoundError(f"Group {group_id} not found")
         return GroupResponse(
-            uuid=group.uuid,
+            id=group.id,
             name=group.name,
             description=group.description,
-            permission_uuids=[p.uuid for p in group.permissions],
+            permission_ids=[p.id for p in group.permissions],
             created_at=group.created_at,
             updated_at=group.updated_at,
         )
@@ -76,10 +76,10 @@ class GroupService:
         return GroupListResponse(
             items=[
                 GroupResponse(
-                    uuid=g.uuid,
+                    id=g.id,
                     name=g.name,
                     description=g.description,
-                    permission_uuids=[p.uuid for p in g.permissions],
+                    permission_ids=[p.id for p in g.permissions],
                     created_at=g.created_at,
                     updated_at=g.updated_at,
                 )
@@ -91,25 +91,25 @@ class GroupService:
         )
 
     async def update(
-        self, session: AsyncSession, uuid: UUID, body: GroupUpdateRequest
+        self, session: AsyncSession, group_id: UUID, body: GroupUpdateRequest
     ) -> GroupResponse:
-        group = await self._repo.get_by_id(session, uuid)
+        group = await self._repo.get_by_id(session, group_id)
         if not group:
-            raise NotFoundError(f"Group {uuid} not found")
+            raise NotFoundError(f"Group {group_id} not found")
 
-        update_data = body.model_dump(exclude={"permission_uuids"}, exclude_none=True)
+        update_data = body.model_dump(exclude={"permission_ids"}, exclude_none=True)
         if update_data:
             await self._repo.update(session, group, **update_data)
 
-        if body.permission_uuids is not None:
+        if body.permission_ids is not None:
             await self._repo.assign_permissions(
-                session, uuid, set(body.permission_uuids)
+                session, group_id, set(body.permission_ids)
             )
 
-        return await self.get_by(session, uuid)
+        return await self.get_by(session, group_id)
 
-    async def delete(self, session: AsyncSession, uuid: UUID) -> None:
-        group = await self._repo.get_by_id(session, uuid)
+    async def delete(self, session: AsyncSession, group_id: UUID) -> None:
+        group = await self._repo.get_by_id(session, group_id)
         if not group:
-            raise NotFoundError(f"Group {uuid} not found")
+            raise NotFoundError(f"Group {group_id} not found")
         await self._repo.delete(session, group)

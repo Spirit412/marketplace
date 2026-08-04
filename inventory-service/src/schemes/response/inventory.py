@@ -1,5 +1,5 @@
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -7,17 +7,17 @@ from pydantic import BaseModel, ConfigDict
 class StockItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    id: UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int
     reserved: int
     available: int
 
 
 class StockResponse(BaseModel):
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int
     reserved: int
     available: int
@@ -26,31 +26,31 @@ class StockResponse(BaseModel):
 class StockMovementResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    stock_item_id: uuid.UUID
+    id: UUID
+    stock_item_id: UUID
     movement_type: str
     quantity: int
     reference_type: str | None = None
-    reference_id: uuid.UUID | None = None
+    reference_id: UUID | None = None
     created_at: datetime
 
 
 class LowStockItemResponse(BaseModel):
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     stock: int
 
 
 class PopularProductResponse(BaseModel):
-    product_id: uuid.UUID
+    product_id: UUID
     total_quantity: int
 
 
 class WarehouseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    seller_id: uuid.UUID
+    id: UUID
+    seller_id: UUID
     name: str
     address: str | None = None
     timezone: str

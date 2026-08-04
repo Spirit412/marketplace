@@ -27,20 +27,20 @@ class RoleService:
             is_admin=body.is_admin,
         )
         result = await self._repo.create(session, role)
-        if body.group_uuids:
-            await self._repo.assign_groups(session, result.uuid, set(body.group_uuids))
+        if body.group_ids:
+            await self._repo.assign_groups(session, result.id, set(body.group_ids))
         return RoleResponse.model_validate(result)
 
-    async def get_by(self, session: AsyncSession, uuid: UUID) -> RoleResponse:
-        role = await self._repo.get_with_groups(session, uuid)
+    async def get_by(self, session: AsyncSession, role_id: UUID) -> RoleResponse:
+        role = await self._repo.get_with_groups(session, role_id)
         if not role:
-            raise NotFoundError(f"Role {uuid} not found")
+            raise NotFoundError(f"Role {role_id} not found")
         return RoleResponse(
-            uuid=role.uuid,
+            id=role.id,
             name=role.name,
             description=role.description,
             is_admin=role.is_admin,
-            group_uuids=[g.uuid for g in role.groups],
+            group_ids=[g.id for g in role.groups],
             created_at=role.created_at,
             updated_at=role.updated_at,
         )
@@ -57,11 +57,11 @@ class RoleService:
         return RoleListResponse(
             items=[
                 RoleResponse(
-                    uuid=r.uuid,
+                    id=r.id,
                     name=r.name,
                     description=r.description,
                     is_admin=r.is_admin,
-                    group_uuids=[],
+                    group_ids=[],
                     created_at=r.created_at,
                     updated_at=r.updated_at,
                 )
@@ -73,23 +73,23 @@ class RoleService:
         )
 
     async def update(
-        self, session: AsyncSession, uuid: UUID, body: RoleUpdateRequest
+        self, session: AsyncSession, role_id: UUID, body: RoleUpdateRequest
     ) -> RoleResponse:
-        role = await self._repo.get_by_id(session, uuid)
+        role = await self._repo.get_by_id(session, role_id)
         if not role:
-            raise NotFoundError(f"Role {uuid} not found")
+            raise NotFoundError(f"Role {role_id} not found")
 
-        update_data = body.model_dump(exclude={"group_uuids"}, exclude_none=True)
+        update_data = body.model_dump(exclude={"group_ids"}, exclude_none=True)
         if update_data:
             await self._repo.update(session, role, **update_data)
 
-        if body.group_uuids is not None:
-            await self._repo.assign_groups(session, uuid, set(body.group_uuids))
+        if body.group_ids is not None:
+            await self._repo.assign_groups(session, role_id, set(body.group_ids))
 
-        return await self.get_by(session, uuid)
+        return await self.get_by(session, role_id)
 
-    async def delete(self, session: AsyncSession, uuid: UUID) -> None:
-        role = await self._repo.get_by_id(session, uuid)
+    async def delete(self, session: AsyncSession, role_id: UUID) -> None:
+        role = await self._repo.get_by_id(session, role_id)
         if not role:
-            raise NotFoundError(f"Role {uuid} not found")
+            raise NotFoundError(f"Role {role_id} not found")
         await self._repo.delete(session, role)

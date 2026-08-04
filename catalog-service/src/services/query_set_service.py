@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +14,7 @@ class QuerySetService:
     async def create(
         self,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         name: str,
         data: dict[str, Any] | None = None,
         displayed_fields: dict[str, Any] | None = None,
@@ -30,14 +30,14 @@ class QuerySetService:
         return await self._repo.create(session, query_set)
 
     async def get_by_id(
-        self, session: AsyncSession, query_set_id: uuid.UUID
+        self, session: AsyncSession, query_set_id: UUID
     ) -> QuerySet | None:
         return await self._repo.get_by_id(session, query_set_id)
 
     async def update(
         self,
         session: AsyncSession,
-        query_set_id: uuid.UUID,
+        query_set_id: UUID,
         **kwargs: object,
     ) -> QuerySet | None:
         qs = await self._repo.get_by_id(session, query_set_id)
@@ -50,13 +50,13 @@ class QuerySetService:
 
         return await self._repo.update(session, qs)
 
-    async def delete(self, session: AsyncSession, query_set_id: uuid.UUID) -> bool:
+    async def delete(self, session: AsyncSession, query_set_id: UUID) -> bool:
         return await self._repo.delete(session, query_set_id)
 
     async def get_by_seller(
         self,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[QuerySet], int]:
@@ -66,11 +66,11 @@ class QuerySetService:
         return await self._repo.get_system(session)
 
     async def get_favorites(
-        self, session: AsyncSession, seller_id: uuid.UUID
+        self, session: AsyncSession, seller_id: UUID
     ) -> list[QuerySet]:
         return await self._repo.get_favorites(session, seller_id)
 
     async def toggle_favorite(
-        self, session: AsyncSession, query_set_id: uuid.UUID
+        self, session: AsyncSession, query_set_id: UUID
     ) -> QuerySet | None:
         return await self._repo.toggle_favorite(session, query_set_id)

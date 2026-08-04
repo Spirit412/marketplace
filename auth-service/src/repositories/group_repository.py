@@ -17,19 +17,21 @@ class GroupRepository(BaseRepository[Group]):
         super().__init__(Group)
 
     async def get_with_permissions(
-        self, session: AsyncSession, uuid: UUID
+        self, session: AsyncSession, group_id: UUID
     ) -> Group | None:
         stmt = (
             select(Group)
-            .where(Group.uuid == uuid)
+            .where(Group.id == group_id)
             .options(selectinload(Group.permissions))
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_with_roles(self, session: AsyncSession, uuid: UUID) -> Group | None:
+    async def get_with_roles(
+        self, session: AsyncSession, group_id: UUID
+    ) -> Group | None:
         stmt = (
-            select(Group).where(Group.uuid == uuid).options(selectinload(Group.roles))
+            select(Group).where(Group.id == group_id).options(selectinload(Group.roles))
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -59,64 +61,60 @@ class GroupRepository(BaseRepository[Group]):
             page_size=page_size,
         )
 
-    async def check_by_uuids(
-        self, session: AsyncSession, uuids: set[UUID]
-    ) -> list[Group]:
-        stmt = select(Group).where(Group.uuid.in_(uuids))
+    async def check_by_ids(self, session: AsyncSession, ids: set[UUID]) -> list[Group]:
+        stmt = select(Group).where(Group.id.in_(ids))
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
     async def assign_permissions(
-        self, session: AsyncSession, group_uuid: UUID, permission_uuids: set[UUID]
+        self, session: AsyncSession, group_id: UUID, permission_ids: set[UUID]
     ) -> None:
-        existing = await self._get_assigned_permissions(session, group_uuid)
-        to_add = permission_uuids - existing
-        to_remove = existing - permission_uuids
+        existing = await self._get_assigned_permissions(session, group_id)
+        to_add = permission_ids - existing
+        to_remove = existing - permission_ids
 
         if to_remove:
             stmt = delete(PermissionGroupAssociation).where(
-                PermissionGroupAssociation.group_uuid == group_uuid,
-                PermissionGroupAssociation.permission_uuid.in_(to_remove),
+                PermissionGroupAssociation.group_id == group_id,
+                PermissionGroupAssociation.permission_id.in_(to_remove),
             )
             await session.execute(stmt)
 
-        for perm_uuid in to_add:
+        for perm_id in to_add:
             session.add(
-                PermissionGroupAssociation(
-                    group_uuid=group_uuid, permission_uuid=perm_uuid
-                )
+                PermissionGroupAssociation(group_id=group_id, permission_id=perm_id)
             )
 
         await session.flush()
 
     async def _get_assigned_permissions(
-        self, session: AsyncSession, group_uuid: UUID
+        self, session: AsyncSession, group_id: UUID
     ) -> set[UUID]:
-        stmt = select(PermissionGroupAssociation.permission_uuid).where(
-            PermissionGroupAssociation.group_uuid == group_uuid
+        stmt = select(PermissionGroupAssociation.permission_id).where(
+            PermissionGroupAssociation.group_id == group_id
         )
         result = await session.execute(stmt)
         return set(result.scalars().all())
 
     async def resolve_permissions_for_role(
-        self, session: AsyncSession, role_uuid: UUID
+        self, session: AsyncSession, role_id: UUID
     ) -> list[Permission]:
         """Get all permissions for a role through its groups."""
         stmt = (
             select(Permission)
             .join(
                 PermissionGroupAssociation,
-                PermissionGroupAssociation.permission_uuid == Permission.uuid,
+                PermissionGroupAssociation.permission_id == Permission.id,
             )
             .join(
                 Group,
-                Group.uuid == PermissionGroupAssociation.group_uuid,
+                Group.id == PermissionGroupAssociation.group_id,
             )
             .join(
                 RoleGroupAssociation,
-                RoleGroupAssociation.group_uuid == Group.uuid,
+                RoleGroupAssociation.group_id == Group.id,
             )
-            .where(RoleGroupAssociation.role_uuid == role_uuid)
+            .where(RoleGroupAssociation.role_id == role_id)
             .distinct()
         )
         result = await session.execute(stmt)

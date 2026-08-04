@@ -1,5 +1,5 @@
-import uuid
 from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +16,7 @@ class SessionRepository(BaseRepository[SessionLog]):
         return await self.get_by(session, session_jti=jti)
 
     async def get_active_for_user(
-        self, session: AsyncSession, user_id: uuid.UUID
+        self, session: AsyncSession, user_id: UUID
     ) -> list[SessionLog]:
         stmt = (
             select(SessionLog)
@@ -36,9 +36,7 @@ class SessionRepository(BaseRepository[SessionLog]):
         await session.execute(stmt)
         await session.flush()
 
-    async def close_all_for_user(
-        self, session: AsyncSession, user_id: uuid.UUID
-    ) -> None:
+    async def close_all_for_user(self, session: AsyncSession, user_id: UUID) -> None:
         stmt = (
             update(SessionLog)
             .where(SessionLog.user_id == user_id)

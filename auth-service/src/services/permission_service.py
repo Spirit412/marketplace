@@ -25,10 +25,12 @@ class PermissionService:
         result = await self._repo.create(session, permission)
         return PermissionResponse.model_validate(result)
 
-    async def get_by(self, session: AsyncSession, uuid: UUID) -> PermissionResponse:
-        result = await self._repo.get_by_id(session, uuid)
+    async def get_by(
+        self, session: AsyncSession, permission_id: UUID
+    ) -> PermissionResponse:
+        result = await self._repo.get_by_id(session, permission_id)
         if not result:
-            raise NotFoundError(f"Permission {uuid} not found")
+            raise NotFoundError(f"Permission {permission_id} not found")
         return PermissionResponse.model_validate(result)
 
     async def list_all(
@@ -48,17 +50,17 @@ class PermissionService:
         )
 
     async def update(
-        self, session: AsyncSession, uuid: UUID, body: PermissionUpdateRequest
+        self, session: AsyncSession, permission_id: UUID, body: PermissionUpdateRequest
     ) -> PermissionResponse:
-        permission = await self._repo.get_by_id(session, uuid)
+        permission = await self._repo.get_by_id(session, permission_id)
         if not permission:
-            raise NotFoundError(f"Permission {uuid} not found")
+            raise NotFoundError(f"Permission {permission_id} not found")
         update_data = body.model_dump(exclude_none=True)
         result = await self._repo.update(session, permission, **update_data)
         return PermissionResponse.model_validate(result)
 
-    async def delete(self, session: AsyncSession, uuid: UUID) -> None:
-        permission = await self._repo.get_by_id(session, uuid)
+    async def delete(self, session: AsyncSession, permission_id: UUID) -> None:
+        permission = await self._repo.get_by_id(session, permission_id)
         if not permission:
-            raise NotFoundError(f"Permission {uuid} not found")
+            raise NotFoundError(f"Permission {permission_id} not found")
         await self._repo.delete(session, permission)

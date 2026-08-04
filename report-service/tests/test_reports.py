@@ -36,7 +36,7 @@ class TestReportGeneration:
 
 class TestReportBuilder:
     def test_builder_constructs_sql(self) -> None:
-        from src.patterns.report_builder import ReportBuilder
+        from src.services.report_builder import ReportBuilder
 
         builder = ReportBuilder()
         builder.with_source("postgres").with_table("test_table").with_filters(
@@ -50,8 +50,8 @@ class TestReportBuilder:
 class TestFormatStrategies:
     @pytest.mark.asyncio
     async def test_csv_strategy(self, tmp_path) -> None:
-        from src.patterns.export_strategy import CsvFormat
-        from src.patterns.report_builder import ResultSet
+        from src.services.export_strategy import CsvFormat
+        from src.services.report_builder import ResultSet
 
         data = ResultSet(
             columns=["id", "name"],

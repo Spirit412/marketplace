@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.auth import (
@@ -10,11 +10,20 @@ from src.core.auth import (
 )
 from src.core.database import get_async_session
 from src.depends import Inject
+from src.exceptions import NotFoundError
 from src.schemes.request.query_set import CreateQuerySetRequest, UpdateQuerySetRequest
 from src.schemes.response.query_set import QuerySetListResponse, QuerySetResponse
 from src.services.query_set_service import QuerySetService
 
 router = APIRouter(prefix="/query-sets", tags=["query-sets"])
+
+QuerySetIdPath = Annotated[
+    UUID,
+    Path(
+        description="Query set id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000060"],
+    ),
+]
 
 
 @router.post(
@@ -31,7 +40,7 @@ async def create_query_set(
     """Create a new query set for the authenticated seller."""
     qs = await service.create(
         session,
-        seller_id=uuid.UUID(token_payload.user_id),
+        seller_id=UUID(token_payload.user_id),
         name=body.name,
         data=body.data,
         displayed_fields=body.displayed_fields,
@@ -45,14 +54,14 @@ async def create_query_set(
     summary="Get query set by ID",
 )
 async def get_query_set(
-    query_set_id: uuid.UUID,
+    query_set_id: QuerySetIdPath,
     service: Annotated[QuerySetService, Depends(Inject(QuerySetService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> QuerySetResponse:
     """Get a single query set by ID."""
     qs = await service.get_by_id(session, query_set_id)
     if qs is None:
-        raise HTTPException(status_code=404, detail="Query set not found")
+        raise NotFoundError("Query set not found")
     return QuerySetResponse.model_validate(qs)
 
 
@@ -61,7 +70,7 @@ async def get_query_set(
     summary="Update query set",
 )
 async def update_query_set(
-    query_set_id: uuid.UUID,
+    query_set_id: QuerySetIdPath,
     body: UpdateQuerySetRequest,
     service: Annotated[QuerySetService, Depends(Inject(QuerySetService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -73,7 +82,7 @@ async def update_query_set(
         **body.model_dump(exclude_none=True),
     )
     if qs is None:
-        raise HTTPException(status_code=404, detail="Query set not found")
+        raise NotFoundError("Query set not found")
     return QuerySetResponse.model_validate(qs)
 
 
@@ -84,14 +93,14 @@ async def update_query_set(
     summary="Delete query set",
 )
 async def delete_query_set(
-    query_set_id: uuid.UUID,
+    query_set_id: QuerySetIdPath,
     service: Annotated[QuerySetService, Depends(Inject(QuerySetService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> None:
     """Delete a query set by ID."""
     deleted = await service.delete(session, query_set_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail="Query set not found")
+        raise NotFoundError("Query set not found")
 
 
 @router.post(
@@ -99,14 +108,14 @@ async def delete_query_set(
     summary="Toggle query set favorite",
 )
 async def toggle_favorite(
-    query_set_id: uuid.UUID,
+    query_set_id: QuerySetIdPath,
     service: Annotated[QuerySetService, Depends(Inject(QuerySetService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> QuerySetResponse:
     """Toggle the favorite status of a query set."""
     qs = await service.toggle_favorite(session, query_set_id)
     if qs is None:
-        raise HTTPException(status_code=404, detail="Query set not found")
+        raise NotFoundError("Query set not found")
     return QuerySetResponse.model_validate(qs)
 
 
@@ -131,13 +140,13 @@ async def list_query_sets(
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[QuerySetService, Depends(Inject(QuerySetService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    page: int = 1,
-    page_size: int = 20,
+    page: Annotated[int, Query(ge=1, description="Page number, 1-based.")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100, description="Items per page.")] = 20,
 ) -> QuerySetListResponse:
     """List query sets for the authenticated seller with pagination."""
     items, total = await service.get_by_seller(
         session,
-        seller_id=uuid.UUID(token_payload.user_id),
+        seller_id=UUID(token_payload.user_id),
         page=page,
         page_size=page_size,
     )

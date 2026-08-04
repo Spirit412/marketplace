@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +11,7 @@ class StockRepo:
     """Repository for StockItem; soft-deleted rows are hidden unless asked for."""
 
     async def get_by_product_and_warehouse(
-        self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
+        self, session: AsyncSession, product_id: UUID, warehouse_id: UUID
     ) -> StockItem | None:
         stmt = exclude_deleted(
             select(StockItem).where(
@@ -24,7 +24,7 @@ class StockRepo:
         return result.scalar_one_or_none()
 
     async def get_by_id(
-        self, session: AsyncSession, stock_item_id: uuid.UUID
+        self, session: AsyncSession, stock_item_id: UUID
     ) -> StockItem | None:
         stmt = exclude_deleted(
             select(StockItem).where(StockItem.id == stock_item_id), StockItem
@@ -37,8 +37,21 @@ class StockRepo:
         await session.flush()
         return stock_item
 
+    async def commit(self, session: AsyncSession) -> None:
+        """Force the current transaction durable now, ahead of the request's own commit.
+
+        reserve()/release() need this: they hold a Redis lock only for the
+        duration of the request, but get_async_session()'s own commit only
+        runs once the request unwinds all the way back up through the
+        router — well after the lock is released. Without an early commit
+        here, a second concurrent request can acquire the lock and read
+        this row before the first request's UPDATE is durable, and both
+        would over-reserve stock beyond what physically exists.
+        """
+        await session.commit()
+
     async def get_or_create(
-        self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
+        self, session: AsyncSession, product_id: UUID, warehouse_id: UUID
     ) -> StockItem:
         item = await self.get_by_product_and_warehouse(
             session, product_id, warehouse_id
@@ -52,7 +65,7 @@ class StockRepo:
     async def update_quantity(
         self,
         session: AsyncSession,
-        stock_item_id: uuid.UUID,
+        stock_item_id: UUID,
         quantity_delta: int = 0,
         reserved_delta: int = 0,
     ) -> StockItem | None:
@@ -70,7 +83,7 @@ class StockRepo:
         return result.scalar_one_or_none()
 
     async def get_available_quantity(
-        self, session: AsyncSession, product_id: uuid.UUID, warehouse_id: uuid.UUID
+        self, session: AsyncSession, product_id: UUID, warehouse_id: UUID
     ) -> int:
         item = await self.get_by_product_and_warehouse(
             session, product_id, warehouse_id
@@ -82,7 +95,7 @@ class StockRepo:
     async def list_by_warehouse(
         self,
         session: AsyncSession,
-        warehouse_id: uuid.UUID,
+        warehouse_id: UUID,
         offset: int = 0,
         limit: int = 100,
     ) -> list[StockItem]:
@@ -116,7 +129,7 @@ class StockRepo:
         return list(result.scalars().all())
 
     async def list_by_product(
-        self, session: AsyncSession, product_id: uuid.UUID
+        self, session: AsyncSession, product_id: UUID
     ) -> list[StockItem]:
         """All stock items for a product across every warehouse.
 

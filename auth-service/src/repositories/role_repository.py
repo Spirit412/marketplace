@@ -17,8 +17,10 @@ class RoleRepository(BaseRepository[Role]):
     async def get_by_name(self, session: AsyncSession, name: str) -> Role | None:
         return await self.get_by(session, name=name)
 
-    async def get_with_groups(self, session: AsyncSession, uuid: UUID) -> Role | None:
-        stmt = select(Role).where(Role.uuid == uuid).options(selectinload(Role.groups))
+    async def get_with_groups(
+        self, session: AsyncSession, role_id: UUID
+    ) -> Role | None:
+        stmt = select(Role).where(Role.id == role_id).options(selectinload(Role.groups))
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -50,7 +52,7 @@ class RoleRepository(BaseRepository[Role]):
     async def search_count_only(
         self, session: AsyncSession, search_value: str | None = None
     ) -> int:
-        stmt = select(func.count(Role.uuid))
+        stmt = select(func.count(Role.id))
         if search_value:
             stmt = stmt.where(
                 or_(
@@ -62,31 +64,29 @@ class RoleRepository(BaseRepository[Role]):
         return result.scalar_one() or 0
 
     async def assign_groups(
-        self, session: AsyncSession, role_uuid: UUID, group_uuids: set[UUID]
+        self, session: AsyncSession, role_id: UUID, group_ids: set[UUID]
     ) -> None:
-        existing = await self._get_assigned_groups(session, role_uuid)
-        to_add = group_uuids - existing
-        to_remove = existing - group_uuids
+        existing = await self._get_assigned_groups(session, role_id)
+        to_add = group_ids - existing
+        to_remove = existing - group_ids
 
         if to_remove:
             stmt = delete(RoleGroupAssociation).where(
-                RoleGroupAssociation.role_uuid == role_uuid,
-                RoleGroupAssociation.group_uuid.in_(to_remove),
+                RoleGroupAssociation.role_id == role_id,
+                RoleGroupAssociation.group_id.in_(to_remove),
             )
             await session.execute(stmt)
 
-        for group_uuid in to_add:
-            session.add(
-                RoleGroupAssociation(role_uuid=role_uuid, group_uuid=group_uuid)
-            )
+        for group_id in to_add:
+            session.add(RoleGroupAssociation(role_id=role_id, group_id=group_id))
 
         await session.flush()
 
     async def _get_assigned_groups(
-        self, session: AsyncSession, role_uuid: UUID
+        self, session: AsyncSession, role_id: UUID
     ) -> set[UUID]:
-        stmt = select(RoleGroupAssociation.group_uuid).where(
-            RoleGroupAssociation.role_uuid == role_uuid
+        stmt = select(RoleGroupAssociation.group_id).where(
+            RoleGroupAssociation.role_id == role_id
         )
         result = await session.execute(stmt)
         return set(result.scalars().all())

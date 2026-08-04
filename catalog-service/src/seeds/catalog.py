@@ -4,7 +4,8 @@ Idempotent: safe to run multiple times (checks by slug/backend_name).
 
 Data files:
     seeds/data/categories.json   — [{name, slug, description, children: [...]}, ...]
-    seeds/data/properties.json   — [{backend_name, frontend_label, property_type, options, category_slugs}, ...]
+    seeds/data/properties.json   — [{backend_name, frontend_label, property_type,
+                                     options, category_slugs}, ...]
 
 Usage:
     POSTGRES_HOST=localhost poetry run python -m src.seeds.catalog
@@ -12,9 +13,8 @@ Usage:
 
 import asyncio
 import json
-import uuid
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -23,6 +23,9 @@ from src.config.settings import settings
 from src.core.datatype import uuid7
 from src.models.category import Category
 from src.models.property import CategoryProperty, Property
+
+if TYPE_CHECKING:
+    import uuid
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -33,7 +36,7 @@ def _load_json(name: str) -> Any:
     Returns `Any`: callers annotate the variable with the shape that
     specific file actually holds.
     """
-    with open(DATA_DIR / name, encoding="utf-8") as fh:
+    with (DATA_DIR / name).open(encoding="utf-8") as fh:
         return json.load(fh)
 
 
@@ -90,20 +93,19 @@ async def seed_catalog(session: AsyncSession) -> None:
     _compute_mptt(categories_data)
     flat_categories = _flatten(categories_data)
 
-    slug_to_uuid: dict[str, uuid.UUID] = {}
+    slug_to_id: dict[str, uuid.UUID] = {}
     for entry in flat_categories:
         existing = await session.execute(
             select(Category).where(Category.slug == entry["slug"])
         )
         existing_cat = existing.scalar_one_or_none()
         if existing_cat is not None:
-            slug_to_uuid[entry["slug"]] = existing_cat.id
+            slug_to_id[entry["slug"]] = existing_cat.id
             continue
 
         parent_id = None
         if entry["level"] > 0:
-            parent_uuid = slug_to_uuid.get(entry.get("parent_slug", ""))
-            parent_id = parent_uuid
+            parent_id = slug_to_id.get(entry.get("parent_slug", ""))
 
         category = Category(
             id=uuid7(),
@@ -118,21 +120,21 @@ async def seed_catalog(session: AsyncSession) -> None:
         )
         session.add(category)
         await session.flush()
-        slug_to_uuid[entry["slug"]] = category.id
+        slug_to_id[entry["slug"]] = category.id
 
-    print(f"  {len(slug_to_uuid)} categories ready")
+    print(f"  {len(slug_to_id)} categories ready")
 
     print("[2/2] Properties...")
     properties_data: list[dict[str, Any]] = _load_json("properties.json")
 
-    backend_to_uuid: dict[str, uuid.UUID] = {}
+    backend_to_id: dict[str, uuid.UUID] = {}
     for entry in properties_data:
         existing = await session.execute(
             select(Property).where(Property.backend_name == entry["backend_name"])
         )
         existing_prop = existing.scalar_one_or_none()
         if existing_prop is not None:
-            backend_to_uuid[entry["backend_name"]] = existing_prop.id
+            backend_to_id[entry["backend_name"]] = existing_prop.id
             continue
 
         prop = Property(
@@ -145,25 +147,25 @@ async def seed_catalog(session: AsyncSession) -> None:
         )
         session.add(prop)
         await session.flush()
-        backend_to_uuid[entry["backend_name"]] = prop.id
+        backend_to_id[entry["backend_name"]] = prop.id
 
-    print(f"  {len(backend_to_uuid)} properties ready")
+    print(f"  {len(backend_to_id)} properties ready")
 
     print("[+] Linking properties to categories...")
     link_count = 0
     for entry in properties_data:
-        prop_uuid = backend_to_uuid.get(entry["backend_name"])
-        if prop_uuid is None:
+        prop_id = backend_to_id.get(entry["backend_name"])
+        if prop_id is None:
             continue
         for cat_slug in entry.get("category_slugs", []):
-            cat_uuid = slug_to_uuid.get(cat_slug)
-            if cat_uuid is None:
+            cat_id = slug_to_id.get(cat_slug)
+            if cat_id is None:
                 continue
 
             existing_link = await session.execute(
                 select(CategoryProperty).where(
-                    CategoryProperty.category_id == cat_uuid,
-                    CategoryProperty.property_id == prop_uuid,
+                    CategoryProperty.category_id == cat_id,
+                    CategoryProperty.property_id == prop_id,
                 )
             )
             if existing_link.scalar_one_or_none() is not None:
@@ -171,8 +173,8 @@ async def seed_catalog(session: AsyncSession) -> None:
 
             link = CategoryProperty(
                 id=uuid7(),
-                category_id=cat_uuid,
-                property_id=prop_uuid,
+                category_id=cat_id,
+                property_id=prop_id,
                 is_required=False,
                 sort_order=0,
             )

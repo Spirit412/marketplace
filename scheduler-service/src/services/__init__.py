@@ -1,7 +1,6 @@
 from . import (
     cache_warmup_job,
     cancel_unpaid_orders_job,
-    cart_cleanup_job,
     daily_report_job,
     inventory_alert_job,
 )
@@ -9,7 +8,6 @@ from . import (
 __all__ = [
     "cache_warmup_job",
     "cancel_unpaid_orders_job",
-    "cart_cleanup_job",
     "daily_report_job",
     "inventory_alert_job",
 ]

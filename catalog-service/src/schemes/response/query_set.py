@@ -1,13 +1,13 @@
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel
 
 
 class QuerySetResponse(BaseModel):
-    id: uuid.UUID
-    seller_id: uuid.UUID
+    id: UUID
+    seller_id: UUID
     name: str
     data: dict[str, Any]
     displayed_fields: dict[str, Any]

@@ -1,7 +1,7 @@
 from typing import Any
 
 from src.enums.import_type import ImportType
-from src.patterns.import_registry import ImportStrategyRegistry
+from src.services.import_registry import ImportStrategyRegistry
 
 
 class MappingService:
@@ -41,9 +41,7 @@ class MappingService:
         return mapping
 
     @staticmethod
-    def apply_mapping(
-        row: dict[str, Any], mapping: dict[str, str]
-    ) -> dict[str, Any]:
+    def apply_mapping(row: dict[str, Any], mapping: dict[str, str]) -> dict[str, Any]:
         """Apply column mapping to a raw CSV row."""
         result: dict[str, Any] = {}
         for target_field, source_header in mapping.items():

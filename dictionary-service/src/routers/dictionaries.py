@@ -28,7 +28,14 @@ router = APIRouter(
     summary="Get dictionary entries by type",
 )
 async def get_dictionary_entries(
-    dict_type: Annotated[DictionaryType, Path(alias="type")],
+    dict_type: Annotated[
+        DictionaryType,
+        Path(
+            alias="type",
+            description="Dictionary type.",
+            examples=["currencies"],
+        ),
+    ],
     service: Annotated[DictionaryService, Depends(Inject(DictionaryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> DictionaryListResponse:
@@ -46,7 +53,14 @@ async def get_dictionary_entries(
     summary="Create dictionary entry",
 )
 async def create_dictionary_entry(
-    dict_type: Annotated[DictionaryType, Path(alias="type")],
+    dict_type: Annotated[
+        DictionaryType,
+        Path(
+            alias="type",
+            description="Dictionary type.",
+            examples=["currencies"],
+        ),
+    ],
     body: CreateDictionaryEntry,
     service: Annotated[DictionaryService, Depends(Inject(DictionaryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],

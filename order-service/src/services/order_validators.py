@@ -29,10 +29,10 @@ class StockAvailableValidator(BaseEventValidator[CreateOrderContext]):
 
     async def validate(self, context: CreateOrderContext) -> None:
         insufficient: list[str] = []
-        for product_uuid, qty in context.cart_items.items():
-            available = await context.inventory_client.check_stock(product_uuid, qty)
+        for product_id, qty in context.cart_items.items():
+            available = await context.inventory_client.check_stock(product_id, qty)
             if not available:
-                insufficient.append(product_uuid)
+                insufficient.append(product_id)
 
         if insufficient:
             context.insufficient_products = insufficient

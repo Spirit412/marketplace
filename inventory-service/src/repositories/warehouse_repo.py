@@ -1,5 +1,5 @@
-import uuid
 from datetime import UTC, datetime
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ class WarehouseRepo:
         return warehouse
 
     async def get_by_id(
-        self, session: AsyncSession, warehouse_id: uuid.UUID
+        self, session: AsyncSession, warehouse_id: UUID
     ) -> Warehouse | None:
         stmt = exclude_deleted(
             select(Warehouse).where(
@@ -31,7 +31,7 @@ class WarehouseRepo:
     async def list_by_seller(
         self,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         offset: int = 0,
         limit: int = 50,
     ) -> tuple[list[Warehouse], int]:
@@ -54,7 +54,7 @@ class WarehouseRepo:
         return warehouse
 
     async def deactivate(
-        self, session: AsyncSession, warehouse_id: uuid.UUID
+        self, session: AsyncSession, warehouse_id: UUID
     ) -> Warehouse | None:
         stmt = (
             update(Warehouse)
@@ -66,7 +66,7 @@ class WarehouseRepo:
         return result.scalar_one_or_none()
 
     async def get_by_name_and_seller(
-        self, session: AsyncSession, name: str, seller_id: uuid.UUID
+        self, session: AsyncSession, name: str, seller_id: UUID
     ) -> Warehouse | None:
         stmt = select(Warehouse).where(
             Warehouse.name == name,

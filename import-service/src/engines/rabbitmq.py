@@ -1,10 +1,12 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aio_pika
 import orjson
-from aio_pika.abc import AbstractChannel, AbstractRobustConnection
 
 from src.config.settings import settings
+
+if TYPE_CHECKING:
+    from aio_pika.abc import AbstractChannel, AbstractRobustConnection
 
 EXCHANGE_NAME = "import.events"
 

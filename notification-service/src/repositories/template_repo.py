@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +45,7 @@ class TemplateRepository:
         await session.flush()
         return template
 
-    async def delete(self, session: AsyncSession, template_id: uuid.UUID) -> None:
+    async def delete(self, session: AsyncSession, template_id: UUID) -> None:
         """Soft-delete a template, keeping the row for history."""
         stmt = exclude_deleted(
             select(Template).where(Template.id == template_id), Template

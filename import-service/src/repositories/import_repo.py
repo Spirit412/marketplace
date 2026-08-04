@@ -1,6 +1,6 @@
-import uuid
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,9 +21,7 @@ class ImportTaskRepository:
         await session.flush()
         return task
 
-    async def get_task(
-        self, session: AsyncSession, task_id: uuid.UUID
-    ) -> ImportTask | None:
+    async def get_task(self, session: AsyncSession, task_id: UUID) -> ImportTask | None:
         stmt = exclude_deleted(
             select(ImportTask).where(ImportTask.id == task_id), ImportTask
         )
@@ -31,7 +29,7 @@ class ImportTaskRepository:
         return result.scalar_one_or_none()
 
     async def update_status(
-        self, session: AsyncSession, task_id: uuid.UUID, status: str, **extra: object
+        self, session: AsyncSession, task_id: UUID, status: str, **extra: object
     ) -> ImportTask | None:
         values: dict[str, object] = {"status": status, **extra}
         if status in ("completed", "failed"):
@@ -48,7 +46,7 @@ class ImportTaskRepository:
     async def update_progress(
         self,
         session: AsyncSession,
-        task_id: uuid.UUID,
+        task_id: UUID,
         processed: int,
         total: int,
         errors: int,
@@ -65,7 +63,7 @@ class ImportTaskRepository:
         await session.execute(stmt)
 
     async def list_tasks(
-        self, session: AsyncSession, seller_id: uuid.UUID, limit: int, offset: int
+        self, session: AsyncSession, seller_id: UUID, limit: int, offset: int
     ) -> list[ImportTask]:
         stmt = (
             select(ImportTask)
@@ -87,7 +85,7 @@ class ImportRowRepository:
             await session.flush()
 
     async def get_rows_by_task(
-        self, session: AsyncSession, task_id: uuid.UUID
+        self, session: AsyncSession, task_id: UUID
     ) -> list[ImportRow]:
         stmt = (
             select(ImportRow)
@@ -98,7 +96,7 @@ class ImportRowRepository:
         return list(result.scalars().all())
 
     async def get_task_errors(
-        self, session: AsyncSession, task_id: uuid.UUID, offset: int, limit: int
+        self, session: AsyncSession, task_id: UUID, offset: int, limit: int
     ) -> list[ImportRow]:
         stmt = (
             select(ImportRow)

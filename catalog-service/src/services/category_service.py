@@ -1,7 +1,7 @@
 import json
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,7 +30,7 @@ class CategoryService:
         name: str,
         slug: str,
         description: str | None = None,
-        parent_id: uuid.UUID | None = None,
+        parent_id: UUID | None = None,
     ) -> Category:
         category = Category(
             name=name,
@@ -56,7 +56,7 @@ class CategoryService:
         name: str,
         slug: str,
         description: str | None = None,
-        parent_id: uuid.UUID | None = None,
+        parent_id: UUID | None = None,
         properties: list[dict[str, Any]] | None = None,
     ) -> Category:
         category = await self.create(
@@ -71,7 +71,7 @@ class CategoryService:
         return category
 
     async def get_by_id(
-        self, session: AsyncSession, category_id: uuid.UUID
+        self, session: AsyncSession, category_id: UUID
     ) -> Category | None:
         return await self._repo.get_by_id(session, category_id)
 
@@ -81,7 +81,7 @@ class CategoryService:
     async def update(
         self,
         session: AsyncSession,
-        category_id: uuid.UUID,
+        category_id: UUID,
         **kwargs: object,
     ) -> Category | None:
         category = await self._repo.get_by_id(session, category_id)
@@ -96,7 +96,7 @@ class CategoryService:
         await self._invalidate_cache()
         return category
 
-    async def delete(self, session: AsyncSession, category_id: uuid.UUID) -> bool:
+    async def delete(self, session: AsyncSession, category_id: UUID) -> bool:
         result = await self._repo.delete(session, category_id)
         if result:
             await self._invalidate_cache()
@@ -116,7 +116,7 @@ class CategoryService:
         return tree
 
     async def get_ancestors(
-        self, session: AsyncSession, category_id: uuid.UUID
+        self, session: AsyncSession, category_id: UUID
     ) -> list[Category]:
         category = await self._repo.get_by_id(session, category_id)
         if category is None:
@@ -124,7 +124,7 @@ class CategoryService:
         return await self._repo.get_ancestors(session, category)
 
     async def get_descendants(
-        self, session: AsyncSession, category_id: uuid.UUID
+        self, session: AsyncSession, category_id: UUID
     ) -> list[Category]:
         category = await self._repo.get_by_id(session, category_id)
         if category is None:
@@ -134,8 +134,8 @@ class CategoryService:
     async def move_node(
         self,
         session: AsyncSession,
-        category_id: uuid.UUID,
-        new_parent_id: uuid.UUID | None,
+        category_id: UUID,
+        new_parent_id: UUID | None,
     ) -> Category | None:
         category = await self._repo.get_by_id(session, category_id)
         if category is None:
@@ -147,7 +147,7 @@ class CategoryService:
     async def link_properties(
         self,
         session: AsyncSession,
-        category_id: uuid.UUID,
+        category_id: UUID,
         property_ids: list[dict[str, Any]],
     ) -> None:
         if self._property_repo is None:
@@ -156,7 +156,7 @@ class CategoryService:
             await self._property_repo.link_category_property(
                 session,
                 category_id=category_id,
-                property_id=uuid.UUID(prop_data["property_id"]),
+                property_id=UUID(prop_data["property_id"]),
                 is_required=prop_data.get("is_required", False),
                 sort_order=prop_data.get("sort_order", 0),
             )
@@ -195,13 +195,11 @@ class CategoryService:
     def _deserialize_tree(data: list[dict[str, Any]]) -> list[Category]:
         return [
             Category(
-                id=uuid.UUID(item["id"]),
+                id=UUID(item["id"]),
                 name=item["name"],
                 slug=item["slug"],
                 description=item.get("description"),
-                parent_id=uuid.UUID(item["parent_id"])
-                if item.get("parent_id")
-                else None,
+                parent_id=UUID(item["parent_id"]) if item.get("parent_id") else None,
                 lft=item.get("lft", 0),
                 rgt=item.get("rgt", 0),
                 tree_id=item.get("tree_id", 0),

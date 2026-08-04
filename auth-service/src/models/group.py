@@ -17,10 +17,12 @@ class Group(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "groups"
     __table_args__ = {
         "schema": "auth",
-        "comment": "Группа прав — объединяет разрешения (Permission), назначается ролям",
+        "comment": (
+            "Группа прав — объединяет разрешения (Permission), назначается ролям"
+        ),
     }
 
-    uuid: Mapped[UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="pk группы"
     )
     name: Mapped[str] = mapped_column(comment="название группы")
@@ -34,4 +36,4 @@ class Group(TimestampMixin, SoftDeleteMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Group {self.uuid} {self.name}>"
+        return f"<Group {self.id} {self.name}>"

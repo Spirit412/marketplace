@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,14 @@ router = APIRouter(
     tags=["permissions"],
     dependencies=[Depends(_require_admin)],
 )
+
+PermissionIdPath = Annotated[
+    UUID,
+    Path(
+        description="Permission id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000003"],
+    ),
+]
 
 
 @router.get(
@@ -50,41 +58,41 @@ async def create_permission(
 
 
 @router.get(
-    "/{perm_uuid}",
+    "/{permission_id}",
     summary="Get permission",
 )
 async def get_permission(
-    perm_uuid: uuid.UUID,
+    permission_id: PermissionIdPath,
     service: Annotated[PermissionService, Depends(Inject(PermissionService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> PermissionResponse:
-    """Get a single permission by its UUID."""
-    return await service.get_by(session, perm_uuid)
+    """Get a single permission by its id."""
+    return await service.get_by(session, permission_id)
 
 
 @router.put(
-    "/{perm_uuid}",
+    "/{permission_id}",
     summary="Update permission",
 )
 async def update_permission(
-    perm_uuid: uuid.UUID,
+    permission_id: PermissionIdPath,
     body: PermissionUpdateRequest,
     service: Annotated[PermissionService, Depends(Inject(PermissionService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> PermissionResponse:
-    """Update an existing permission by its UUID."""
-    return await service.update(session, perm_uuid, body)
+    """Update an existing permission by its id."""
+    return await service.update(session, permission_id, body)
 
 
 @router.delete(
-    "/{perm_uuid}",
+    "/{permission_id}",
     summary="Delete permission",
 )
 async def delete_permission(
-    perm_uuid: uuid.UUID,
+    permission_id: PermissionIdPath,
     service: Annotated[PermissionService, Depends(Inject(PermissionService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> Response:
-    """Delete a permission by its UUID."""
-    await service.delete(session, perm_uuid)
+    """Delete a permission by its id."""
+    await service.delete(session, permission_id)
     return Response(status_code=204)

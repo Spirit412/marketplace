@@ -15,7 +15,7 @@ async def _check_postgres() -> None:
         await check_postgres(session)
 
 
-@router.get("/health", response_model=HealthStatus, summary="Health check")
+@router.get("/health", summary="Health check")
 async def health_check() -> HealthStatus:
     """Perform health check for report service."""
     manager = HealthManager(service_name="report-service")

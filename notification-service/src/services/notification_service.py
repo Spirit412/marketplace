@@ -1,17 +1,19 @@
 import logging
-import uuid
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
 from src.enums.channel import Channel
+from src.exceptions import NotFoundError, ValidationError
 from src.models.notification import Notification
 from src.models.notification import Template as Tpl
-from src.patterns.channel_strategy import ChannelRegistry
-from src.patterns.notification_builder import NotificationBuilder
-from src.patterns.template_registry import TemplateRegistry
 from src.repositories.notification_repo import NotificationRepository
 from src.schemes.internal.notification import NotificationPayload
+from src.schemes.response.notification import NotificationResponse
+from src.services.channel_strategy import ChannelRegistry
+from src.services.notification_builder import NotificationBuilder
+from src.services.template_registry import TemplateRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -73,20 +75,58 @@ class NotificationService:
 
         return results
 
+    async def get_notifications(
+        self,
+        session: AsyncSession,
+        user_id: UUID,
+        *,
+        status: str = "unread",
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[NotificationResponse]:
+        """Get notifications for a user, filtered by status ("unread" | "all")."""
+        if status == "unread":
+            items = await self._repo.get_unread(session, user_id, limit, offset)
+        else:
+            items = await self._repo.get_history(session, user_id, limit, offset)
+        return [NotificationResponse.model_validate(item) for item in items]
+
+    async def get_history(
+        self,
+        session: AsyncSession,
+        user_id: UUID,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[NotificationResponse]:
+        items = await self._repo.get_history(session, user_id, limit, offset)
+        return [NotificationResponse.model_validate(item) for item in items]
+
+    async def mark_read(
+        self, session: AsyncSession, notification_id: UUID
+    ) -> NotificationResponse:
+        result = await self._repo.mark_read(session, notification_id)
+        if result is None:
+            raise NotFoundError("Notification not found")
+        return NotificationResponse.model_validate(result)
+
     async def send_manual(
         self,
         session: AsyncSession,
-        user_uuids: list[uuid.UUID],
+        user_ids: list[UUID] | None,
         subject: str,
         body: str,
         channel: str,
         notification_type: str,
     ) -> list[Notification]:
         """Admin-initiated manual notification (mass mailing)."""
+        if user_ids is None:
+            raise ValidationError("user_ids is required for manual send")
+
         results: list[Notification] = []
         strategy = self._channels.get(channel)
 
-        for user_id in user_uuids:
+        for user_id in user_ids:
             notification = Notification(
                 id=uuid7(),
                 user_id=user_id,

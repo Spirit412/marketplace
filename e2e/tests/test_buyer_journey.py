@@ -673,7 +673,7 @@ class TestEdgeCases:
 
         conftest.py's own contract is HTTP-only, no direct Redis access — and
         waiting 7 days is not a reasonable test. Left as a documented gap
-        rather than faked; verify via `redis-cli TTL cart:{user_uuid}`
+        rather than faked; verify via `redis-cli TTL cart:{user_id}`
         manually if this ever needs re-checking.
         """
         pytest.skip("cart TTL requires either direct Redis access or a 7-day wait")

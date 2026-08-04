@@ -343,7 +343,7 @@ class TestPaymentByOrderDirectly:
         unique: str,
     ) -> None:
         """The IDOR gap this endpoint was built without repeating — see
-        PLAN_api-service.md's note on GET /payments/{payment_uuid} having
+        PLAN_api-service.md's note on GET /payments/{payment_id} having
         had no ownership check at all before this change.
         """
         order = _create_order(clients, customer_headers, seller_headers, unique)
@@ -380,15 +380,18 @@ class TestHealthAndDocs:
     def test_swagger_is_enabled_on_api_service(
         self, clients: dict[str, httpx.Client]
     ) -> None:
-        """The one service where interactive docs are deliberately kept —
-        see main.py's docs_url comment on every other service.
-        """
         resp = clients["api"].get("/docs")
         assert resp.status_code == 200
 
     @pytest.mark.parametrize("service", ["catalog", "order", "payment", "inventory"])
-    def test_swagger_is_disabled_on_domain_services(
+    def test_docs_are_served_by_domain_services(
         self, clients: dict[str, httpx.Client], service: str
     ) -> None:
-        resp = clients[service].get("/docs")
-        assert resp.status_code == 404
+        """Every service exposes its own docs — Web/Mobile need to discover
+        each API directly, and api-service (the BFF) composes only a couple
+        of endpoints. Reachable without a token: AuthMiddleware's
+        exclude_paths lets the doc routes through.
+        """
+        for path in ("/docs", "/redoc", "/openapi.json"):
+            resp = clients[service].get(path)
+            assert resp.status_code == 200, f"{service}{path} -> {resp.status_code}"

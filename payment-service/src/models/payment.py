@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import JSON, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,15 +12,15 @@ class Payment(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "payments"
     __table_args__ = {"schema": "payment", "comment": "Платёж по заказу"}
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ платежа"
     )
-    order_id: Mapped[uuid.UUID] = mapped_column(
+    order_id: Mapped[UUID] = mapped_column(
         unique=True,
         index=True,
         comment="Заказ, к которому относится платёж (id из order-service)",
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True, comment="Плательщик")
+    user_id: Mapped[UUID] = mapped_column(index=True, comment="Плательщик")
     amount: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="Сумма платежа, в минорных единицах валюты"
     )
@@ -58,10 +58,10 @@ class Transaction(CreatedAtMixin, Base):
         "comment": "Операция по платежу (списание, возврат и т.п.) в системе шлюза",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ операции"
     )
-    payment_id: Mapped[uuid.UUID] = mapped_column(
+    payment_id: Mapped[UUID] = mapped_column(
         ForeignKey("payment.payments.id", ondelete="CASCADE"),
         nullable=False,
         comment="Платёж (fk на payments.id)",

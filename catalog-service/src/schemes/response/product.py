@@ -1,14 +1,14 @@
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel
 
 
 class ProductResponse(BaseModel):
-    id: uuid.UUID
-    seller_id: uuid.UUID
-    category_id: uuid.UUID | None = None
+    id: UUID
+    seller_id: UUID
+    category_id: UUID | None = None
     name: str
     description: str | None = None
     price: float

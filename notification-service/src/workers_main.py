@@ -22,8 +22,8 @@ logger = logging.getLogger("notification-worker")
 async def main() -> None:
 
     ws_manager = WebSocketManager()
-    channel_registry = get_channel_registry()
-    template_registry = get_template_registry()
+    get_channel_registry()
+    get_template_registry()
 
     broker = RabbitBroker(settings.rabbitmq.url)
     router = create_subscriber_router()

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSON
@@ -16,13 +16,13 @@ class Order(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "orders"
     __table_args__ = {"schema": "order", "comment": "Заказ покупателя"}
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ заказа"
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         index=True, comment="Покупатель, оформивший заказ"
     )
-    seller_id: Mapped[uuid.UUID | None] = mapped_column(
+    seller_id: Mapped[UUID | None] = mapped_column(
         nullable=True, comment="Продавец (если заказ одного продавца)"
     )
     status: Mapped[str] = mapped_column(
@@ -89,15 +89,15 @@ class OrderItem(Base):
         "comment": "Позиция заказа (товар, количество, цена на момент заказа)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ позиции"
     )
-    order_id: Mapped[uuid.UUID] = mapped_column(
+    order_id: Mapped[UUID] = mapped_column(
         ForeignKey("order.orders.id", ondelete="CASCADE"),
         nullable=False,
         comment="Заказ (fk на orders.id)",
     )
-    product_id: Mapped[uuid.UUID] = mapped_column(
+    product_id: Mapped[UUID] = mapped_column(
         index=True, comment="Товар (id из catalog-service)"
     )
     product_name: Mapped[str] = mapped_column(
@@ -111,10 +111,10 @@ class OrderItem(Base):
     quantity: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="Количество товара в заказе"
     )
-    seller_id: Mapped[uuid.UUID | None] = mapped_column(
+    seller_id: Mapped[UUID | None] = mapped_column(
         nullable=True, comment="Продавец товара"
     )
-    warehouse_id: Mapped[uuid.UUID | None] = mapped_column(
+    warehouse_id: Mapped[UUID | None] = mapped_column(
         nullable=True,
         comment=(
             "Склад, с которого зарезервирован товар (fk на inventory.warehouses.id)"
@@ -128,10 +128,10 @@ class OrderStatusHistory(Base):
     __tablename__ = "order_status_history"
     __table_args__ = {"schema": "order", "comment": "История смены статусов заказа"}
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ записи истории"
     )
-    order_id: Mapped[uuid.UUID] = mapped_column(
+    order_id: Mapped[UUID] = mapped_column(
         ForeignKey("order.orders.id", ondelete="CASCADE"),
         nullable=False,
         comment="Заказ (fk на orders.id)",
@@ -148,7 +148,7 @@ class OrderStatusHistory(Base):
         nullable=False,
         comment="Дата и время смены статуса",
     )
-    changed_by: Mapped[uuid.UUID | None] = mapped_column(
+    changed_by: Mapped[UUID | None] = mapped_column(
         nullable=True, comment="Пользователь, инициировавший смену статуса"
     )
     comment: Mapped[str | None] = mapped_column(

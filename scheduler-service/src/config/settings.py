@@ -101,12 +101,10 @@ class Settings(BaseSettings):
     CANCEL_UNPAID_ORDERS_CRON: str = "*/5 * * * *"
     DAILY_REPORT_CRON: str = "0 2 * * *"
     CACHE_WARMUP_CRON: str = "0 * * * *"
-    CART_CLEANUP_CRON: str = "0 3 * * 0"
     INVENTORY_ALERT_CRON: str = "0 6 * * *"
 
     UNPAID_ORDER_TIMEOUT_MINUTES: int = 30
     STOCK_DEPLETION_THRESHOLD: int = 10
-    CART_EXPIRY_DAYS: int = 7
 
     ORDER_SERVICE_URL: str = "http://mp-order-service:8130"
     INVENTORY_SERVICE_URL: str = "http://mp-inventory-service:8180"

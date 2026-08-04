@@ -1,19 +1,56 @@
 # Inventory Service
 
-Микросервис для Multi-Vendor Marketplace.
+Микросервис складского учёта.
 
-## Порт
+## Функциональность
 
-`8080`
-
-## Запуск
-
-```bash
-docker compose up -d
-```
+- Управление складами: создание, редактирование, удаление
+- Учёт остатков товаров на складах (Stock)
+- Резервирование / списание / отгрузка / пополнение
+- Журнал движений товаров (Movement) с аудитом
+- Стратегии оприходования (`receipt_strategy`)
+- Кэширование остатков в Redis
+- Блокировки через Redis (предотвращение гонок при резервировании)
+- InventoryUnitOfWork — атомарные операции PostgreSQL + инвалидация кэша
 
 ## API
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| `GET` | `/health` | Health check |
+| `GET` | `/stock/low-stock` | Товары ниже порога остатка |
+| `GET` | `/stock/popular` | Популярные товары по движениям |
+| `POST` | `/stock/check` | Проверить наличие на складе |
+| `POST` | `/stock/check/by-product` | Проверить наличие товара по всем складам |
+| `POST` | `/stock/reserve` | Зарезервировать товар |
+| `POST` | `/stock/reserve/by-product` | Зарезервировать на любом складе |
+| `POST` | `/stock/release` | Снять резерв |
+| `POST` | `/stock/ship` | Отгрузить товар |
+| `POST` | `/stock/receipt` | Оприходовать поступление |
+| `POST` | `/stock/adjust` | Скорректировать остаток |
+| `GET` | `/stock/movements` | Журнал движений |
+| `GET` | `/warehouses` | Список складов |
+| `POST` | `/warehouses` | Создать склад |
+| `GET` | `/warehouses/{id}` | Получить склад по ID |
+| `PUT` | `/warehouses/{id}` | Обновить склад |
+| `DELETE` | `/warehouses/{id}` | Удалить склад |
+
+## Резервирование и отгрузка
+
+```
+reserve → ship (списание резерва + уменьшение остатка)
+       ↘ release (возврат резерва без списания)
+```
+
+`reserve/by-product` — автоматически выбирает склад с достаточным остатком. Используется `order-service` при оформлении заказа.
+
+## Порты
+
+- API: `8180`
+- Swagger: `/docs`, `/redoc`
+
+## Запуск
+
+```bash
+docker compose up -d
+cd .. && ./manage.sh up inventory-service
+```

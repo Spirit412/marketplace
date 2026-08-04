@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from src.schemes.response.job import JobList, JobStatus, TriggerResponse
 from src.services.cache_warmup_job import cache_warmup_job
 from src.services.cancel_unpaid_orders_job import cancel_unpaid_orders_job
-from src.services.cart_cleanup_job import cart_cleanup_job
 from src.services.daily_report_job import daily_report_job
 from src.services.inventory_alert_job import inventory_alert_job
 
@@ -63,9 +62,6 @@ class TestJobFunctionsExist:
 
     def test_cache_warmup_exists(self) -> None:
         assert callable(cache_warmup_job)
-
-    def test_cart_cleanup_exists(self) -> None:
-        assert callable(cart_cleanup_job)
 
     def test_inventory_alert_exists(self) -> None:
         assert callable(inventory_alert_job)

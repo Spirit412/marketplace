@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,7 @@ class CategoryRepo:
     async def get_by_id(
         self,
         session: AsyncSession,
-        category_id: uuid.UUID,
+        category_id: UUID,
         *,
         include_deleted: bool = False,
     ) -> Category | None:
@@ -57,7 +57,7 @@ class CategoryRepo:
         refreshed = await self.get_by_id(session, merged.id)
         return refreshed if refreshed is not None else merged
 
-    async def delete(self, session: AsyncSession, category_id: uuid.UUID) -> bool:
+    async def delete(self, session: AsyncSession, category_id: UUID) -> bool:
         """Soft-delete a category, keeping the row for history."""
         category = await self.get_by_id(session, category_id)
         if category is None:
@@ -66,7 +66,7 @@ class CategoryRepo:
         await session.flush()
         return True
 
-    async def restore(self, session: AsyncSession, category_id: uuid.UUID) -> bool:
+    async def restore(self, session: AsyncSession, category_id: UUID) -> bool:
         """Clear the soft-delete flag on a category."""
         category = await self.get_by_id(session, category_id, include_deleted=True)
         if category is None:
@@ -132,7 +132,7 @@ class CategoryRepo:
         self,
         session: AsyncSession,
         category: Category,
-        new_parent_id: uuid.UUID | None,
+        new_parent_id: UUID | None,
     ) -> Category:
         category.parent_id = new_parent_id
         await session.merge(category)
@@ -140,7 +140,7 @@ class CategoryRepo:
         return category
 
     async def get_category_properties(
-        self, session: AsyncSession, category_id: uuid.UUID
+        self, session: AsyncSession, category_id: UUID
     ) -> list[CategoryProperty]:
         stmt = (
             select(CategoryProperty)

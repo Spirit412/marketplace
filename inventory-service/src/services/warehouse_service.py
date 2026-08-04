@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,7 +21,7 @@ class WarehouseService:
         *,
         session: AsyncSession,
         request: WarehouseCreateRequest,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
     ) -> WarehouseResponse:
         warehouse_repo = WarehouseRepo()
         existing = await warehouse_repo.get_by_name_and_seller(
@@ -46,7 +46,7 @@ class WarehouseService:
         self,
         *,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         offset: int = 0,
         limit: int = 50,
     ) -> list[WarehouseResponse]:
@@ -57,7 +57,7 @@ class WarehouseService:
         return [WarehouseResponse.model_validate(ware) for ware in warehouses]
 
     async def get(
-        self, *, session: AsyncSession, warehouse_id: uuid.UUID, seller_id: uuid.UUID
+        self, *, session: AsyncSession, warehouse_id: UUID, seller_id: UUID
     ) -> WarehouseResponse:
         warehouse_repo = WarehouseRepo()
         warehouse = await warehouse_repo.get_by_id(session, warehouse_id)
@@ -71,9 +71,9 @@ class WarehouseService:
         self,
         *,
         session: AsyncSession,
-        warehouse_id: uuid.UUID,
+        warehouse_id: UUID,
         request: WarehouseUpdateRequest,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
     ) -> WarehouseResponse:
         warehouse_repo = WarehouseRepo()
         warehouse = await warehouse_repo.get_by_id(session, warehouse_id)
@@ -101,7 +101,7 @@ class WarehouseService:
         return WarehouseResponse.model_validate(warehouse)
 
     async def delete(
-        self, *, session: AsyncSession, warehouse_id: uuid.UUID, seller_id: uuid.UUID
+        self, *, session: AsyncSession, warehouse_id: UUID, seller_id: UUID
     ) -> None:
         warehouse_repo = WarehouseRepo()
         warehouse = await warehouse_repo.get_by_id(session, warehouse_id)

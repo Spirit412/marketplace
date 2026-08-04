@@ -3,8 +3,8 @@
 Subscribes to report.generate.* events and processes them asynchronously.
 """
 
-import uuid
 from typing import Any
+from uuid import UUID
 
 from src.core.database import _get_session_factory
 from src.engines.file_storage import LocalFileStorage
@@ -24,7 +24,7 @@ async def handle_report_generation(
 
         await service.process_generation(
             session,
-            report_id=uuid.UUID(payload["report_id"]),
+            report_id=UUID(payload["report_id"]),
             report_type=payload["report_type"],
             fmt=payload["format"],
             parameters=payload.get("parameters", {}),

@@ -187,7 +187,7 @@ async def test_validation_service_rejects_invalid_rows() -> None:
         {"name": "", "price": "-10", "category_id": str(uuid7())},
         {"name": "OK", "price": "not-a-number", "category_id": str(uuid7())},
     ]
-    from src.patterns.import_strategy import ProductsImport
+    from src.services.import_strategy import ProductsImport
 
     strategy = ProductsImport()
     valid, errors = validator.validate_rows(rows, ImportType.PRODUCTS, strategy)

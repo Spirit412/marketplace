@@ -6,6 +6,8 @@ from src.facades.catalog import CatalogFacade
 from src.facades.inventory import InventoryFacade
 from src.facades.order import OrderFacade
 from src.facades.payment import PaymentFacade
+from src.services.order_service import OrderService
+from src.services.storefront_service import StorefrontService
 
 
 class Inject[T]:
@@ -34,3 +36,6 @@ def init_container() -> None:
     container.add_instance(
         PaymentFacade(base_url=settings.PAYMENT_SERVICE_URL), PaymentFacade
     )
+
+    container.add_scoped(StorefrontService)
+    container.add_scoped(OrderService)

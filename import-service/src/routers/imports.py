@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Path, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.auth import (
@@ -10,11 +10,19 @@ from src.core.auth import (
 )
 from src.core.database import get_async_session
 from src.dependencies import Inject
-from src.exceptions import NotFoundError, ValidationError
+from src.exceptions import NotFoundError
 from src.schemes.response.import_dto import ImportErrorResponse, ImportTaskResponse
 from src.services.import_service import ImportService
 
 router = APIRouter(prefix="/imports", tags=["imports"])
+
+TaskIdPath = Annotated[
+    UUID,
+    Path(
+        description="Import task id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000070"],
+    ),
+]
 
 
 @router.post(
@@ -23,18 +31,21 @@ router = APIRouter(prefix="/imports", tags=["imports"])
     summary="Upload CSV file for import",
 )
 async def upload_csv(
-    file: Annotated[UploadFile, File()],
-    import_type: Annotated[str, Form()],
+    file: Annotated[UploadFile, File(description="CSV file to import.")],
+    import_type: Annotated[
+        str,
+        Form(
+            description="Kind of data being imported.",
+            examples=["products"],
+        ),
+    ],
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[ImportService, Depends(Inject(ImportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ImportTaskResponse:
     """Upload a CSV file for processing as an import task."""
-    if not file.filename:
-        raise ValidationError("No file provided")
-
     content = await file.read()
-    seller_id = uuid.UUID(token_payload.user_id)
+    seller_id = UUID(token_payload.user_id)
 
     task = await service.create_task(
         session=session,
@@ -52,7 +63,7 @@ async def upload_csv(
     summary="Get import task by ID",
 )
 async def get_import_task(
-    task_id: uuid.UUID,
+    task_id: TaskIdPath,
     service: Annotated[ImportService, Depends(Inject(ImportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ImportTaskResponse:
@@ -68,24 +79,16 @@ async def get_import_task(
     summary="Get import task errors",
 )
 async def get_task_errors(
-    task_id: uuid.UUID,
+    task_id: TaskIdPath,
     service: Annotated[ImportService, Depends(Inject(ImportService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    offset: int = 0,
-    limit: int = 100,
+    offset: Annotated[int, Query(ge=0, description="Rows to skip.")] = 0,
+    limit: Annotated[int, Query(ge=1, le=500, description="Max rows to return.")] = 100,
 ) -> ImportErrorResponse:
     """Get errors for a specific import task with pagination."""
-    errors = await service.get_task_errors(
+    return await service.get_task_errors_response(
         session=session,
         task_id=task_id,
         offset=offset,
         limit=limit,
     )
-    rows = [
-        {
-            "row_number": row.row_number,
-            "errors": row.error_description or {},
-        }
-        for row in errors
-    ]
-    return ImportErrorResponse(rows=rows)

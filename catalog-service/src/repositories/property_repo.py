@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ class PropertyRepo:
     async def get_by_id(
         self,
         session: AsyncSession,
-        property_id: uuid.UUID,
+        property_id: UUID,
         *,
         include_deleted: bool = False,
     ) -> Property | None:
@@ -49,8 +49,8 @@ class PropertyRepo:
     async def link_category_property(
         self,
         session: AsyncSession,
-        category_id: uuid.UUID,
-        property_id: uuid.UUID,
+        category_id: UUID,
+        property_id: UUID,
         is_required: bool = False,
         sort_order: int = 0,
     ) -> CategoryProperty:

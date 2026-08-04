@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import JSON, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,7 +18,7 @@ class DictionaryEntry(TimestampMixin, SoftDeleteMixin, Base):
         },
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ записи"
     )
     type: Mapped[str] = mapped_column(

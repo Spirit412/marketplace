@@ -24,6 +24,7 @@ from . import (
     http_client,
     orm,
     repository,
+    state_machine,
     uow,
 )
 from .config import configure
@@ -40,5 +41,6 @@ __all__ = [
     "http_client",
     "orm",
     "repository",
+    "state_machine",
     "uow",
 ]

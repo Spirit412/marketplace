@@ -7,8 +7,8 @@ via broker.include_router() instead of growing one flat file.
 """
 
 import logging
-import uuid
 from typing import Any
+from uuid import UUID
 
 from faststream.rabbit import ExchangeType, RabbitExchange, RabbitQueue, RabbitRouter
 
@@ -68,7 +68,7 @@ async def handle_payment_succeeded(payload: dict[str, Any]) -> None:
         service = _build_order_service()
         try:
             order = await service.confirm_payment(
-                session=session, order_uuid=uuid.UUID(order_id)
+                session=session, order_id=UUID(order_id)
             )
             await session.commit()
         except Exception:

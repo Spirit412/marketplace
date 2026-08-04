@@ -16,10 +16,10 @@ import json
 import logging
 import os
 import time
-import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import (
     JSON,
@@ -47,7 +47,7 @@ DEFAULT_DSN = (
 )
 
 
-def _uuid7() -> uuid.UUID:
+def _uuid7() -> UUID:
     """Local copy of src/core/datatype.py's uuid7() — this script deliberately
     avoids importing src/ (see module docstring), so the id generator is
     copied rather than shared, same as every other core/ file in this codebase.
@@ -57,7 +57,7 @@ def _uuid7() -> uuid.UUID:
     hex_list = list(hex_str)
     hex_list[12] = "7"
     hex_list[16] = "8"
-    return uuid.UUID(hex="".join(hex_list))
+    return UUID(hex="".join(hex_list))
 
 
 class _Base(DeclarativeBase):
@@ -73,7 +73,7 @@ class _Template(_Base):
         {"schema": "notification"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid7)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=_uuid7)
     code: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     locale: Mapped[str] = mapped_column(String(8), nullable=False, default="ru")
     subject: Mapped[str] = mapped_column(String(512), nullable=False, default="")

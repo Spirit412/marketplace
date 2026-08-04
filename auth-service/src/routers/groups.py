@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,14 @@ router = APIRouter(
     tags=["groups"],
     dependencies=[Depends(_require_admin)],
 )
+
+GroupIdPath = Annotated[
+    UUID,
+    Path(
+        description="Group id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000002"],
+    ),
+]
 
 
 @router.get(
@@ -50,41 +58,41 @@ async def create_group(
 
 
 @router.get(
-    "/{group_uuid}",
+    "/{group_id}",
     summary="Get group",
 )
 async def get_group(
-    group_uuid: uuid.UUID,
+    group_id: GroupIdPath,
     service: Annotated[GroupService, Depends(Inject(GroupService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> GroupResponse:
-    """Get a single group by its UUID."""
-    return await service.get_by(session, group_uuid)
+    """Get a single group by its id."""
+    return await service.get_by(session, group_id)
 
 
 @router.put(
-    "/{group_uuid}",
+    "/{group_id}",
     summary="Update group",
 )
 async def update_group(
-    group_uuid: uuid.UUID,
+    group_id: GroupIdPath,
     body: GroupUpdateRequest,
     service: Annotated[GroupService, Depends(Inject(GroupService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> GroupResponse:
-    """Update an existing group by its UUID."""
-    return await service.update(session, group_uuid, body)
+    """Update an existing group by its id."""
+    return await service.update(session, group_id, body)
 
 
 @router.delete(
-    "/{group_uuid}",
+    "/{group_id}",
     summary="Delete group",
 )
 async def delete_group(
-    group_uuid: uuid.UUID,
+    group_id: GroupIdPath,
     service: Annotated[GroupService, Depends(Inject(GroupService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> Response:
-    """Delete a group by its UUID."""
-    await service.delete(session, group_uuid)
+    """Delete a group by its id."""
+    await service.delete(session, group_id)
     return Response(status_code=204)

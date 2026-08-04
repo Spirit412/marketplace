@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from src.patterns.state_machine import StateMachine
+from src.core.state_machine import StateMachine
 
 
 class PaymentStatus(StrEnum):

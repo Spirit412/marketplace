@@ -38,5 +38,5 @@ class EmailService:
             logger.info("Email sent to %s: %s", to_email, subject)
             return True
         except Exception as exc:
-            logger.error("Failed to send email to %s: %s", to_email, exc)
+            logger.exception("Failed to send email to %s: %s", to_email, exc)
             return False

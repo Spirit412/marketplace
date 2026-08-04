@@ -88,6 +88,12 @@ ignore = [
 # annotations` -- moving them under TYPE_CHECKING breaks the app at import
 # time with MappedAnnotationError, it isn't just unnecessary caution.
 "src/models/*.py" = ["F821", "RUF012", "TC001", "TC002", "TC003"]
+# Same hazard as src/models/*.py above, applied to Pydantic: BaseModel
+# resolves field annotations at class-creation time via typing.get_type_hints()
+# against the module's real namespace, even under `from __future__ import
+# annotations` -- moving scalar field types (uuid.UUID, datetime, ...) under
+# TYPE_CHECKING breaks the app at import time.
+"src/schemes/**/*.py" = ["TC001", "TC002", "TC003"]
 # Alembic revisions are generated
 "src/alembic/**" = ["ALL"]
 # Byte-identical across every service (see core-shared-package convention).

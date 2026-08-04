@@ -1,9 +1,9 @@
 import os
 import time
-import uuid
+from uuid import UUID
 
 
-def uuid7() -> uuid.UUID:
+def uuid7() -> UUID:
     """Generate a time-sortable UUID version 7 (RFC 9562).
 
     Layout is 48 bits of big-endian Unix time in milliseconds, a 4-bit
@@ -19,4 +19,4 @@ def uuid7() -> uuid.UUID:
     data = bytearray(timestamp_ms.to_bytes(6, "big") + os.urandom(10))
     data[6] = 0x70 | (data[6] & 0x0F)
     data[8] = 0x80 | (data[8] & 0x3F)
-    return uuid.UUID(bytes=bytes(data))
+    return UUID(bytes=bytes(data))

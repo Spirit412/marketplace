@@ -1,6 +1,6 @@
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID as PyUUID
 
 from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -17,13 +17,13 @@ class Report(TimestampMixin, SoftDeleteMixin, Base):
         "comment": "Сформированный или формируемый отчёт",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,
         comment="Первичный ключ отчёта",
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, comment="Пользователь, запросивший отчёт"
     )
     report_type: Mapped[str] = mapped_column(
@@ -69,7 +69,7 @@ class ReportTemplate(SoftDeleteMixin, Base):
         "comment": "Шаблон отчёта (SQL-запрос и схема параметров)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,

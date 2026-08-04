@@ -38,4 +38,4 @@ def init_container() -> None:
     container.add_scoped(ProductService)
     container.add_scoped(CategoryService)
     container.add_scoped(QuerySetService)
-    container.add_scoped_by_factory(lambda: HealthService(), HealthService)
+    container.add_scoped_by_factory(HealthService, HealthService)

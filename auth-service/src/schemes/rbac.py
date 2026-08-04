@@ -10,7 +10,7 @@ class RoleCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=128)
     description: str | None = None
     is_admin: bool = False
-    group_uuids: list[UUID] = Field(default_factory=list)
+    group_ids: list[UUID] = Field(default_factory=list)
 
 
 class RoleUpdateRequest(BaseModel):
@@ -19,17 +19,17 @@ class RoleUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=128)
     description: str | None = None
     is_admin: bool | None = None
-    group_uuids: list[UUID] | None = None
+    group_ids: list[UUID] | None = None
 
 
 class RoleResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    uuid: UUID
+    id: UUID
     name: str
     description: str | None
     is_admin: bool
-    group_uuids: list[UUID] = Field(default_factory=list)
+    group_ids: list[UUID] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -62,7 +62,7 @@ class PermissionUpdateRequest(BaseModel):
 class PermissionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    uuid: UUID
+    id: UUID
     name: str
     app_id: str
     method: str
@@ -83,7 +83,7 @@ class GroupCreateRequest(BaseModel):
 
     name: str = Field(min_length=1, max_length=128)
     description: str | None = None
-    permission_uuids: list[UUID] = Field(default_factory=list)
+    permission_ids: list[UUID] = Field(default_factory=list)
 
 
 class GroupUpdateRequest(BaseModel):
@@ -91,16 +91,16 @@ class GroupUpdateRequest(BaseModel):
 
     name: str | None = Field(default=None, min_length=1, max_length=128)
     description: str | None = None
-    permission_uuids: list[UUID] | None = None
+    permission_ids: list[UUID] | None = None
 
 
 class GroupResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    uuid: UUID
+    id: UUID
     name: str
     description: str | None
-    permission_uuids: list[UUID] = Field(default_factory=list)
+    permission_ids: list[UUID] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -115,7 +115,7 @@ class GroupListResponse(BaseModel):
 class UserAccessAssignRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    role_uuid: UUID | None = None
+    role_id: UUID | None = None
     additional_permissions: list[UUID] = Field(default_factory=list)
 
 
@@ -123,13 +123,19 @@ class UserAccessResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     user_id: UUID
-    role_uuid: UUID | None
+    role_id: UUID | None
     additional_permissions: list[UUID]
     created_at: datetime
     updated_at: datetime
 
 
 class PaginationParams(BaseModel):
-    page: int = Field(default=1, ge=1)
-    page_size: int = Field(default=20, ge=1, le=100)
-    search: str | None = None
+    page: int = Field(
+        default=1, ge=1, description="Page number, 1-based.", examples=[1]
+    )
+    page_size: int = Field(
+        default=20, ge=1, le=100, description="Items per page.", examples=[20]
+    )
+    search: str | None = Field(
+        default=None, description="Free-text search filter.", examples=["admin"]
+    )

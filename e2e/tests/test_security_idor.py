@@ -78,7 +78,7 @@ def seller2_token(
     """A second, freshly-provisioned seller — needed for cross-seller IDOR.
 
     No seller2 is seeded, so this registers a throwaway account and promotes
-    it via the admin RBAC API, discovering the seller role's uuid from the
+    it via the admin RBAC API, discovering the seller role's id from the
     real seller account rather than hardcoding an environment-specific id.
     """
     email = f"e2e-seller2-{uuid_hex()}@marketplace.dev"
@@ -96,12 +96,12 @@ def seller2_token(
         f"/auth/users/{seller_user_id}/access", headers=admin_headers_module
     )
     if access.status_code != 200:
-        pytest.skip("could not resolve the seller role uuid via the admin RBAC API")
-    role_uuid = access.json()["role_uuid"]
+        pytest.skip("could not resolve the seller role id via the admin RBAC API")
+    role_id = access.json()["role_id"]
 
     assigned = clients["auth"].put(
         f"/auth/users/{new_user_id}/access",
-        json={"role_uuid": role_uuid},
+        json={"role_id": role_id},
         headers=admin_headers_module,
     )
     if assigned.status_code != 200:

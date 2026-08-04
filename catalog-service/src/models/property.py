@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from sqlalchemy import (
     Boolean,
@@ -27,7 +27,7 @@ class Property(CreatedAtMixin, SoftDeleteMixin, Base):
         "comment": "Динамическое свойство товара (цвет, размер и т.п.)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ свойства"
     )
     backend_name: Mapped[str] = mapped_column(
@@ -67,15 +67,15 @@ class CategoryProperty(Base):
         "comment": "Связь категория↔свойство (какие свойства доступны в категории)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ связи"
     )
-    category_id: Mapped[uuid.UUID] = mapped_column(
+    category_id: Mapped[UUID] = mapped_column(
         ForeignKey("catalog.categories.id", ondelete="CASCADE"),
         nullable=False,
         comment="Категория (fk на categories.id)",
     )
-    property_id: Mapped[uuid.UUID] = mapped_column(
+    property_id: Mapped[UUID] = mapped_column(
         ForeignKey("catalog.properties.id", ondelete="CASCADE"),
         nullable=False,
         comment="Свойство (fk на properties.id)",

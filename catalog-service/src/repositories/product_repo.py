@@ -1,11 +1,13 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.repository import exclude_deleted, mark_deleted
 from src.models.product import Product
+from src.services.query_constructor import ProductQueryConstructor
+from src.services.sort_strategy import get_sort_strategy
 
 
 class ProductRepo:
@@ -14,7 +16,7 @@ class ProductRepo:
     async def get_by_id(
         self,
         session: AsyncSession,
-        product_id: uuid.UUID,
+        product_id: UUID,
         *,
         include_deleted: bool = False,
     ) -> Product | None:
@@ -48,7 +50,7 @@ class ProductRepo:
         await session.refresh(product)
         return product
 
-    async def delete(self, session: AsyncSession, product_id: uuid.UUID) -> bool:
+    async def delete(self, session: AsyncSession, product_id: UUID) -> bool:
         """Soft-delete a product, keeping the row for history."""
         product = await self.get_by_id(session, product_id)
         if product is None:
@@ -57,7 +59,7 @@ class ProductRepo:
         await session.flush()
         return True
 
-    async def restore(self, session: AsyncSession, product_id: uuid.UUID) -> bool:
+    async def restore(self, session: AsyncSession, product_id: UUID) -> bool:
         """Clear the soft-delete flag on a product."""
         product = await self.get_by_id(session, product_id, include_deleted=True)
         if product is None:
@@ -71,13 +73,40 @@ class ProductRepo:
             select(Product).where(Product.is_active.is_(True)), Product, include_deleted
         )
 
-    async def search(
+    async def search(  # noqa: PLR0913 -- one filter dimension per param, all optional
         self,
         session: AsyncSession,
-        stmt: Select[Any],
+        *,
+        query: str | None = None,
+        category_id: UUID | None = None,
+        seller_id: UUID | None = None,
+        price_min: float | None = None,
+        price_max: float | None = None,
+        status: str | None = None,
+        filters: dict[str, str] | None = None,
+        sort: str = "newest",
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Product], int]:
+        stmt = self.base_query()
+
+        if query:
+            stmt = ProductQueryConstructor.apply_search(stmt, query)
+        if category_id:
+            stmt = stmt.where(Product.category_id == category_id)
+        if seller_id:
+            stmt = stmt.where(Product.seller_id == seller_id)
+        if price_min is not None:
+            stmt = stmt.where(Product.price >= price_min)
+        if price_max is not None:
+            stmt = stmt.where(Product.price <= price_max)
+        if status:
+            stmt = stmt.where(Product.status == status)
+        if filters:
+            stmt = ProductQueryConstructor.apply_filters(stmt, filters)
+
+        stmt = get_sort_strategy(sort).apply(stmt)
+
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total_result = await session.execute(count_stmt)
         total = total_result.scalar_one()

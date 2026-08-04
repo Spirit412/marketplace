@@ -1,4 +1,3 @@
-import json
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
@@ -34,9 +33,9 @@ async def yookassa_webhook(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> dict[str, Any]:
     """Handle incoming YooKassa webhook event."""
-    full_payload = json.dumps({"event": body.event, "object": body.object})
     await service.handle_yookassa_webhook(
         session=session,
-        payload=full_payload,
+        raw_event_type=body.event,
+        raw_event_object=body.object,
     )
     return {"status": "ok"}

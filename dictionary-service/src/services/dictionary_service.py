@@ -8,8 +8,8 @@ from src.engines.rabbitmq import DictionaryPublisher
 from src.engines.redis import RedisDictCache
 from src.enums.dictionary_type import DictionaryType
 from src.models.dictionary import DictionaryEntry
-from src.patterns.dictionary_registry import DictionaryRegistry
 from src.repositories.dictionary_repo import DictionaryRepository
+from src.services.dictionary_registry import DictionaryRegistry
 
 logger = logging.getLogger(__name__)
 

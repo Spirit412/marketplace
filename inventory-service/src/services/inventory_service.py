@@ -176,15 +176,9 @@ class InventoryService:
             )
             await movement_repo.create(session, movement)
 
-            # Commit before releasing the lock (in the `finally` below), not
-            # after: get_async_session()'s own commit only runs once this
-            # whole request unwinds back up through the router, well after
-            # the lock is released. That gap let a second concurrent
-            # reservation acquire the lock and read this row before the first
-            # reservation's UPDATE was durable — both would see the
-            # pre-reservation quantity and both would succeed, over-reserving
-            # stock beyond what physically exists.
-            await session.commit()
+            # See StockRepo.commit()'s docstring for why this has to happen
+            # here, ahead of the lock release in `finally` below.
+            await stock_repo.commit(session)
 
             try:
                 broker = get_broker()
@@ -277,10 +271,9 @@ class InventoryService:
             )
             await movement_repo.create(session, movement)
 
-            # See the matching comment in reserve() — commit before the lock
-            # releases in `finally`, not after, so a second concurrent
-            # request can't read this row before the update is durable.
-            await session.commit()
+            # See StockRepo.commit()'s docstring for why this has to happen
+            # here, ahead of the lock release in `finally` below.
+            await stock_repo.commit(session)
 
             try:
                 broker = get_broker()

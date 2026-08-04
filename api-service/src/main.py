@@ -6,7 +6,7 @@ from http import HTTPStatus
 import aiohttp
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse
 
 from src.auth_middleware import AuthMiddleware, init_auth
 from src.config.settings import settings
@@ -22,9 +22,6 @@ from src.exceptions import (
 )
 from src.routers import routers
 
-# Must run before uvicorn imports this module further and before `app` is
-# built — see configure_logging()'s docstring for why this still wins over
-# uvicorn's own default logging setup despite running "second".
 configure_logging(settings.APP_NAME, settings.LOG_FORMAT, settings.LOG_LEVEL)
 
 logger = logging.getLogger(__name__)
@@ -52,7 +49,9 @@ def _log_error(request: Request, status_code: int, detail: object) -> None:
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    async def _domain_error_handler(
+        request: Request, exc: DomainError
+    ) -> ORJSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ValidationError: 400,
@@ -63,12 +62,12 @@ def _register_exception_handlers(app: FastAPI) -> None:
         status_code = status_map.get(type(exc), 500)
         detail = str(exc)
         _log_error(request, status_code, detail)
-        return JSONResponse(status_code=status_code, content={"detail": detail})
+        return ORJSONResponse(status_code=status_code, content={"detail": detail})
 
     @app.exception_handler(aiohttp.ClientResponseError)
     async def _downstream_response_error_handler(
         request: Request, exc: aiohttp.ClientResponseError
-    ) -> JSONResponse:
+    ) -> ORJSONResponse:
         """A downstream non-2xx response that slipped past a facade's own 404 handling.
 
         A genuine 4xx (e.g. an RBAC gap on the downstream side) is passed
@@ -83,27 +82,22 @@ def _register_exception_handlers(app: FastAPI) -> None:
         )
         detail = f"Downstream service error ({exc.status}): {exc.message}"
         _log_error(request, status_code, detail)
-        return JSONResponse(status_code=status_code, content={"detail": detail})
+        return ORJSONResponse(status_code=status_code, content={"detail": detail})
 
     @app.exception_handler(aiohttp.ClientError)
     async def _downstream_connection_error_handler(
         request: Request, exc: aiohttp.ClientError
-    ) -> JSONResponse:
-        # Connection refused, DNS failure, timeout -- no HTTP response to
-        # read a status from at all, so this is unambiguously "the
-        # dependency is unreachable", unlike the response-error case above.
+    ) -> ORJSONResponse:
         detail = f"Downstream service unavailable: {exc}"
         _log_error(request, 503, detail)
-        return JSONResponse(status_code=503, content={"detail": detail})
+        return ORJSONResponse(status_code=503, content={"detail": detail})
 
     @app.exception_handler(Exception)
     async def _unhandled_exception_handler(
         request: Request, exc: Exception
-    ) -> JSONResponse:
-        # A genuine bug, not a DomainError/downstream failure covered above
-        # -- log the full traceback but never leak it to the caller.
+    ) -> ORJSONResponse:
         _log_error(request, 500, str(exc))
-        return JSONResponse(
+        return ORJSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )
 
@@ -112,6 +106,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
     lifespan=lifespan,
+    default_response_class=ORJSONResponse,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.add_middleware(
@@ -128,7 +125,9 @@ init_auth(
     app_id=settings.APP_ID,
     redis_url=settings.redis.url,
 )
-app.add_middleware(AuthMiddleware)
+app.add_middleware(
+    AuthMiddleware, exclude_paths=["/health", "/docs", "/redoc", "/openapi.json"]
+)
 
 for router in routers:
     app.include_router(router)

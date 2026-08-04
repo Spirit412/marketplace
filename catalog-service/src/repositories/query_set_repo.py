@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ class QuerySetRepo:
     async def get_by_id(
         self,
         session: AsyncSession,
-        query_set_id: uuid.UUID,
+        query_set_id: UUID,
         *,
         include_deleted: bool = False,
     ) -> QuerySet | None:
@@ -35,7 +35,7 @@ class QuerySetRepo:
         await session.flush()
         return query_set
 
-    async def delete(self, session: AsyncSession, query_set_id: uuid.UUID) -> bool:
+    async def delete(self, session: AsyncSession, query_set_id: UUID) -> bool:
         """Soft-delete a query set, keeping the row for history."""
         qs = await self.get_by_id(session, query_set_id)
         if qs is None:
@@ -44,7 +44,7 @@ class QuerySetRepo:
         await session.flush()
         return True
 
-    async def restore(self, session: AsyncSession, query_set_id: uuid.UUID) -> bool:
+    async def restore(self, session: AsyncSession, query_set_id: UUID) -> bool:
         """Clear the soft-delete flag on a query set."""
         qs = await self.get_by_id(session, query_set_id, include_deleted=True)
         if qs is None:
@@ -56,7 +56,7 @@ class QuerySetRepo:
     async def get_by_seller(
         self,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[QuerySet], int]:
@@ -82,7 +82,7 @@ class QuerySetRepo:
         return list(result.scalars().all())
 
     async def get_favorites(
-        self, session: AsyncSession, seller_id: uuid.UUID
+        self, session: AsyncSession, seller_id: UUID
     ) -> list[QuerySet]:
         stmt = exclude_deleted(
             select(QuerySet).where(
@@ -95,7 +95,7 @@ class QuerySetRepo:
         return list(result.scalars().all())
 
     async def toggle_favorite(
-        self, session: AsyncSession, query_set_id: uuid.UUID
+        self, session: AsyncSession, query_set_id: UUID
     ) -> QuerySet | None:
         qs = await self.get_by_id(session, query_set_id)
         if qs is None:

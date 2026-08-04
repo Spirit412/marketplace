@@ -1,16 +1,25 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_async_session
 from src.depends import Inject
+from src.exceptions import NotFoundError
 from src.schemes.request.category import CreateCategoryRequest, UpdateCategoryRequest
 from src.schemes.response.category import CategoryResponse, CategoryTreeResponse
 from src.services.category_service import CategoryService
 
 router = APIRouter(prefix="/categories", tags=["categories"])
+
+CategoryIdPath = Annotated[
+    UUID,
+    Path(
+        description="Category id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000020"],
+    ),
+]
 
 
 @router.post(
@@ -29,7 +38,7 @@ async def create_category(
         name=body.name,
         slug=body.slug,
         description=body.description,
-        parent_id=uuid.UUID(body.parent_id) if body.parent_id else None,
+        parent_id=body.parent_id,
         properties=[prop.model_dump() for prop in body.properties]
         if body.properties
         else None,
@@ -57,14 +66,14 @@ async def get_tree(
     summary="Get category by ID",
 )
 async def get_category(
-    category_id: uuid.UUID,
+    category_id: CategoryIdPath,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> CategoryResponse:
     """Get a single category by ID."""
     category = await service.get_by_id(session, category_id)
     if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise NotFoundError("Category not found")
     return CategoryResponse.model_validate(category)
 
 
@@ -73,7 +82,7 @@ async def get_category(
     summary="Update category",
 )
 async def update_category(
-    category_id: uuid.UUID,
+    category_id: CategoryIdPath,
     body: UpdateCategoryRequest,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -85,7 +94,7 @@ async def update_category(
         **body.model_dump(exclude_none=True),
     )
     if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise NotFoundError("Category not found")
     return CategoryResponse.model_validate(category)
 
 
@@ -96,14 +105,14 @@ async def update_category(
     summary="Delete category",
 )
 async def delete_category(
-    category_id: uuid.UUID,
+    category_id: CategoryIdPath,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> None:
     """Delete a category by ID."""
     deleted = await service.delete(session, category_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise NotFoundError("Category not found")
 
 
 @router.get(
@@ -111,7 +120,7 @@ async def delete_category(
     summary="Get category ancestors",
 )
 async def get_ancestors(
-    category_id: uuid.UUID,
+    category_id: CategoryIdPath,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> list[CategoryResponse]:
@@ -125,7 +134,7 @@ async def get_ancestors(
     summary="Get category descendants",
 )
 async def get_descendants(
-    category_id: uuid.UUID,
+    category_id: CategoryIdPath,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> list[CategoryResponse]:
@@ -139,14 +148,19 @@ async def get_descendants(
     summary="Move category",
 )
 async def move_category(
-    category_id: uuid.UUID,
+    category_id: CategoryIdPath,
     service: Annotated[CategoryService, Depends(Inject(CategoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    new_parent_id: Annotated[str | None, Query()] = None,
+    new_parent_id: Annotated[
+        UUID | None,
+        Query(
+            description="New parent category id, or omit/null for root.",
+            examples=["019f0000-0000-7000-8000-000000000021"],
+        ),
+    ] = None,
 ) -> CategoryResponse:
     """Move a category to a new parent."""
-    parent = uuid.UUID(new_parent_id) if new_parent_id else None
-    category = await service.move_node(session, category_id, parent)
+    category = await service.move_node(session, category_id, new_parent_id)
     if category is None:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise NotFoundError("Category not found")
     return CategoryResponse.model_validate(category)

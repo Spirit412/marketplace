@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.auth import (
@@ -41,7 +41,9 @@ async def list_low_stock(
     service: Annotated[InventoryService, Depends(Inject(InventoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    threshold: Annotated[int, Query(ge=0)] = 10,
+    threshold: Annotated[
+        int, Query(ge=0, description="Report items at or below this quantity.")
+    ] = 10,
 ) -> list[LowStockItemResponse]:
     """Used by scheduler-service's inventory alert job."""
     return await service.get_low_stock_items(session=session, threshold=threshold)
@@ -55,7 +57,9 @@ async def list_popular_products(
     service: Annotated[MovementService, Depends(Inject(MovementService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    limit: Annotated[
+        int, Query(ge=1, le=200, description="Max products to return.")
+    ] = 50,
 ) -> list[PopularProductResponse]:
     """Used by scheduler-service's cache warmup job.
 
@@ -74,8 +78,20 @@ async def check_stock(
     service: Annotated[InventoryService, Depends(Inject(InventoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    product_id: Annotated[uuid.UUID, Query()],
-    warehouse_id: Annotated[uuid.UUID, Query()],
+    product_id: Annotated[
+        UUID,
+        Query(
+            description="Product id (UUID7).",
+            examples=["019f0000-0000-7000-8000-000000000050"],
+        ),
+    ],
+    warehouse_id: Annotated[
+        UUID,
+        Query(
+            description="Warehouse id (UUID7).",
+            examples=["019f0000-0000-7000-8000-000000000080"],
+        ),
+    ],
 ) -> StockResponse:
     """Check stock levels for a product at a warehouse."""
     return await service.check_stock(
@@ -89,11 +105,17 @@ async def check_stock(
     summary="Check stock across all warehouses for a product",
 )
 async def check_stock_by_product(
-    product_id: uuid.UUID,
+    product_id: Annotated[
+        UUID,
+        Path(
+            description="Product id (UUID7).",
+            examples=["019f0000-0000-7000-8000-000000000050"],
+        ),
+    ],
     service: Annotated[InventoryService, Depends(Inject(InventoryService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    quantity: Annotated[int, Query(gt=0)],
+    quantity: Annotated[int, Query(gt=0, description="Quantity required.")],
 ) -> StockResponse:
     """Find a warehouse with enough stock, without the caller knowing which one.
 
@@ -221,10 +243,19 @@ async def list_movements(
     service: Annotated[MovementService, Depends(Inject(MovementService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    stock_item_id: Annotated[uuid.UUID, Query()],
-    movement_type: Annotated[str | None, Query()] = None,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    stock_item_id: Annotated[
+        UUID,
+        Query(
+            description="Stock item id (UUID7).",
+            examples=["019f0000-0000-7000-8000-000000000090"],
+        ),
+    ],
+    movement_type: Annotated[
+        str | None,
+        Query(description="Filter by movement type.", examples=["reserve"]),
+    ] = None,
+    offset: Annotated[int, Query(ge=0, description="Rows to skip.")] = 0,
+    limit: Annotated[int, Query(ge=1, le=500, description="Max rows to return.")] = 100,
 ) -> list[StockMovementResponse]:
     """List stock movements for a stock item with optional filtering."""
     return await service.list_by_stock_item(

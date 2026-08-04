@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -16,10 +16,10 @@ class QuerySet(TimestampMixin, SoftDeleteMixin, Base):
         "comment": "Сохранённый набор фильтров и отображаемых полей для товаров",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ набора"
     )
-    seller_id: Mapped[uuid.UUID] = mapped_column(
+    seller_id: Mapped[UUID] = mapped_column(
         nullable=False, index=True, comment="Продавец-владелец набора"
     )
     name: Mapped[str] = mapped_column(

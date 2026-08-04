@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,14 @@ router = APIRouter(
     tags=["roles"],
     dependencies=[Depends(_require_admin)],
 )
+
+RoleIdPath = Annotated[
+    UUID,
+    Path(
+        description="Role id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000001"],
+    ),
+]
 
 
 @router.get(
@@ -50,41 +58,41 @@ async def create_role(
 
 
 @router.get(
-    "/{role_uuid}",
+    "/{role_id}",
     summary="Get role",
 )
 async def get_role(
-    role_uuid: uuid.UUID,
+    role_id: RoleIdPath,
     service: Annotated[RoleService, Depends(Inject(RoleService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> RoleResponse:
-    """Get a single role by its UUID."""
-    return await service.get_by(session, role_uuid)
+    """Get a single role by its id."""
+    return await service.get_by(session, role_id)
 
 
 @router.put(
-    "/{role_uuid}",
+    "/{role_id}",
     summary="Update role",
 )
 async def update_role(
-    role_uuid: uuid.UUID,
+    role_id: RoleIdPath,
     body: RoleUpdateRequest,
     service: Annotated[RoleService, Depends(Inject(RoleService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> RoleResponse:
-    """Update an existing role by its UUID."""
-    return await service.update(session, role_uuid, body)
+    """Update an existing role by its id."""
+    return await service.update(session, role_id, body)
 
 
 @router.delete(
-    "/{role_uuid}",
+    "/{role_id}",
     summary="Delete role",
 )
 async def delete_role(
-    role_uuid: uuid.UUID,
+    role_id: RoleIdPath,
     service: Annotated[RoleService, Depends(Inject(RoleService))],
     session: Annotated[AsyncSession, Depends(get_service_session)],
 ) -> Response:
-    """Delete a role by its UUID."""
-    await service.delete(session, role_uuid)
+    """Delete a role by its id."""
+    await service.delete(session, role_id)
     return Response(status_code=204)

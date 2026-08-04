@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse
 
 from src.auth_middleware import AuthMiddleware, init_auth
 from src.config.settings import settings
@@ -52,7 +52,9 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
 def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
-    async def _domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    async def _domain_error_handler(
+        request: Request, exc: DomainError
+    ) -> ORJSONResponse:
         status_map: dict[type[DomainError], int] = {
             NotFoundError: 404,
             ConflictError: 409,
@@ -64,16 +66,14 @@ def _register_exception_handlers(app: FastAPI) -> None:
         status_code = status_map.get(type(exc), 500)
         detail = str(exc)
         _log_error(request, status_code, detail)
-        return JSONResponse(status_code=status_code, content={"detail": detail})
+        return ORJSONResponse(status_code=status_code, content={"detail": detail})
 
     @app.exception_handler(Exception)
     async def _unhandled_exception_handler(
         request: Request, exc: Exception
-    ) -> JSONResponse:
-        # A genuine bug, not a DomainError covered above -- log the full
-        # traceback but never leak it to the caller.
+    ) -> ORJSONResponse:
         _log_error(request, 500, str(exc))
-        return JSONResponse(
+        return ORJSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )
 
@@ -82,12 +82,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
     lifespan=lifespan,
-    # Interactive docs are api-service's job (the intended discovery
-    # path for consumers) -- disabling them here shrinks the attack
-    # surface for anyone who reaches this service's port directly
-    # without losing any actual functionality (HTTP/RMQ unaffected).
-    docs_url=None,
-    redoc_url=None,
+    default_response_class=ORJSONResponse,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.add_middleware(
@@ -104,7 +101,9 @@ init_auth(
     app_id=settings.APP_ID,
     redis_url=settings.redis.url,
 )
-app.add_middleware(AuthMiddleware)
+app.add_middleware(
+    AuthMiddleware, exclude_paths=["/health", "/docs", "/redoc", "/openapi.json"]
+)
 
 for router in routers:
     app.include_router(router)

@@ -1,6 +1,7 @@
 from datetime import datetime
+from uuid import UUID
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 
 class TokenResponse(BaseModel):
@@ -12,45 +13,35 @@ class TokenResponse(BaseModel):
 class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
-    id: str
+    id: UUID
     email: str
     role: str | None = None
     is_blocked: bool
     created_at: datetime
 
-    @field_validator("id", mode="before")
-    @classmethod
-    def _coerce_uuid(cls, v: object) -> str:
-        return str(v)
-
 
 class SessionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
-    id: str
-    user_id: str
+    id: UUID
+    user_id: UUID
     login_at: datetime
     logout_at: datetime | None
     refresh_count: int
     device_info: str | None
     ip_address: str | None
 
-    @field_validator("id", "user_id", mode="before")
-    @classmethod
-    def _coerce_uuid(cls, v: object) -> str:
-        return str(v)
-
 
 class CheckAccessResponse(BaseModel):
     allowed: bool
-    user_id: str
+    user_id: UUID
     role: str | None = None
     is_admin: bool = False
 
 
 class CheckCredentialsResponse(BaseModel):
     valid: bool
-    user_id: str | None = None
+    user_id: UUID | None = None
     role: str | None = None
     is_admin: bool = False
     error: str | None = None

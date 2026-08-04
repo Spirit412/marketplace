@@ -1,12 +1,14 @@
 import contextlib
+import json
 import logging
-import uuid
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 import redis.asyncio as redis_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
+from src.core.state_machine import InvalidTransitionError
 from src.engines.rabbitmq import (
     publish_payment_failed,
     publish_payment_refunded,
@@ -21,13 +23,12 @@ from src.enums.payment_status import (
 )
 from src.exceptions import ConflictError, NotFoundError
 from src.models.payment import Payment, Transaction
-from src.patterns.gateway_registry import PaymentGatewayRegistry
-from src.patterns.payload_builder import PaymentPayloadBuilder
-from src.patterns.state_machine import InvalidTransitionError
 from src.repositories.payment_repo import PaymentRepo
+from src.services.gateway_registry import PaymentGatewayRegistry
+from src.services.payload_builder import PaymentPayloadBuilder
 
 if TYPE_CHECKING:
-    from src.patterns.gateway_strategy import BasePaymentGateway
+    from src.services.gateway_strategy import BasePaymentGateway
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +52,8 @@ class PaymentService:
         self,
         *,
         session: AsyncSession,
-        order_id: uuid.UUID,
-        user_id: uuid.UUID,
+        order_id: UUID,
+        user_id: UUID,
         amount: int,
         currency: str,
         payment_method: PaymentMethod,
@@ -160,8 +161,8 @@ class PaymentService:
         self,
         *,
         session: AsyncSession,
-        payment_uuid: uuid.UUID,
-        caller_id: uuid.UUID,
+        payment_id: UUID,
+        caller_id: UUID,
         caller_is_privileged: bool = False,
     ) -> Payment | None:
         """Fetch a payment by id — the payment's own buyer, or an admin.
@@ -171,7 +172,7 @@ class PaymentService:
         that into 404, so a payment ID belonging to someone else isn't
         distinguishable from one that doesn't exist at all.
         """
-        payment = await self._repo.get_by_uuid(session=session, uuid_value=payment_uuid)
+        payment = await self._repo.get_by_id(session=session, payment_id=payment_id)
         if payment is None:
             return None
         if not caller_is_privileged and payment.user_id != caller_id:
@@ -182,8 +183,8 @@ class PaymentService:
         self,
         *,
         session: AsyncSession,
-        order_id: uuid.UUID,
-        caller_id: uuid.UUID,
+        order_id: UUID,
+        caller_id: UUID,
         caller_is_privileged: bool = False,
     ) -> Payment | None:
         """Fetch the payment for an order — same ownership rule as get_payment().
@@ -204,13 +205,13 @@ class PaymentService:
         self,
         *,
         session: AsyncSession,
-        payment_uuid: uuid.UUID,
+        payment_id: UUID,
         amount: int | None = None,
     ) -> Payment:
         """Refund a successful payment."""
-        payment = await self._repo.get_by_uuid(session=session, uuid_value=payment_uuid)
+        payment = await self._repo.get_by_id(session=session, payment_id=payment_id)
         if payment is None:
-            msg = f"Payment not found: {payment_uuid}"
+            msg = f"Payment not found: {payment_id}"
             raise NotFoundError(msg)
 
         if payment.status != PaymentStatus.SUCCEEDED:
@@ -222,7 +223,7 @@ class PaymentService:
             # before a payment can reach SUCCEEDED. Guarded explicitly so a
             # future path that skips that assignment fails loudly here
             # instead of asking the gateway to refund "None".
-            msg = f"Payment {payment_uuid} has no gateway_payment_id to refund"
+            msg = f"Payment {payment_id} has no gateway_payment_id to refund"
             raise ConflictError(msg)
 
         gateway: BasePaymentGateway = self._registry.get_gateway(
@@ -307,10 +308,15 @@ class PaymentService:
                     )
 
     async def handle_yookassa_webhook(
-        self, *, session: AsyncSession, payload: str | bytes
+        self,
+        *,
+        session: AsyncSession,
+        raw_event_type: str,
+        raw_event_object: dict[str, Any],
     ) -> None:
         """Process a YooKassa webhook event."""
         gateway = self._registry.get_gateway(PaymentMethod.YOOKASSA)
+        payload = json.dumps({"event": raw_event_type, "object": raw_event_object})
         event = await gateway.verify_webhook(payload)
 
         event_type = event.get("event", "")

@@ -1,7 +1,7 @@
 import json
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,8 +9,6 @@ from src.config.settings import Settings
 from src.engines.rabbitmq import RabbitMQEngine
 from src.engines.redis import get_redis_client
 from src.models.product import Product
-from src.patterns.query_constructor import ProductQueryConstructor
-from src.patterns.sort_strategy import get_sort_strategy
 from src.repositories.product_repo import ProductRepo
 
 
@@ -25,18 +23,17 @@ class ProductService:
         self._settings = settings
         self._rmq = rmq_engine
         self._redis = get_redis_client()
-        self._query_constructor = ProductQueryConstructor()
 
     async def create(
         self,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         name: str,
         price: float,
         description: str | None = None,
         sku: str | None = None,
         stock: int = 0,
-        category_id: uuid.UUID | None = None,
+        category_id: UUID | None = None,
         custom_properties_config: dict[str, Any] | None = None,
         images: dict[str, Any] | None = None,
     ) -> Product:
@@ -57,7 +54,7 @@ class ProductService:
         return product
 
     async def get_by_id(
-        self, session: AsyncSession, product_id: uuid.UUID
+        self, session: AsyncSession, product_id: UUID
     ) -> Product | None:
         cached = await self._redis.get(f"product:{product_id}")
         if cached:
@@ -72,15 +69,17 @@ class ProductService:
     async def update(
         self,
         session: AsyncSession,
-        product_id: uuid.UUID,
+        product_id: UUID,
         *,
-        caller_id: uuid.UUID,
-        caller_is_privileged: bool,
+        caller_id: UUID,
+        caller_is_admin: bool,
+        caller_role: str | None = None,
         **kwargs: object,
     ) -> Product | None:
         product = await self._repo.get_by_id(session, product_id)
         if product is None:
             return None
+        caller_is_privileged = caller_is_admin or caller_role == "moderator"
         if not caller_is_privileged and product.seller_id != caller_id:
             # Same response as "not found" — a non-owner shouldn't be able to
             # tell a product exists from a 403 vs 404 difference.
@@ -107,12 +106,12 @@ class ProductService:
     async def delete(
         self,
         session: AsyncSession,
-        product_id: uuid.UUID,
+        product_id: UUID,
         *,
-        caller_id: uuid.UUID,
-        caller_is_privileged: bool,
+        caller_id: UUID,
+        caller_is_admin: bool,
     ) -> bool:
-        if not caller_is_privileged:
+        if not caller_is_admin:
             product = await self._repo.get_by_id(session, product_id)
             if product is None:
                 return False
@@ -125,12 +124,12 @@ class ProductService:
             await self._redis.delete(f"product:{product_id}")
         return result
 
-    async def search(  # noqa: PLR0913, PLR0917 -- one filter dimension per param, all optional
+    async def search(  # noqa: PLR0913 -- one filter dimension per param, all optional
         self,
         session: AsyncSession,
         query: str | None = None,
-        category_id: uuid.UUID | None = None,
-        seller_id: uuid.UUID | None = None,
+        category_id: UUID | None = None,
+        seller_id: UUID | None = None,
         price_min: float | None = None,
         price_max: float | None = None,
         sort: str = "newest",
@@ -139,29 +138,19 @@ class ProductService:
         status: str | None = None,
         filters: dict[str, str] | None = None,
     ) -> tuple[list[Product], int]:
-        stmt = self._repo.base_query()
-
-        if query:
-            stmt = self._query_constructor.apply_search(stmt, query)
-        if category_id:
-            stmt = stmt.where(Product.category_id == category_id)
-        if seller_id:
-            stmt = stmt.where(Product.seller_id == seller_id)
-        if price_min is not None:
-            stmt = stmt.where(Product.price >= price_min)
-        if price_max is not None:
-            stmt = stmt.where(Product.price <= price_max)
-        if status:
-            stmt = stmt.where(Product.status == status)
-
-        if filters:
-            stmt = self._query_constructor.apply_filters(stmt, filters)
-
-        strategy = get_sort_strategy(sort)
-        stmt = strategy.apply(stmt)
-
-        products, total = await self._repo.search(session, stmt, page, page_size)
-        return products, total
+        return await self._repo.search(
+            session,
+            query=query,
+            category_id=category_id,
+            seller_id=seller_id,
+            price_min=price_min,
+            price_max=price_max,
+            status=status,
+            filters=filters,
+            sort=sort,
+            page=page,
+            page_size=page_size,
+        )
 
     async def _cache_product(self, product: Product) -> None:
         key = f"product:{product.id}"
@@ -217,9 +206,9 @@ class ProductService:
         try:
             parsed = json.loads(data)
             return Product(
-                id=uuid.UUID(parsed["id"]),
-                seller_id=uuid.UUID(parsed["seller_id"]),
-                category_id=uuid.UUID(parsed["category_id"])
+                id=UUID(parsed["id"]),
+                seller_id=UUID(parsed["seller_id"]),
+                category_id=UUID(parsed["category_id"])
                 if parsed.get("category_id")
                 else None,
                 name=parsed["name"],

@@ -1,21 +1,21 @@
 import logging
-import uuid
 from typing import Any
+from uuid import UUID
 
 import redis.asyncio as redis_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
 from src.core.event import EventManager
+from src.core.state_machine import InvalidTransitionError
 from src.enums.order_status import ORDER_STATE_MACHINE, OrderStatus
 from src.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationError
 from src.facades import InsufficientStockError, InventoryClient
 from src.facades.catalog import CatalogClient
 from src.models.order import Order
-from src.patterns.builder import OrderBuilder
-from src.patterns.state_machine import InvalidTransitionError
 from src.repositories.order_repo import OrderRepo
 from src.services.cart_service import CartService
+from src.services.order_builder import OrderBuilder
 from src.services.order_validators import (
     CartNotEmptyValidator,
     CreateOrderContext,
@@ -46,7 +46,7 @@ class OrderService:
         self,
         *,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         shipping_address: dict[str, Any],
         payment_method: str,
         tax_strategy: str,
@@ -54,7 +54,7 @@ class OrderService:
         notes: str | None = None,
     ) -> Order:
         """Create an order from the user's cart."""
-        user_uuid_str = str(user_id)
+        user_id_str = str(user_id)
 
         if idempotency_key:
             idem_key = f"idempotency:{idempotency_key}"
@@ -67,7 +67,7 @@ class OrderService:
                     return existing
             await self._redis.expire(idem_key, 86400)
 
-        cart_items = await self._cart_service.get_cart(user_uuid_str)
+        cart_items = await self._cart_service.get_cart(user_id_str)
 
         validation_context = CreateOrderContext(
             cart_items=cart_items, inventory_client=self._inventory_client
@@ -111,13 +111,11 @@ class OrderService:
         order.notes = notes
         for item in order.items:
             warehouse_id_str = warehouse_by_product.get(str(item.product_id))
-            item.warehouse_id = (
-                uuid.UUID(warehouse_id_str) if warehouse_id_str else None
-            )
+            item.warehouse_id = UUID(warehouse_id_str) if warehouse_id_str else None
 
         order = await self._order_repo.create(session, order)
 
-        await self._cart_service.clear_cart(user_uuid_str)
+        await self._cart_service.clear_cart(user_id_str)
 
         return order
 
@@ -131,16 +129,16 @@ class OrderService:
         the only place that needs to know both units.
         """
         details: dict[str, dict[str, Any]] = {}
-        for product_uuid in cart_items:
+        for product_id in cart_items:
             try:
-                product = await self._catalog_client.get_product(product_uuid)
+                product = await self._catalog_client.get_product(product_id)
             except Exception as exc:
-                msg = f"Product {product_uuid} could not be found in the catalog"
+                msg = f"Product {product_id} could not be found in the catalog"
                 raise ValidationError(msg) from exc
-            details[product_uuid] = {
+            details[product_id] = {
                 "name": product["name"],
                 "price_minor_units": round(float(product["price"]) * 100),
-                "seller_id": uuid.UUID(product["seller_id"])
+                "seller_id": UUID(product["seller_id"])
                 if product.get("seller_id")
                 else None,
             }
@@ -157,11 +155,11 @@ class OrderService:
         """
         warehouse_by_product: dict[str, str] = {}
         try:
-            for product_uuid, qty in cart_items.items():
+            for product_id, qty in cart_items.items():
                 result = await self._inventory_client.reserve(
-                    product_uuid, qty, reference_id=reference_id
+                    product_id, qty, reference_id=reference_id
                 )
-                warehouse_by_product[product_uuid] = result["warehouse_id"]
+                warehouse_by_product[product_id] = result["warehouse_id"]
         except InsufficientStockError as exc:
             await self._release_reserved(warehouse_by_product, cart_items, reference_id)
             raise ValidationError(str(exc)) from exc
@@ -177,12 +175,12 @@ class OrderService:
         reference_id: str | None,
     ) -> None:
         """Best-effort compensating release for a failed checkout."""
-        for product_uuid, warehouse_id in warehouse_by_product.items():
+        for product_id, warehouse_id in warehouse_by_product.items():
             try:
                 await self._inventory_client.release(
-                    product_uuid,
+                    product_id,
                     warehouse_id,
-                    cart_items[product_uuid],
+                    cart_items[product_id],
                     reference_id=reference_id,
                 )
             except Exception:
@@ -190,11 +188,11 @@ class OrderService:
                     "Failed to release reserved stock for product %s during "
                     "checkout rollback — stock will be stuck reserved until "
                     "manually corrected",
-                    product_uuid,
+                    product_id,
                 )
 
     async def get_order(
-        self, *, session: AsyncSession, order_uuid: uuid.UUID, user_id: uuid.UUID
+        self, *, session: AsyncSession, order_id: UUID, user_id: UUID
     ) -> Order:
         """Get an order by UUID — must belong to the requesting user.
 
@@ -202,12 +200,12 @@ class OrderService:
         authenticated caller with ORDER:GET could read any other user's
         order by id (IDOR).
         """
-        order = await self._order_repo.get_by_uuid(session, order_uuid)
+        order = await self._order_repo.get_with_items(session, order_id)
         if not order:
-            msg = f"Order {order_uuid} not found"
+            msg = f"Order {order_id} not found"
             raise NotFoundError(msg)
         if order.user_id != user_id:
-            msg = f"Order {order_uuid} not found"
+            msg = f"Order {order_id} not found"
             raise NotFoundError(msg)
         return order
 
@@ -215,7 +213,7 @@ class OrderService:
         self,
         *,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[Order], int]:
@@ -228,8 +226,8 @@ class OrderService:
         self,
         *,
         session: AsyncSession,
-        order_uuid: uuid.UUID,
-        user_id: uuid.UUID,
+        order_id: UUID,
+        user_id: UUID,
         caller_is_privileged: bool = False,
     ) -> Order:
         """Cancel an order and release reserved stock.
@@ -238,9 +236,9 @@ class OrderService:
         cancel_unpaid_orders job cancels on behalf of the system (payment
         timeout), never as the order's own buyer, via SYSTEM_TOKEN.
         """
-        order = await self._order_repo.get_by_uuid(session, order_uuid)
+        order = await self._order_repo.get_with_items(session, order_id)
         if not order:
-            msg = f"Order {order_uuid} not found"
+            msg = f"Order {order_id} not found"
             raise NotFoundError(msg)
 
         if not caller_is_privileged and order.user_id != user_id:
@@ -283,7 +281,7 @@ class OrderService:
         return await self._order_repo.get_expired_orders(session, expiration_minutes)
 
     async def confirm_payment(
-        self, *, session: AsyncSession, order_uuid: uuid.UUID
+        self, *, session: AsyncSession, order_id: UUID
     ) -> Order | None:
         """Advance an order out of "pending" once its payment has succeeded.
 
@@ -299,7 +297,7 @@ class OrderService:
         "pending" — the event may be redelivered, or may race a manual
         cancellation; either way there's nothing left to do.
         """
-        order = await self._order_repo.get_by_uuid(session, order_uuid)
+        order = await self._order_repo.get_with_items(session, order_id)
         if order is None:
             return None
 

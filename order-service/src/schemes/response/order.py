@@ -1,6 +1,6 @@
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -12,12 +12,12 @@ class OrderItemResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    product_id: uuid.UUID
+    id: UUID
+    product_id: UUID
     product_name: str
     price: int
     quantity: int
-    seller_id: uuid.UUID | None
+    seller_id: UUID | None
 
 
 class OrderResponse(BaseModel):
@@ -25,8 +25,8 @@ class OrderResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    user_id: uuid.UUID
+    id: UUID
+    user_id: UUID
     status: OrderStatus
     items: list[OrderItemResponse]
     subtotal: int

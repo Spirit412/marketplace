@@ -1,6 +1,6 @@
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID as PyUUID
 
 from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import JSON, UUID
@@ -17,13 +17,13 @@ class ImportTask(CreatedAtMixin, SoftDeleteMixin, Base):
         "comment": "Задача импорта товаров/остатков продавца из CSV",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,
         comment="Первичный ключ задачи",
     )
-    seller_id: Mapped[uuid.UUID] = mapped_column(
+    seller_id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         index=True,
         nullable=False,

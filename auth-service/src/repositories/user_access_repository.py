@@ -32,12 +32,12 @@ class UserAccessRepository(BaseRepository[UserAccess]):
         session: AsyncSession,
         *,
         user_id: UUID,
-        role_uuid: UUID | None,
+        role_id: UUID | None,
         additional_permissions: list[UUID] | None = None,
     ) -> UserAccess:
         existing = await self.get_by(session, user_id=user_id)
         if existing:
-            existing.role_uuid = role_uuid
+            existing.role_id = role_id
             if additional_permissions is not None:
                 existing.additional_permissions = additional_permissions
             await session.flush()
@@ -51,7 +51,7 @@ class UserAccessRepository(BaseRepository[UserAccess]):
 
         user_access = UserAccess(
             user_id=user_id,
-            role_uuid=role_uuid,
+            role_id=role_id,
             additional_permissions=additional_permissions or [],
         )
         session.add(user_access)

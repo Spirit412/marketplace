@@ -1,5 +1,5 @@
-import uuid as _uuid
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -33,16 +33,9 @@ class CreateProductRequest(BaseModel):
     price: float = Field(ge=0.0)
     sku: str | None = Field(default=None, max_length=100)
     stock: int = Field(default=0, ge=0)
-    category_id: str | None = None
+    category_id: UUID | None = None
     custom_properties_config: dict[str, Any] = Field(default_factory=dict)
     images: dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("category_id")
-    @classmethod
-    def _validate_category_id(cls, v: str | None) -> str | None:
-        if v is not None:
-            _uuid.UUID(v)
-        return v
 
     @field_validator("custom_properties_config", "images")
     @classmethod
@@ -59,18 +52,11 @@ class UpdateProductRequest(BaseModel):
     price: float | None = Field(default=None, ge=0.0)
     sku: str | None = Field(default=None, max_length=100)
     stock: int | None = Field(default=None, ge=0)
-    category_id: str | None = None
+    category_id: UUID | None = None
     custom_properties_config: dict[str, Any] | None = None
     images: dict[str, Any] | None = None
     is_active: bool | None = None
     status: str | None = None
-
-    @field_validator("category_id")
-    @classmethod
-    def _validate_category_id(cls, v: str | None) -> str | None:
-        if v is not None:
-            _uuid.UUID(v)
-        return v
 
     @field_validator("custom_properties_config", "images")
     @classmethod
@@ -89,23 +75,46 @@ class UpdateProductRequest(BaseModel):
 
 
 class ProductFilterParams(BaseModel):
-    page: int = Field(default=1, ge=1)
-    page_size: int = Field(default=20, ge=1, le=100)
-    sort: str = Field(default="newest")
-    search: str | None = None
-    filters_set: str | None = None
-    category_id: str | None = None
-    seller_id: str | None = None
-    price_min: float | None = None
-    price_max: float | None = None
-    status: str | None = None
-
-    @field_validator("category_id", "seller_id")
-    @classmethod
-    def _validate_uuid_fields(cls, v: str | None) -> str | None:
-        if v is not None:
-            _uuid.UUID(v)
-        return v
+    page: int = Field(
+        default=1, ge=1, description="Page number, 1-based.", examples=[1]
+    )
+    page_size: int = Field(
+        default=20, ge=1, le=100, description="Items per page.", examples=[20]
+    )
+    sort: str = Field(
+        default="newest",
+        description="Sort order.",
+        examples=["newest", "price_asc", "price_desc"],
+    )
+    search: str | None = Field(
+        default=None,
+        description="Free-text search over name/description.",
+        examples=["wireless headphones"],
+    )
+    filters_set: str | None = Field(
+        default=None,
+        description="Saved query-set id to apply as extra filters.",
+        examples=["019f0000-0000-7000-8000-000000000040"],
+    )
+    category_id: UUID | None = Field(
+        default=None,
+        description="Restrict results to this category.",
+        examples=["019f0000-0000-7000-8000-000000000020"],
+    )
+    seller_id: UUID | None = Field(
+        default=None,
+        description="Restrict results to products from this seller.",
+        examples=["019f0000-0000-7000-8000-000000000030"],
+    )
+    price_min: float | None = Field(
+        default=None, description="Minimum price, inclusive.", examples=[100.0]
+    )
+    price_max: float | None = Field(
+        default=None, description="Maximum price, inclusive.", examples=[5000.0]
+    )
+    status: str | None = Field(
+        default=None, description="Filter by product status.", examples=["active"]
+    )
 
     @field_validator("status")
     @classmethod

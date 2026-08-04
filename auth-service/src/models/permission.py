@@ -16,10 +16,12 @@ class Permission(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "permissions"
     __table_args__ = {
         "schema": "auth",
-        "comment": "Разрешение — доступ к конкретному методу и пути одного микросервиса",
+        "comment": (
+            "Разрешение — доступ к конкретному методу и пути одного микросервиса"
+        ),
     }
 
-    uuid: Mapped[UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="pk разрешения"
     )
     name: Mapped[str] = mapped_column(comment="название разрешения")
@@ -32,4 +34,4 @@ class Permission(TimestampMixin, SoftDeleteMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Permission {self.uuid} {self.app_id}:{self.method} {self.path}>"
+        return f"<Permission {self.id} {self.app_id}:{self.method} {self.path}>"

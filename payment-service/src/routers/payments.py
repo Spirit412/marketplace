@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_middleware import _get_auth_state
@@ -17,6 +17,21 @@ from src.schemes.response.payment import PaymentResponse
 from src.services.payment_service import PaymentService
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+
+OrderIdPath = Annotated[
+    UUID,
+    Path(
+        description="Order id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000110"],
+    ),
+]
+PaymentIdPath = Annotated[
+    UUID,
+    Path(
+        description="Payment id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000120"],
+    ),
+]
 
 
 @router.post(
@@ -48,7 +63,7 @@ async def create_payment(
     summary="Get the payment for an order",
 )
 async def get_payment_by_order(
-    order_id: uuid.UUID,
+    order_id: OrderIdPath,
     request: Request,
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[PaymentService, Depends(Inject(PaymentService))],
@@ -56,21 +71,21 @@ async def get_payment_by_order(
 ) -> PaymentResponse:
     """Get the payment for an order — the order's own buyer, or an admin.
 
-    Must stay declared before GET /{payment_uuid} below — a static segment
+    Must stay declared before GET /{payment_id} below — a static segment
     ("by-order") after a parameterised one would be swallowed as an
     (invalid) UUID path param instead of matching here; see
     order-service's GET /orders/pending for the same rule.
 
     404 both when the order has no payment yet (still `pending`) and when
     the caller doesn't own it — same ownership-hides-behind-404 rule as
-    GET /{payment_uuid}. Built for api-service's GET /orders/{id}/full
+    GET /{payment_id}. Built for api-service's GET /orders/{id}/full
     composition (see PLAN_api-service.md), also usable directly.
     """
     auth_state = _get_auth_state(request)
     payment = await service.get_payment_by_order(
         session=session,
         order_id=order_id,
-        caller_id=uuid.UUID(token_payload.user_id),
+        caller_id=UUID(token_payload.user_id),
         caller_is_privileged=auth_state.is_admin,
     )
     if payment is None:
@@ -80,11 +95,11 @@ async def get_payment_by_order(
 
 
 @router.get(
-    "/{payment_uuid}",
+    "/{payment_id}",
     summary="Get payment by ID",
 )
 async def get_payment(
-    payment_uuid: uuid.UUID,
+    payment_id: PaymentIdPath,
     request: Request,
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[PaymentService, Depends(Inject(PaymentService))],
@@ -94,22 +109,22 @@ async def get_payment(
     auth_state = _get_auth_state(request)
     payment = await service.get_payment(
         session=session,
-        payment_uuid=payment_uuid,
-        caller_id=uuid.UUID(token_payload.user_id),
+        payment_id=payment_id,
+        caller_id=UUID(token_payload.user_id),
         caller_is_privileged=auth_state.is_admin,
     )
     if payment is None:
-        msg = f"Payment {payment_uuid} not found"
+        msg = f"Payment {payment_id} not found"
         raise NotFoundError(msg)
     return PaymentResponse.model_validate(payment)
 
 
 @router.post(
-    "/{payment_uuid}/refund",
+    "/{payment_id}/refund",
     summary="Refund payment",
 )
 async def refund_payment(
-    payment_uuid: uuid.UUID,
+    payment_id: PaymentIdPath,
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[PaymentService, Depends(Inject(PaymentService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -125,7 +140,7 @@ async def refund_payment(
     """
     payment = await service.refund(
         session=session,
-        payment_uuid=payment_uuid,
+        payment_id=payment_id,
         amount=body.amount if body is not None else None,
     )
     return PaymentResponse.model_validate(payment)

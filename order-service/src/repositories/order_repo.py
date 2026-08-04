@@ -1,7 +1,7 @@
 """Order repository — inherits from BaseRepository."""
 
-import uuid
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,13 +15,11 @@ class OrderRepo(BaseRepository[Order]):
     def __init__(self) -> None:
         super().__init__(Order)
 
-    async def get_by_uuid(
-        self, session: AsyncSession, order_uuid: uuid.UUID
+    async def get_with_items(
+        self, session: AsyncSession, order_id: UUID
     ) -> Order | None:
         stmt = (
-            select(Order)
-            .where(Order.id == order_uuid)
-            .options(selectinload(Order.items))
+            select(Order).where(Order.id == order_id).options(selectinload(Order.items))
         )
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -29,7 +27,7 @@ class OrderRepo(BaseRepository[Order]):
     async def get_by_user(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         *,
         page: int = 1,
         page_size: int = 20,
@@ -57,7 +55,7 @@ class OrderRepo(BaseRepository[Order]):
         order: Order,
         new_status: str,
         *,
-        changed_by: uuid.UUID | None = None,
+        changed_by: UUID | None = None,
         comment: str | None = None,
     ) -> Order:
         history_entry = OrderStatusHistory(

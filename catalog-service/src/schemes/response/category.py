@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel
 
 
 class CategoryPropertyResponse(BaseModel):
-    id: uuid.UUID
-    property_id: uuid.UUID
+    id: UUID
+    property_id: UUID
     is_required: bool
     sort_order: int
 
@@ -16,11 +16,11 @@ class CategoryPropertyResponse(BaseModel):
 
 
 class CategoryResponse(BaseModel):
-    id: uuid.UUID
+    id: UUID
     name: str
     slug: str
     description: str | None = None
-    parent_id: uuid.UUID | None = None
+    parent_id: UUID | None = None
     lft: int = 0
     rgt: int = 0
     tree_id: int = 0

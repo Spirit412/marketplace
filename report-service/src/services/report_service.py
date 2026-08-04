@@ -1,9 +1,9 @@
 import asyncio
 import json
 import logging
-import uuid
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,9 +20,6 @@ from src.enums.report import (
     ReportType,
 )
 from src.models.report import Report
-from src.patterns.export_strategy import FormatStrategyRegistry
-from src.patterns.report_builder import ReportBuilder
-from src.patterns.report_registry import REPORT_TYPE_REGISTRY
 from src.repositories.report_repo import ReportRepo
 from src.repositories.template_repo import ReportTemplateRepo
 from src.schemes.request.report import GenerateReportRequest
@@ -30,6 +27,9 @@ from src.schemes.response.report import (
     ReportListResponse,
     ReportResponse,
 )
+from src.services.export_strategy import FormatStrategyRegistry
+from src.services.report_builder import ReportBuilder
+from src.services.report_registry import REPORT_TYPE_REGISTRY
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class ReportService:
         self,
         session: AsyncSession,
         request: GenerateReportRequest,
-        user_id: uuid.UUID,
+        user_id: UUID,
     ) -> ReportResponse:
         """Initiate report generation. Publishes to RabbitMQ for async processing."""
         config = REPORT_TYPE_REGISTRY.get(request.report_type)
@@ -106,7 +106,7 @@ class ReportService:
     async def _transition_status(
         self,
         session: AsyncSession,
-        report_id: uuid.UUID,
+        report_id: UUID,
         new_status: ReportStatus,
         *,
         file_path: str | None = None,
@@ -141,7 +141,7 @@ class ReportService:
         )
 
     async def get_report(
-        self, session: AsyncSession, report_id: uuid.UUID
+        self, session: AsyncSession, report_id: UUID
     ) -> ReportResponse:
         """Get report metadata by ID."""
         report = await self._report_repo.get_by_id(session, report_id)
@@ -150,7 +150,7 @@ class ReportService:
         return ReportResponse.model_validate(report)
 
     async def download(
-        self, session: AsyncSession, report_id: uuid.UUID
+        self, session: AsyncSession, report_id: UUID
     ) -> tuple[bytes, str, str]:
         """Download a generated report file.
 
@@ -203,7 +203,7 @@ class ReportService:
     async def list_reports(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         offset: int = 0,
         limit: int = 50,
     ) -> ReportListResponse:
@@ -218,7 +218,7 @@ class ReportService:
     async def process_generation(
         self,
         session: AsyncSession,
-        report_id: uuid.UUID,
+        report_id: UUID,
         report_type: str,
         fmt: str,
         parameters: dict[str, Any],

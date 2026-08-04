@@ -1,22 +1,21 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.settings import settings
 from src.core.auth import (
     TokenPayload,
     get_token_payload,
 )
 from src.depends import (
+    Inject,
     _require_admin,
     _user_role_name,
     enforce_login_rate_limit,
     get_auth_service,
     get_service_session,
 )
-from src.engines.redis_client import get_redis_client
 from src.schemes.request.auth import (
     BlockUserRequest,
     CheckAccessRequest,
@@ -32,8 +31,17 @@ from src.schemes.response.auth import (
     UserResponse,
 )
 from src.services.auth_service import AuthService
+from src.services.rate_limit_service import RateLimitService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+UserIdPath = Annotated[
+    UUID,
+    Path(
+        description="User id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000010"],
+    ),
+]
 
 
 @router.post("/register", status_code=201, summary="Register user")
@@ -131,7 +139,7 @@ async def logout_all(
     """Revoke all refresh tokens to log out from every session."""
     await service.logout_all(
         session=session,
-        user_id=uuid.UUID(token_payload.user_id),
+        user_id=UUID(token_payload.user_id),
     )
 
 
@@ -147,7 +155,7 @@ async def get_sessions(
     """List all active sessions for the authenticated user."""
     sessions = await service.get_sessions(
         session=session,
-        user_id=uuid.UUID(token_payload.user_id),
+        user_id=UUID(token_payload.user_id),
     )
     return [SessionResponse.model_validate(s) for s in sessions]
 
@@ -163,11 +171,11 @@ async def check_credentials(
 ) -> CheckCredentialsResponse:
     """Validate the token payload and return credential status."""
     credentials = await service.resolve_credentials(
-        session, uuid.UUID(token_payload.user_id), token_payload.iat
+        session, UUID(token_payload.user_id), token_payload.iat
     )
     return CheckCredentialsResponse(
         valid=True,
-        user_id=token_payload.user_id,
+        user_id=UUID(token_payload.user_id),
         role=credentials.role_name,
         is_admin=credentials.is_admin,
     )
@@ -196,7 +204,7 @@ async def check_access(
     )
     return CheckAccessResponse(
         allowed=allowed,
-        user_id=user_id,
+        user_id=UUID(user_id),
         role=role,
         is_admin=is_admin,
     )
@@ -208,7 +216,7 @@ async def check_access(
     summary="Block user",
 )
 async def block_user(
-    user_id: uuid.UUID,
+    user_id: UserIdPath,
     block_request: BlockUserRequest,
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -218,7 +226,7 @@ async def block_user(
     user = await service.block_user(
         session=session,
         user_id=user_id,
-        blocked_by=uuid.UUID(token_payload.user_id),
+        blocked_by=UUID(token_payload.user_id),
         reason=block_request.reason,
     )
     return UserResponse.model_validate(user)
@@ -232,7 +240,7 @@ async def block_user(
     summary="Unblock user",
 )
 async def unblock_user(
-    user_id: uuid.UUID,
+    user_id: UserIdPath,
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[AuthService, Depends(get_auth_service)],
     session: Annotated[AsyncSession, Depends(get_service_session)],
@@ -246,13 +254,10 @@ async def unblock_user(
 
 
 @router.get("/rate-limit-status", summary="Get rate limit status")
-async def rate_limit_status(request: Request) -> dict[str, object]:
+async def rate_limit_status(
+    request: Request,
+    service: Annotated[RateLimitService, Depends(Inject(RateLimitService))],
+) -> dict[str, object]:
     """Return the current rate limit count for the requesting IP."""
-    redis_client = get_redis_client()
     ip_address = request.client.host if request.client else "unknown"
-    key = f"{settings.REDIS_KEY_PREFIX}:rate_limit:{ip_address}"
-    current = await redis_client.get(key)
-    return {
-        "ip": ip_address,
-        "current_count": int(current) if current else 0,
-    }
+    return await service.get_status(ip_address)

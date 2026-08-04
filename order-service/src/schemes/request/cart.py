@@ -8,5 +8,10 @@ class CartItemRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    product_id: UUID
-    quantity: int = Field(default=1, ge=1, le=100)
+    product_id: UUID = Field(
+        description="Product id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000050"],
+    )
+    quantity: int = Field(
+        default=1, ge=1, le=100, description="Units to add.", examples=[1]
+    )

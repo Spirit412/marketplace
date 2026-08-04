@@ -18,7 +18,7 @@ class Role(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "roles"
     __table_args__ = {"schema": "auth", "comment": "Роль пользователя"}
 
-    uuid: Mapped[UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True,
         default=uuid7,
         comment="pk роли",
@@ -45,4 +45,4 @@ class Role(TimestampMixin, SoftDeleteMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Role {self.uuid} {self.name}>"
+        return f"<Role {self.id} {self.name}>"

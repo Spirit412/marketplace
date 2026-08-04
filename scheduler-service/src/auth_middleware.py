@@ -39,7 +39,7 @@ from typing import Any
 import httpx
 import redis.asyncio as redis_asyncio
 from fastapi import Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.types import ASGIApp
 
@@ -162,13 +162,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
             request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
         )
         if not token:
-            return JSONResponse(
+            return ORJSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"error": "missing_token"},
             )
 
         if _AUTH_SERVICE_URL is None or _APP_ID is None:
-            return JSONResponse(
+            return ORJSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "auth_not_initialized"},
             )
@@ -193,19 +193,19 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
             except httpx.ConnectError:
                 logger.exception("Auth service unreachable at %s", _AUTH_SERVICE_URL)
-                return JSONResponse(
+                return ORJSONResponse(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     content={"error": "auth_service_unreachable"},
                 )
             except httpx.HTTPStatusError as exc:
                 logger.warning("Auth check failed: %s", exc)
-                return JSONResponse(
+                return ORJSONResponse(
                     status_code=exc.response.status_code,
                     content={"error": "auth_failed"},
                 )
             except Exception:
                 logger.exception("Unexpected error during auth check")
-                return JSONResponse(
+                return ORJSONResponse(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     content={"error": "auth_check_error"},
                 )
@@ -213,7 +213,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             await _set_cached_decision(cache_key, data)
 
         if not data.get("allowed"):
-            return JSONResponse(
+            return ORJSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"error": "access_denied"},
             )

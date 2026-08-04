@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
@@ -14,7 +15,7 @@ router = APIRouter(tags=["websocket"])
 
 @router.websocket("/ws/{user_id}")
 async def websocket_endpoint(
-    user_id: str,
+    user_id: UUID,
     ws: WebSocket,
     token: str = "",
     manager: WebSocketManager = Depends(get_ws_manager),
@@ -23,12 +24,13 @@ async def websocket_endpoint(
     if token:
         try:
             payload = decode_jwt(token, settings.jwt.SECRET_KEY, settings.jwt.ALGORITHM)
-            user_id = payload.user_id
+            user_id = UUID(payload.user_id)
         except Exception:
             await ws.close(code=4003, reason="Invalid token")
             return
 
-    await manager.connect(user_id, ws)
+    user_key = str(user_id)
+    await manager.connect(user_key, ws)
     try:
         while True:
             data = await ws.receive_text()
@@ -37,6 +39,6 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         pass
     except Exception as exc:
-        logger.warning("WebSocket error for user=%s: %s", user_id, exc)
+        logger.warning("WebSocket error for user=%s: %s", user_key, exc)
     finally:
-        await manager.disconnect(user_id, ws)
+        await manager.disconnect(user_key, ws)

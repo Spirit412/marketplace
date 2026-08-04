@@ -17,8 +17,8 @@ class CatalogClient:
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._system_token}"}
 
-    async def get_product(self, product_uuid: str) -> dict[str, Any]:
+    async def get_product(self, product_id: str) -> dict[str, Any]:
         """Fetch a single product's current name/price/seller_id."""
         return await self._client.get(
-            f"/products/{product_uuid}", headers=self._headers()
+            f"/products/{product_id}", headers=self._headers()
         )

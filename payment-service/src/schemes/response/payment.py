@@ -1,5 +1,5 @@
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -9,7 +9,7 @@ from src.enums.payment_status import PaymentMethod, PaymentStatus
 class TransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: UUID
     transaction_type: str
     amount: int
     gateway_transaction_id: str | None
@@ -19,9 +19,9 @@ class TransactionResponse(BaseModel):
 class PaymentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    order_id: uuid.UUID
-    user_id: uuid.UUID
+    id: UUID
+    order_id: UUID
+    user_id: UUID
     amount: int
     currency: str
     status: PaymentStatus

@@ -6,15 +6,15 @@ from fastapi import Depends
 
 from src.config.settings import Settings, settings
 from src.core.auth import TokenPayload, get_token_payload
+from src.core.order_uow import OrderUnitOfWork
 from src.dependencies import container
 from src.engines.redis import get_redis_client
 from src.exceptions import RateLimitExceededError
 from src.facades import InventoryClient
 from src.facades.catalog import CatalogClient
-from src.patterns.builder import OrderBuilder
-from src.patterns.uow import OrderUnitOfWork
 from src.repositories.order_repo import OrderItemRepo, OrderRepo
 from src.services.cart_service import CartService
+from src.services.order_builder import OrderBuilder
 from src.services.order_service import OrderService
 
 

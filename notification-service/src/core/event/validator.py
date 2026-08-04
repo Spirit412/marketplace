@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 ContextT = TypeVar("ContextT")
 
 
-class BaseEventValidator(ABC, Generic[ContextT]):
+class BaseEventValidator[ContextT](ABC):
     """One business rule. Raises EventError on violation, returns None otherwise.
 
     Concrete validators receive whatever context object the call site needs

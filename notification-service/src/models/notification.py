@@ -1,6 +1,6 @@
-import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import DateTime, Index, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -20,10 +20,10 @@ class Notification(CreatedAtMixin, SoftDeleteMixin, Base):
         },
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ уведомления"
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         index=True, nullable=False, comment="Получатель уведомления"
     )
     event_type: Mapped[str] = mapped_column(
@@ -69,7 +69,7 @@ class Template(TimestampMixin, SoftDeleteMixin, Base):
         },
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ шаблона"
     )
     code: Mapped[str] = mapped_column(

@@ -1,37 +1,37 @@
-import uuid
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class StockCheckRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
 
 
 class ReserveRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int = Field(gt=0)
     reference_type: str | None = None
-    reference_id: uuid.UUID | None = None
+    reference_id: UUID | None = None
 
 
 class ReleaseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int = Field(gt=0)
     reference_type: str | None = None
-    reference_id: uuid.UUID | None = None
+    reference_id: UUID | None = None
 
 
 class StockCheckByProductRequest(BaseModel):
     """Check availability without knowing which warehouse holds the stock."""
 
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
+    product_id: UUID
     quantity: int = Field(gt=0)
 
 
@@ -39,34 +39,34 @@ class ReserveByProductRequest(BaseModel):
     """Reserve from whichever warehouse has enough stock — caller doesn't pick one."""
 
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
+    product_id: UUID
     quantity: int = Field(gt=0)
     reference_type: str | None = None
-    reference_id: uuid.UUID | None = None
+    reference_id: UUID | None = None
 
 
 class ReceiptRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int = Field(gt=0)
     reference_type: str | None = None
-    reference_id: uuid.UUID | None = None
+    reference_id: UUID | None = None
 
 
 class ShipRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int = Field(gt=0)
     reference_type: str | None = None
-    reference_id: uuid.UUID | None = None
+    reference_id: UUID | None = None
 
 
 class AdjustRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    product_id: uuid.UUID
-    warehouse_id: uuid.UUID
+    product_id: UUID
+    warehouse_id: UUID
     quantity: int
     reason: str = Field(min_length=1, max_length=500)
 

@@ -26,11 +26,11 @@ class InventoryClient:
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._system_token}"}
 
-    async def check_stock(self, product_uuid: str, quantity: int) -> bool:
+    async def check_stock(self, product_id: str, quantity: int) -> bool:
         """Check whether any warehouse has enough stock for this product."""
         try:
             await self._client.get(
-                f"/stock/by-product/{product_uuid}",
+                f"/stock/by-product/{product_id}",
                 params={"quantity": quantity},
                 headers=self._headers(),
             )
@@ -43,7 +43,7 @@ class InventoryClient:
 
     async def reserve(
         self,
-        product_uuid: str,
+        product_id: str,
         quantity: int,
         *,
         reference_id: str | None = None,
@@ -60,7 +60,7 @@ class InventoryClient:
             return await self._client.post(
                 "/stock/reserve-by-product",
                 json={
-                    "product_id": product_uuid,
+                    "product_id": product_id,
                     "quantity": quantity,
                     "reference_type": "order",
                     "reference_id": reference_id,
@@ -69,13 +69,13 @@ class InventoryClient:
             )
         except aiohttp.ClientResponseError as exc:
             if exc.status == HTTPStatus.CONFLICT:
-                msg = f"Insufficient stock for product {product_uuid}"
+                msg = f"Insufficient stock for product {product_id}"
                 raise InsufficientStockError(msg) from exc
             raise
 
     async def release(
         self,
-        product_uuid: str,
+        product_id: str,
         warehouse_id: str,
         quantity: int,
         *,
@@ -85,7 +85,7 @@ class InventoryClient:
         return await self._client.post(
             "/stock/release",
             json={
-                "product_id": product_uuid,
+                "product_id": product_id,
                 "warehouse_id": warehouse_id,
                 "quantity": quantity,
                 "reference_type": "order",

@@ -22,8 +22,10 @@ from . import (
     event,
     health,
     http_client,
+    import_uow,
     orm,
     repository,
+    state_machine,
     uow,
 )
 from .config import configure
@@ -38,7 +40,9 @@ __all__ = [
     "event",
     "health",
     "http_client",
+    "import_uow",
     "orm",
     "repository",
+    "state_machine",
     "uow",
 ]

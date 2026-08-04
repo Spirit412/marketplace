@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,9 +11,9 @@ from src.engines.redis import check_redis
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health", response_model=HealthStatus, summary="Health check")
+@router.get("/health", summary="Health check")
 async def health_check(
-    session: AsyncSession = Depends(get_async_session),
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> HealthStatus:
     """Perform health check for payment service."""
     manager = HealthManager(service_name="payment-service")

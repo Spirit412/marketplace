@@ -1,7 +1,7 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, Depends, Header, Path, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_middleware import _get_auth_state
@@ -17,6 +17,14 @@ from src.services.order_service import OrderService
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
+OrderIdPath = Annotated[
+    UUID,
+    Path(
+        description="Order id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000110"],
+    ),
+]
+
 
 @router.post(
     "/",
@@ -29,12 +37,19 @@ async def create_order(
     body: CreateOrderRequest,
     service: Annotated[OrderService, Depends(Inject(OrderService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description="Client-generated key to safely retry order creation.",
+            examples=["a1b2c3d4-e5f6-4789-9012-3456789abcde"],
+        ),
+    ] = None,
 ) -> OrderResponse:
     """Create a new order from the user's cart."""
     order = await service.create_order(
         session=session,
-        user_id=uuid.UUID(token_payload.user_id),
+        user_id=UUID(token_payload.user_id),
         shipping_address=body.shipping_address,
         payment_method=body.payment_method.value,
         tax_strategy=body.tax_strategy.value,
@@ -52,13 +67,13 @@ async def get_orders(
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[OrderService, Depends(Inject(OrderService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    page: Annotated[int, Query(ge=1)] = 1,
-    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
+    page: Annotated[int, Query(ge=1, description="Page number, 1-based.")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100, description="Items per page.")] = 20,
 ) -> OrderListResponse:
     """Get user's orders (paginated)."""
     orders, total = await service.get_user_orders(
         session=session,
-        user_id=uuid.UUID(token_payload.user_id),
+        user_id=UUID(token_payload.user_id),
         page=page,
         page_size=page_size,
     )
@@ -78,12 +93,14 @@ async def get_pending_orders(
     _token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[OrderService, Depends(Inject(OrderService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    older_than_minutes: Annotated[int, Query(ge=1)] = 30,
+    older_than_minutes: Annotated[
+        int, Query(ge=1, description="Age threshold in minutes.")
+    ] = 30,
 ) -> list[OrderResponse]:
     """Orders still 'pending' after older_than_minutes.
 
     Used by the scheduler's cancel_unpaid_orders job. Must be declared
-    before /{order_uuid} — a static segment after a parameterised one
+    before /{order_id} — a static segment after a parameterised one
     would be swallowed as a (invalid) UUID path param instead of matching
     here.
     """
@@ -94,32 +111,32 @@ async def get_pending_orders(
 
 
 @router.get(
-    "/{order_uuid}",
+    "/{order_id}",
     summary="Get order by ID",
 )
 async def get_order(
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    order_uuid: uuid.UUID,
+    order_id: OrderIdPath,
     service: Annotated[OrderService, Depends(Inject(OrderService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> OrderResponse:
     """Get a single order by UUID."""
     order = await service.get_order(
         session=session,
-        order_uuid=order_uuid,
-        user_id=uuid.UUID(token_payload.user_id),
+        order_id=order_id,
+        user_id=UUID(token_payload.user_id),
     )
     return OrderResponse.model_validate(order)
 
 
 @router.post(
-    "/{order_uuid}/cancel",
+    "/{order_id}/cancel",
     summary="Cancel order",
 )
 async def cancel_order(
     request: Request,
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
-    order_uuid: uuid.UUID,
+    order_id: OrderIdPath,
     service: Annotated[OrderService, Depends(Inject(OrderService))],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> OrderResponse:
@@ -131,8 +148,8 @@ async def cancel_order(
     auth_state = _get_auth_state(request)
     order = await service.cancel_order(
         session=session,
-        order_uuid=order_uuid,
-        user_id=uuid.UUID(token_payload.user_id),
+        order_id=order_id,
+        user_id=UUID(token_payload.user_id),
         caller_is_privileged=auth_state.is_admin or auth_state.role == "system",
     )
     return OrderResponse.model_validate(order)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import (
     ForeignKey,
@@ -26,7 +26,7 @@ class Category(TimestampMixin, SoftDeleteMixin, Base):
         "comment": "Категория товара (дерево, MPTT: lft/rgt/tree_id)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ категории"
     )
     name: Mapped[str] = mapped_column(
@@ -38,7 +38,7 @@ class Category(TimestampMixin, SoftDeleteMixin, Base):
     description: Mapped[str | None] = mapped_column(
         Text, nullable=True, comment="Описание категории"
     )
-    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+    parent_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("catalog.categories.id", ondelete="SET NULL"),
         nullable=True,
         comment="Родительская категория (fk на categories.id)",

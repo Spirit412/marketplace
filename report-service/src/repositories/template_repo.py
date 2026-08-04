@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ class ReportTemplateRepo:
     async def get_by_id(
         self,
         session: AsyncSession,
-        template_id: uuid.UUID,
+        template_id: UUID,
         *,
         include_deleted: bool = False,
     ) -> ReportTemplate | None:

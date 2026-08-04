@@ -4,10 +4,10 @@ container = Container()
 
 from src.engines.redis import get_redis_client
 from src.engines.ws_manager import WebSocketManager
-from src.patterns.channel_strategy import ChannelRegistry
-from src.patterns.template_registry import TemplateRegistry
 from src.repositories.notification_repo import NotificationRepository
+from src.services.channel_strategy import ChannelRegistry
 from src.services.notification_service import NotificationService
+from src.services.template_registry import TemplateRegistry
 
 _ws_manager: WebSocketManager | None = None
 _channel_registry: ChannelRegistry | None = None

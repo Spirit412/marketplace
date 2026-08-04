@@ -9,14 +9,14 @@ from src.models.base import Base, TimestampMixin
 class RoleGroupAssociation(TimestampMixin, Base):
     __tablename__ = "role_group_association"
     __table_args__ = (
-        PrimaryKeyConstraint("role_uuid", "group_uuid"),
-        Index(None, "role_uuid", "group_uuid"),
+        PrimaryKeyConstraint("role_id", "group_id"),
+        Index(None, "role_id", "group_id"),
         {"schema": "auth", "comment": "Связь роль-группа прав"},
     )
 
-    role_uuid: Mapped[UUID] = mapped_column(
-        ForeignKey("auth.roles.uuid", ondelete="CASCADE"), comment="fk роли"
+    role_id: Mapped[UUID] = mapped_column(
+        ForeignKey("auth.roles.id", ondelete="CASCADE"), comment="fk роли"
     )
-    group_uuid: Mapped[UUID] = mapped_column(
-        ForeignKey("auth.groups.uuid", ondelete="CASCADE"), comment="fk группы"
+    group_id: Mapped[UUID] = mapped_column(
+        ForeignKey("auth.groups.id", ondelete="CASCADE"), comment="fk группы"
     )

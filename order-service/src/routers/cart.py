@@ -1,15 +1,23 @@
-import uuid
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 
 from src.core.auth import TokenPayload, get_token_payload
 from src.depends import Inject
 from src.schemes.request.cart import CartItemRequest
-from src.schemes.response.cart import CartItemResponse, CartResponse
+from src.schemes.response.cart import CartResponse
 from src.services.cart_service import CartService
 
 router = APIRouter(prefix="/cart", tags=["cart"])
+
+ProductIdPath = Annotated[
+    UUID,
+    Path(
+        description="Product id (UUID7).",
+        examples=["019f0000-0000-7000-8000-000000000050"],
+    ),
+]
 
 
 @router.get(
@@ -21,11 +29,7 @@ async def get_cart(
     service: Annotated[CartService, Depends(Inject(CartService))],
 ) -> CartResponse:
     """Get current user's cart."""
-    items = await service.get_cart(token_payload.user_id)
-    cart_items = [
-        CartItemResponse(product_id=uuid.UUID(k), quantity=v) for k, v in items.items()
-    ]
-    return CartResponse(items=cart_items)
+    return await service.get_cart_response(token_payload.user_id)
 
 
 @router.post(
@@ -38,32 +42,28 @@ async def add_to_cart(
     service: Annotated[CartService, Depends(Inject(CartService))],
 ) -> CartResponse:
     """Add an item to the cart."""
-    items = await service.add_item(
+    return await service.add_item_response(
         user_id=token_payload.user_id,
-        product_uuid=str(body.product_id),
+        product_id=str(body.product_id),
         quantity=body.quantity,
     )
-    cart_items = [
-        CartItemResponse(product_id=uuid.UUID(k), quantity=v) for k, v in items.items()
-    ]
-    return CartResponse(items=cart_items)
 
 
 @router.delete(
-    "/{product_uuid}",
+    "/{product_id}",
     status_code=204,
     response_model=None,
     summary="Remove item from cart",
 )
 async def remove_from_cart(
-    product_uuid: uuid.UUID,
+    product_id: ProductIdPath,
     token_payload: Annotated[TokenPayload, Depends(get_token_payload)],
     service: Annotated[CartService, Depends(Inject(CartService))],
 ) -> None:
     """Remove an item from the cart."""
     await service.remove_item(
         user_id=token_payload.user_id,
-        product_uuid=str(product_uuid),
+        product_id=str(product_id),
     )
 
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from sqlalchemy import (
     Boolean,
@@ -51,13 +51,13 @@ class Product(TimestampMixin, SoftDeleteMixin, Base):
         {"schema": "catalog", "comment": "Товар продавца"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ товара"
     )
-    seller_id: Mapped[uuid.UUID] = mapped_column(
+    seller_id: Mapped[UUID] = mapped_column(
         nullable=False, index=True, comment="Продавец-владелец товара"
     )
-    category_id: Mapped[uuid.UUID | None] = mapped_column(
+    category_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("catalog.categories.id", ondelete="SET NULL"),
         nullable=True,
         comment="Категория товара (fk на categories.id)",

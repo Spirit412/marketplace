@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.patterns.import_strategy import BaseImportStrategy
+from src.services.import_strategy import BaseImportStrategy
 
 
 class RowValidator:
@@ -49,7 +49,7 @@ class RowValidator:
         if value is not None and isinstance(value, str):
             value = value.strip()
 
-        if field == "price" or field == "sale_price":
+        if field in {"price", "sale_price"}:
             if value is not None and isinstance(value, str) and value:
                 try:
                     float(value)

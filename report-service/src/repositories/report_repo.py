@@ -1,6 +1,6 @@
-import uuid
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,7 @@ class ReportRepo:
     async def get_by_id(
         self,
         session: AsyncSession,
-        report_id: uuid.UUID,
+        report_id: UUID,
         *,
         include_deleted: bool = False,
     ) -> Report | None:
@@ -37,7 +37,7 @@ class ReportRepo:
     async def list_by_user(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
+        user_id: UUID,
         offset: int = 0,
         limit: int = 50,
     ) -> tuple[list[Report], int]:
@@ -63,7 +63,7 @@ class ReportRepo:
     async def update_status(
         self,
         session: AsyncSession,
-        report_id: uuid.UUID,
+        report_id: UUID,
         status: str,
         file_path: str | None = None,
         error_message: str | None = None,

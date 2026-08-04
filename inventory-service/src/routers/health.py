@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,9 +21,9 @@ def get_health_manager() -> HealthManager:
     return _health_manager
 
 
-@router.get("/health", response_model=HealthStatus, summary="Health check")
+@router.get("/health", summary="Health check")
 async def health_check(
-    session: AsyncSession = Depends(get_async_session),
+    session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> HealthStatus:
     """Perform health check for inventory service."""
     manager = get_health_manager()

@@ -107,12 +107,7 @@ class BaseRepository[T: Base]:
         *,
         include_deleted: bool = False,
     ) -> T | None:
-        # T is unbound, so mypy can't statically know every model has one of
-        # these two primary-key column names -- it's a deliberate runtime
-        # duck-typing fallback (auth-service models use "uuid", most others
-        # use "id").
-        pk_col = getattr(self._model, "id", None) or self._model.uuid  # type: ignore[attr-defined]
-        stmt = select(self._model).where(pk_col == entity_id)
+        stmt = select(self._model).where(self._model.id == entity_id)  # type: ignore[attr-defined]
         stmt = self._apply_soft_delete_filter(stmt, include_deleted)
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
@@ -121,6 +116,17 @@ class BaseRepository[T: Base]:
         session.add(instance)
         await session.flush()
         return instance
+
+    async def commit(self, session: AsyncSession) -> None:
+        """Force the current transaction durable now, ahead of the request's own commit.
+
+        get_async_session()'s own commit only runs once the request unwinds
+        all the way back up through the router. A caller that's about to
+        raise (aborting the request, which would otherwise roll back)
+        needs this to make already-applied writes durable first, instead of
+        losing them to that rollback.
+        """
+        await session.commit()
 
     async def update(self, session: AsyncSession, instance: T, **values: Any) -> T:
         for key, value in values.items():

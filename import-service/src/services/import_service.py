@@ -1,23 +1,24 @@
 import csv
 import io
 import logging
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.engines.rabbitmq import ImportPublisher
 from src.enums.import_status import IMPORT_STATE_MACHINE, ImportStatus
 from src.enums.import_type import ImportType
-from src.exceptions import NotFoundError
+from src.exceptions import NotFoundError, ValidationError
 from src.facades import CatalogClient, DictionaryClient
 from src.models.import_row import ImportRow
 from src.models.import_task import ImportTask
-from src.patterns.file_storage_registry import FileStorageRegistry
-from src.patterns.import_registry import ImportStrategyRegistry
-from src.patterns.product_from_row_builder import ProductFromRowBuilder
 from src.repositories.import_repo import ImportRowRepository, ImportTaskRepository
+from src.schemes.response.import_dto import ImportErrorResponse
+from src.services.file_storage_registry import FileStorageRegistry
+from src.services.import_registry import ImportStrategyRegistry
 from src.services.mapping_service import MappingService
+from src.services.product_from_row_builder import ProductFromRowBuilder
 from src.services.validation_service import RowValidator
 
 logger = logging.getLogger(__name__)
@@ -46,11 +47,14 @@ class ImportService:
         self,
         *,
         session: AsyncSession,
-        seller_id: uuid.UUID,
+        seller_id: UUID,
         import_type: str,
-        file_name: str,
+        file_name: str | None,
         content: bytes,
     ) -> ImportTask:
+        if not file_name:
+            raise ValidationError("No file provided")
+
         file_path = await self._file_storage.backend.save(
             content, f"{seller_id}/{file_name}"
         )
@@ -68,7 +72,7 @@ class ImportService:
     async def _transition_status(
         self,
         session: AsyncSession,
-        task_id: uuid.UUID,
+        task_id: UUID,
         new_status: ImportStatus,
         **extra: object,
     ) -> ImportTask | None:
@@ -96,7 +100,7 @@ class ImportService:
             session, task_id, new_status, **extra
         )
 
-    async def validate_csv(self, *, session: AsyncSession, task_id: uuid.UUID) -> None:
+    async def validate_csv(self, *, session: AsyncSession, task_id: UUID) -> None:
 
         task = await self._task_repo.get_task(session, task_id)
         if task is None:
@@ -166,7 +170,7 @@ class ImportService:
         else:
             await self._transition_status(session, task_id, ImportStatus.PROCESSING)
 
-    async def process_rows(self, *, session: AsyncSession, task_id: uuid.UUID) -> None:
+    async def process_rows(self, *, session: AsyncSession, task_id: UUID) -> None:
 
         task = await self._task_repo.get_task(session, task_id)
         if task is None:
@@ -223,11 +227,23 @@ class ImportService:
         await self._transition_status(session, task_id, ImportStatus.COMPLETED)
 
     async def get_task_status(
-        self, *, session: AsyncSession, task_id: uuid.UUID
+        self, *, session: AsyncSession, task_id: UUID
     ) -> ImportTask | None:
         return await self._task_repo.get_task(session, task_id)
 
     async def get_task_errors(
-        self, *, session: AsyncSession, task_id: uuid.UUID, offset: int, limit: int
+        self, *, session: AsyncSession, task_id: UUID, offset: int, limit: int
     ) -> list[ImportRow]:
         return await self._row_repo.get_task_errors(session, task_id, offset, limit)
+
+    async def get_task_errors_response(
+        self, *, session: AsyncSession, task_id: UUID, offset: int, limit: int
+    ) -> ImportErrorResponse:
+        errors = await self.get_task_errors(
+            session=session, task_id=task_id, offset=offset, limit=limit
+        )
+        rows = [
+            {"row_number": row.row_number, "errors": row.error_description or {}}
+            for row in errors
+        ]
+        return ImportErrorResponse(rows=rows)

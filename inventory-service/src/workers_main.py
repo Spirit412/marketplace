@@ -3,8 +3,9 @@
 Subscribes to order.* and product.created events.
 """
 
-import uuid
+import contextlib
 from typing import Any
+from uuid import UUID
 
 from src.core.database import _get_session_factory
 from src.engines.rabbitmq import get_broker
@@ -23,16 +24,14 @@ async def handle_order_created(payload: dict[str, Any]) -> None:
 
         for item in payload.get("items", []):
             request = ReserveRequest(
-                product_id=uuid.UUID(item["product_id"]),
-                warehouse_id=uuid.UUID(item["warehouse_id"]),
+                product_id=UUID(item["product_id"]),
+                warehouse_id=UUID(item["warehouse_id"]),
                 quantity=item["quantity"],
                 reference_type="order",
-                reference_id=uuid.UUID(payload["order_id"]),
+                reference_id=UUID(payload["order_id"]),
             )
-            try:
+            with contextlib.suppress(Exception):
                 await service.reserve(session=session, request=request)
-            except Exception:
-                pass
 
 
 @broker.subscriber("order.confirmed")
@@ -44,11 +43,11 @@ async def handle_order_confirmed(payload: dict[str, Any]) -> None:
 
         for item in payload.get("items", []):
             request = ShipRequest(
-                product_id=uuid.UUID(item["product_id"]),
-                warehouse_id=uuid.UUID(item["warehouse_id"]),
+                product_id=UUID(item["product_id"]),
+                warehouse_id=UUID(item["warehouse_id"]),
                 quantity=item["quantity"],
                 reference_type="order",
-                reference_id=uuid.UUID(payload["order_id"]),
+                reference_id=UUID(payload["order_id"]),
             )
             await service.ship(session=session, request=request)
 
@@ -62,10 +61,10 @@ async def handle_order_cancelled(payload: dict[str, Any]) -> None:
 
         for item in payload.get("items", []):
             request = ReleaseRequest(
-                product_id=uuid.UUID(item["product_id"]),
-                warehouse_id=uuid.UUID(item["warehouse_id"]),
+                product_id=UUID(item["product_id"]),
+                warehouse_id=UUID(item["warehouse_id"]),
                 quantity=item["quantity"],
                 reference_type="order",
-                reference_id=uuid.UUID(payload["order_id"]),
+                reference_id=UUID(payload["order_id"]),
             )
             await service.release(session=session, request=request)

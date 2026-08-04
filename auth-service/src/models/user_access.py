@@ -18,7 +18,7 @@ class UserAccess(TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "user_access"
     __table_args__ = (
         PrimaryKeyConstraint("user_id"),
-        Index(None, "user_id", "role_uuid"),
+        Index(None, "user_id", "role_id"),
         {
             "schema": "auth",
             "comment": "Назначенные пользователю роль и дополнительные разрешения",
@@ -29,8 +29,8 @@ class UserAccess(TimestampMixin, SoftDeleteMixin, Base):
         ForeignKey("auth.users.id", ondelete="CASCADE"),
         comment="fk пользователя",
     )
-    role_uuid: Mapped[UUID | None] = mapped_column(
-        ForeignKey("auth.roles.uuid", ondelete="SET NULL"),
+    role_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("auth.roles.id", ondelete="SET NULL"),
         default=None,
         comment="fk роли",
     )
@@ -51,7 +51,7 @@ class UserAccess(TimestampMixin, SoftDeleteMixin, Base):
     permissions: Mapped[list[Permission]] = relationship(
         "Permission",
         primaryjoin=(
-            "remote(Permission.uuid) == "
+            "remote(Permission.id) == "
             "func.any_(foreign(UserAccess.additional_permissions))"
         ),
         viewonly=True,
@@ -62,6 +62,6 @@ class UserAccess(TimestampMixin, SoftDeleteMixin, Base):
     def __repr__(self) -> str:
         return (
             f"<UserAccess user={self.user_id} "
-            f"role={self.role_uuid} "
+            f"role={self.role_id} "
             f"additional={self.additional_permissions}>"
         )

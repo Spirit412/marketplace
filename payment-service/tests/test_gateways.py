@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from src.config.settings import get_settings
 from src.enums.payment_status import PaymentMethod
-from src.patterns.gateway_registry import PaymentGatewayRegistry
-from src.patterns.gateway_strategy import (
+from src.services.gateway_registry import PaymentGatewayRegistry
+from src.services.gateway_strategy import (
     MockGateway,
     StripeGateway,
     YooKassaGateway,

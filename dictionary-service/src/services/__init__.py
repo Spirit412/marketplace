@@ -1,3 +1,3 @@
-from . import dictionary_service
+from . import dictionary_registry, dictionary_service, dictionary_source
 
-__all__ = ["dictionary_service"]
+__all__ = ["dictionary_registry", "dictionary_service", "dictionary_source"]

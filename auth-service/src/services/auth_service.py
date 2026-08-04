@@ -1,7 +1,7 @@
 import fnmatch
-import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,13 +26,13 @@ from src.exceptions import (
 )
 from src.models.permission import Permission
 from src.models.user import SessionLog, User
-from src.patterns.password_hasher import PasswordHasher
 from src.repositories.group_repository import GroupRepository
 from src.repositories.permission_repository import PermissionRepository
 from src.repositories.role_repository import RoleRepository
 from src.repositories.session_repository import SessionRepository
 from src.repositories.user_access_repository import UserAccessRepository
 from src.repositories.user_repository import UserRepository
+from src.services.password_hasher import PasswordHasher
 
 
 class AuthService:
@@ -111,7 +111,7 @@ class AuthService:
             await self._user_access_repo.create_or_update(
                 session,
                 user_id=created.id,
-                role_uuid=default_role.uuid,
+                role_id=default_role.id,
             )
 
         result = await self._user_repo.get_with_access(session, created.id)
@@ -212,14 +212,14 @@ class AuthService:
                 # (session_logs.logout_at) of logout_all while the Redis
                 # side stays revoked — leaving the audit trail out of sync
                 # with actual (correctly revoked) access.
-                await self.logout_all(session, uuid.UUID(payload.user_id))
-                await session.commit()
+                await self.logout_all(session, UUID(payload.user_id))
+                await self._session_repo.commit(session)
                 raise ForbiddenError(
                     "Refresh token reuse detected — all sessions revoked"
                 )
             raise UnauthorizedError("Refresh token revoked")
 
-        user = await self._user_repo.get_by_id(session, uuid.UUID(payload.user_id))
+        user = await self._user_repo.get_by_id(session, UUID(payload.user_id))
         if not user or user.is_blocked:
             raise ForbiddenError("User blocked or not found")
 
@@ -285,7 +285,7 @@ class AuthService:
         await self._redis.srem(self._user_tokens_key(payload.user_id), payload.jti)
         await self._session_repo.close_session(session, payload.jti)
 
-    async def logout_all(self, session: AsyncSession, user_id: uuid.UUID) -> None:
+    async def logout_all(self, session: AsyncSession, user_id: UUID) -> None:
         await self._session_repo.close_all_for_user(session, user_id)
 
         tokens_key = self._user_tokens_key(str(user_id))
@@ -305,15 +305,15 @@ class AuthService:
         )
 
     async def get_sessions(
-        self, session: AsyncSession, user_id: uuid.UUID
+        self, session: AsyncSession, user_id: UUID
     ) -> list[SessionLog]:
         return await self._session_repo.get_active_for_user(session, user_id)
 
     async def block_user(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
-        blocked_by: uuid.UUID,
+        user_id: UUID,
+        blocked_by: UUID,
         reason: str,
     ) -> User:
         user = await self._user_repo.get_by_id(session, user_id)
@@ -327,7 +327,7 @@ class AuthService:
         await self.logout_all(session, user_id)
         return blocked
 
-    async def unblock_user(self, session: AsyncSession, user_id: uuid.UUID) -> User:
+    async def unblock_user(self, session: AsyncSession, user_id: UUID) -> User:
         user = await self._user_repo.unblock(session, user_id)
         if not user:
             raise NotFoundError("User not found")
@@ -341,7 +341,7 @@ class AuthService:
         )
 
     async def _resolve_permissions(
-        self, session: AsyncSession, user_id: uuid.UUID
+        self, session: AsyncSession, user_id: UUID
     ) -> ResolvedAccess:
         """Resolve effective permissions for a user.
 
@@ -356,9 +356,9 @@ class AuthService:
         role_name: str | None = None
         is_admin: bool = False
 
-        if user_access is not None and user_access.role_uuid is not None:
+        if user_access is not None and user_access.role_id is not None:
             role_permissions = await self._group_repo.resolve_permissions_for_role(
-                session, user_access.role_uuid
+                session, user_access.role_id
             )
             self._merge_permissions(result, role_permissions)
             if user_access.role is not None:
@@ -367,7 +367,7 @@ class AuthService:
 
         if user_access is not None and user_access.additional_permissions:
             perm_repo = PermissionRepository()
-            extra_perms = await perm_repo.check_by_uuids(
+            extra_perms = await perm_repo.check_by_ids(
                 session, set(user_access.additional_permissions)
             )
             self._merge_permissions(result, extra_perms)
@@ -449,13 +449,13 @@ class AuthService:
         # revoked despite being issued at or after it.
         return iat < int(invalidated_dt.timestamp())
 
-    async def _is_user_blocked(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
+    async def _is_user_blocked(self, session: AsyncSession, user_id: UUID) -> bool:
         """True if the user is blocked or no longer exists."""
         user = await self._user_repo.get_by_id(session, user_id)
         return user is None or bool(user.is_blocked)
 
     async def resolve_credentials(
-        self, session: AsyncSession, user_id: uuid.UUID, iat: int | None = None
+        self, session: AsyncSession, user_id: UUID, iat: int | None = None
     ) -> ResolvedAccess:
         """Return role metadata for a user without checking a specific path.
 
@@ -482,7 +482,7 @@ class AuthService:
         Returns: (allowed, user_id, role, is_admin)
         """
         payload = await self.check_credentials(token)
-        user_id = uuid.UUID(payload.user_id)
+        user_id = UUID(payload.user_id)
 
         if await self._is_token_revoked(
             payload.user_id, payload.iat
@@ -500,30 +500,30 @@ class AuthService:
     async def assign_role(
         self,
         session: AsyncSession,
-        user_id: uuid.UUID,
-        role_uuid: uuid.UUID | None,
-        additional_permissions: list[uuid.UUID] | None = None,
+        user_id: UUID,
+        role_id: UUID | None,
+        additional_permissions: list[UUID] | None = None,
     ) -> None:
         """Assign or update a role for a user."""
         user = await self._user_repo.get_by_id(session, user_id)
         if not user:
             raise NotFoundError("User not found")
 
-        if role_uuid is not None:
-            role = await self._role_repo.get_by_id(session, role_uuid)
+        if role_id is not None:
+            role = await self._role_repo.get_by_id(session, role_id)
             if not role:
-                msg = f"Role {role_uuid} not found"
+                msg = f"Role {role_id} not found"
                 raise NotFoundError(msg)
 
         await self._user_access_repo.create_or_update(
             session,
             user_id=user_id,
-            role_uuid=role_uuid,
+            role_id=role_id,
             additional_permissions=additional_permissions,
         )
 
     async def get_user_permissions(
-        self, session: AsyncSession, user_id: uuid.UUID
+        self, session: AsyncSession, user_id: UUID
     ) -> ResolvedAccess:
         """Get resolved permissions for any user (admin use)."""
         return await self._resolve_permissions(session, user_id)

@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,11 +13,14 @@ class ErrorTemplate(TimestampMixin, SoftDeleteMixin, Base):
         Index("ix_error_templates_code_locale", "code", "locale", unique=True),
         {
             "schema": "dictionary",
-            "comment": "Локализованный шаблон текста ошибки (используется, например, import-service)",
+            "comment": (
+                "Локализованный шаблон текста ошибки "
+                "(используется, например, import-service)"
+            ),
         },
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ шаблона"
     )
     code: Mapped[str] = mapped_column(String(100), nullable=False, comment="Код ошибки")

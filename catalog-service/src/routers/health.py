@@ -7,7 +7,7 @@ from src.services.health_service import HealthService
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health", response_model=HealthStatus, summary="Health check")
+@router.get("/health", summary="Health check")
 async def health_check() -> HealthStatus:
     """Perform health check for catalog service."""
     health_service = HealthService()

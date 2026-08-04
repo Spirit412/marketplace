@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -14,7 +14,7 @@ class TimezoneEntry(TimestampMixin, SoftDeleteMixin, Base):
         "comment": "Справочник часовых поясов (IANA)",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid7, comment="Первичный ключ записи"
     )
     iana_name: Mapped[str] = mapped_column(

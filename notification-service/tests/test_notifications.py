@@ -10,12 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.datatype import uuid7
 from src.models.notification import Notification, Template
-from src.patterns.frontend_notification_builder import FrontendNotificationBuilder
-from src.patterns.notification_builder import NotificationBuilder
 from src.repositories.notification_repo import NotificationRepository
 from src.repositories.template_repo import TemplateRepository
 from src.schemes.internal.notification import NotificationPayload
 from src.schemes.ws_message import WSMessage
+from src.services.frontend_notification_builder import FrontendNotificationBuilder
+from src.services.notification_builder import NotificationBuilder
 
 
 class TestNotificationBuilder:

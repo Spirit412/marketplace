@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class CartItemResponse(BaseModel):
     """Single cart item."""
 
-    product_id: uuid.UUID
+    product_id: UUID
     quantity: int
 
 

@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID as PyUUID
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
@@ -15,13 +15,13 @@ class Warehouse(TimestampMixin, SoftDeleteMixin, Base):
         {"schema": "inventory", "comment": "Склад продавца"},
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,
         comment="Первичный ключ склада",
     )
-    seller_id: Mapped[uuid.UUID] = mapped_column(
+    seller_id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, comment="Продавец-владелец склада"
     )
     name: Mapped[str] = mapped_column(
@@ -49,16 +49,16 @@ class StockItem(TimestampMixin, SoftDeleteMixin, Base):
         "comment": "Остаток товара на конкретном складе",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,
         comment="Первичный ключ остатка",
     )
-    product_id: Mapped[uuid.UUID] = mapped_column(
+    product_id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, comment="Товар (id из catalog-service)"
     )
-    warehouse_id: Mapped[uuid.UUID] = mapped_column(
+    warehouse_id: Mapped[PyUUID] = mapped_column(
         ForeignKey("inventory.warehouses.id", ondelete="CASCADE"),
         nullable=False,
         comment="Склад (fk на warehouses.id)",
@@ -87,13 +87,13 @@ class StockMovement(CreatedAtMixin, Base):
         "comment": "Движение товара по складу (приход/расход/резерв/списание) — аудиторский след",
     }
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid7,
         comment="Первичный ключ движения",
     )
-    stock_item_id: Mapped[uuid.UUID] = mapped_column(
+    stock_item_id: Mapped[PyUUID] = mapped_column(
         ForeignKey("inventory.stock_items.id", ondelete="CASCADE"),
         nullable=False,
         comment="Остаток, к которому относится движение",
@@ -111,7 +111,7 @@ class StockMovement(CreatedAtMixin, Base):
         nullable=True,
         comment="Тип связанной сущности (order, seed, cleanup...)",
     )
-    reference_id: Mapped[uuid.UUID | None] = mapped_column(
+    reference_id: Mapped[PyUUID | None] = mapped_column(
         UUID(as_uuid=True),
         nullable=True,
         comment="Идентификатор связанной сущности (например, id заказа)",

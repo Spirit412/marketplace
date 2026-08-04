@@ -1,5 +1,5 @@
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,7 @@ class MovementRepo:
     async def list_by_stock_item(
         self,
         session: AsyncSession,
-        stock_item_id: uuid.UUID,
+        stock_item_id: UUID,
         movement_type: str | None = None,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
@@ -44,7 +44,7 @@ class MovementRepo:
 
     async def list_popular_products(
         self, session: AsyncSession, limit: int = 50
-    ) -> list[tuple[uuid.UUID, int]]:
+    ) -> list[tuple[UUID, int]]:
         """Rank products by total reserved/shipped quantity.
 
         This is the closest proxy for demand buildable from data
@@ -68,7 +68,7 @@ class MovementRepo:
     async def list_by_warehouse(
         self,
         session: AsyncSession,
-        warehouse_id: uuid.UUID,
+        warehouse_id: UUID,
         offset: int = 0,
         limit: int = 100,
     ) -> list[StockMovement]:

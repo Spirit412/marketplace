@@ -1,5 +1,5 @@
-import uuid
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,6 @@ class PostgresRepository:
         return []
 
     async def get_inventory_items(
-        self, session: AsyncSession, seller_id: uuid.UUID | None = None
+        self, session: AsyncSession, seller_id: UUID | None = None
     ) -> list[dict[str, Any]]:
         return []
