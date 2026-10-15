@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mp-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    env_file:
+      - .env
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8100}
+      - VITE_AUTH_URL=${VITE_AUTH_URL:-http://localhost:8110}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8150/ws}
+    networks:
+      - marketplace
+    restart: unless-stopped
+
+  # Dev-режим: горячая перезагрузка через Vite
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mp-frontend-dev
+    ports:
+      - "${FRONTEND_DEV_PORT:-5173}:5173"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tailwind.config.ts:/app/tailwind.config.ts
+    env_file:
+      - .env
+    networks:
+      - marketplace
+    profiles:
+      - dev
+
+networks:
+  marketplace:
+    external: true

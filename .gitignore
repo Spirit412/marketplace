@@ -29,3 +29,5 @@ reports/
 .idea/
 .vscode/
 .DS_Store
+.sentry-native/31d60385-7066-49bd-7fbd-c822086bde45.run.lock
+frontend/.husky/pre-commit
