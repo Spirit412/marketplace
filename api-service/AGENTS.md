@@ -1146,6 +1146,134 @@ class Base(DeclarativeBase):
   пакета `uuid6`/`uuid-utils` в общем `Base`, зафиксированный в
   `src/core/database.py`; отдельные модели генератор не переопределяют.
 
+**Базовый класс моделей (`src/core/database.py`).** Все модели наследуются
+от единого `Base` — канон (по модулю `database/models/base.py` эталонной
+библиотеки `core`):
+
+```python
+# src/core/database.py
+from datetime import datetime
+from typing import Any, ClassVar
+from uuid import UUID
+
+from sqlalchemy import TIMESTAMP, MetaData, func
+from sqlalchemy.dialects.postgresql import BOOLEAN, JSONB, VARCHAR
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.sql.elements import TextClause
+from sqlalchemy.sql.expression import text
+
+
+def empty_jsonb() -> TextClause:
+    return text("'{}'::jsonb")
+
+
+def uuid_default() -> TextClause:
+    return text("gen_random_uuid()")
+
+
+metadata = MetaData(
+    naming_convention={
+        "ix": "ix_%(column_0_label)s",
+        "uq": "uq_%(table_name)s_%(column_0_name)s",
+        "ck": "ck_%(table_name)s_%(constraint_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s",
+    },
+)
+
+
+class Base(DeclarativeBase):
+    __abstract__ = True
+
+    metadata = metadata
+
+    type_annotation_map: ClassVar[dict[Any, Any]] = {
+        datetime: TIMESTAMP(timezone=False),
+        dict[str, Any]: JSONB,
+        str: VARCHAR(),
+        bool: BOOLEAN,
+    }
+
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True,
+        server_default=uuid_default(),
+        index=True,
+        unique=True,
+        comment="Идентификатор",
+        sort_order=-100,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.current_timestamp(),
+        comment="Дата создания",
+        sort_order=99,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        server_onupdate=func.current_timestamp(),
+        comment="Дата обновления",
+        sort_order=100,
+    )
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}, id={self.id!r}"
+```
+
+Что даёт каждый элемент (анализ модуля):
+
+- `naming_convention` — воспроизводимые имена индексов и констрейнтов:
+  Alembic autogenerate не рождает мусорных diff'ов, а операции над схемой
+  (drop constraint) не требуют угадывания автогенерированных имён.
+- `type_annotation_map` — единый маппинг питоновских типов в DDL:
+  `datetime` → `TIMESTAMP(timezone=False)` (без tz — канон проекта),
+  `dict` → `JSONB`, `str` → `VARCHAR`, `bool` → `BOOLEAN`.
+- `id` — UUID PK с генерацией на стороне БД и `comment` в DDL;
+  `sort_order` фиксирует порядок служебных колонок в сгенерированной
+  таблице (id — первая, created_at/updated_at — последние).
+- `created_at`/`updated_at` — на стороне БД: `server_default` +
+  `server_onupdate` срабатывает даже при UPDATE вне ORM.
+- Хелперы `uuid_default()`/`empty_jsonb()` — текстовые server_default'ы в
+  одном месте: переход на UUIDv7 (PostgreSQL 18+, см. блок выше) — замена
+  одной строки на `text("uuidv7()")`; на PostgreSQL < 18 `gen_random_uuid()`
+  — это v4, и канон — app-side `default=uuid7` (блок UUIDv7 выше).
+- `__repr__` с id — читаемые логи без подгрузки всех полей.
+
+Правила:
+
+- `Base`, хелперы и `metadata` определяются один раз в
+  `src/core/database.py`; модели импортируют оттуда, свои `MetaData` и
+  базовые классы не объявляют.
+- Служебные колонки (`id`, `created_at`, `updated_at`) в конкретных моделях
+  не дублируются.
+- `comment` у колонок — на русском, отражает доменный смысл (попадает в DDL
+  и в описание схемы БД).
+
+**Внедрение библиотеки `core` в проекты.** Эталонная реализация живёт в
+общей библиотеке `core` (монорепа web_milk_back; распространяется через
+внутренний PyPI `gitlab.plinor.team`, в `pyproject.toml` — `core (==1.0.31)`
++ `[[tool.poetry.source]]`). Кроме `Base`, в ней:
+
+- `database/` — `BaseRepository[T, AS]` (§13.2), `UnitOfWork` (§13.3),
+  `ServiceAsyncSession`, `get_async_session`, mixins;
+- `event/` — `EventManager`, `BaseEventHandler`, `BaseEventScheme`,
+  `Credential`, валидаторы и pipeline (§14);
+- `datatype/` — `UUIDEnum`, `Inject`, деревья;
+- `aioredis/`, `health/`, `user/permission`.
+
+Два пути внедрения:
+
+1. **Зависимость** (предпочтительно при доступе к внутреннему PyPI): `core`
+   в `dependencies` + poetry-source; обновления — версиями пакета, канон не
+   разъезжается между сервисами.
+2. **Копирование канона в `src/core/`** (если внутренний PyPI недоступен,
+   как в marketplace): переносятся только описанные в этом документе каноны
+   (`Base`, `BaseRepository`, `UnitOfWork`, `Inject`, оркестратор) — без
+   локальных «улучшений»; расхождение решается правкой канона (этого
+   файла), а не скрытым форком.
+
+Запрещено локально патчить скопированный core-код «под проект»: через
+полгода это несопровождаемый форк, не получающий обновлений канона.
+
 ### 13.2 Репозитории
 
 ```python
@@ -1364,6 +1492,115 @@ class OrderResponse(BaseModel):
   `schemes/annotation.py` + `TypeAdapter` в `schemes/adapter.py` для
   валидации сырых данных (Redis, RabbitMQ).
 - Схемы не импортируют models/repositories/services.
+
+**Dataclass vs pydantic.** Критерий выбора — пересекает ли данные границу
+доверия (место, где входу нельзя доверять без валидации):
+
+| Ситуация | Инструмент |
+|---|---|
+| HTTP request/response, OpenAPI-контракт | pydantic `BaseModel` |
+| Сообщения RabbitMQ, записи в Redis, ответы внешних API | pydantic `BaseModel` + `TypeAdapter` |
+| Конфигурация приложения | `BaseSettings` (§8) |
+| Внутренние value-объекты: `Credentials`, результат промежуточных вычислений, передача между слоями внутри процесса | `@dataclass(frozen=True, slots=True)` |
+
+- Pydantic — на границе: внешним данным не доверяем, нужны валидация и
+  сериализация. Цена — производительность и бойлерплейт, поэтому внутри
+  процесса он не применяется.
+- Dataclass — внутри: данные уже проверены (credentials собраны auth-слоем
+  из ответа auth-service), валидация не нужна; `frozen=True` —
+  неизменяемость, `slots=True` — компактность.
+- Запрещено: принимать внешний ввод в dataclass (валидации нет) и
+  размещать доменную логику в pydantic-схемах (они — DTO, а не объекты
+  домена).
+
+**`@model_validator` и `@computed_field` — когда обязательны.**
+
+- `@model_validator(mode="after")` — обязателен для кросс-полевых
+  инвариантов, которые одним полем не выразить:
+
+```python
+class ReportRangeRequest(BaseModel):
+    date_from: date
+    date_to: date
+
+    @model_validator(mode="after")
+    def check_range(self) -> Self:
+        if self.date_from > self.date_to:
+            raise ValueError("date_from must not be after date_to")
+        return self
+```
+
+- `@computed_field` — обязателен, когда производное значение должно
+  попадать в сериализацию ответа; дублировать его обычным полем (данные
+  расходятся) или голым `@property` (не сериализуется) запрещено:
+
+```python
+class OrderItemResponse(BaseModel):
+    price: int
+    quantity: int
+
+    @computed_field
+    @property
+    def total(self) -> int:
+        return self.price * self.quantity
+```
+
+Правило: инвариант между полями — `model_validator`; производное поле в
+выдаче — `computed_field`. Проверка связки полей в роутере/сервисе вместо
+валидатора — анти-паттерн: инвариант перестаёт гарантироваться схемой и
+размазывается по вызовам.
+
+**Явное прописывание полей.** Каждое поле внешней схемы прописывается
+явно — тип, необязательность, ограничения, документация:
+
+```python
+number_full: str | None = Field(
+    default=None,
+    min_length=1,
+    max_length=20,
+    description="Полный номер животного.",
+    examples=["AB-123456"],
+)
+```
+
+- `| None` без `default=None` (и наоборот) запрещён: опциональность
+  читается однозначно из одного места.
+- Ограничения (`min_length`, `max_length`, `ge`/`le`, `pattern`) — в
+  `Field`, а не только в БД или валидаторе сервиса: некорректный вход
+  отсекается на границе понятным 422.
+- В response-схемах `description` + `examples` обязательны у каждого поля
+  (правила выше); во внутренних схемах голый тип допустим, если описание
+  ничего не добавляет.
+- `Field(discriminator="type")` в union'ах — всегда явно (см. ниже).
+
+**`TypeAdapter` и `Annotated`.**
+
+- `TypeAdapter` — валидация данных вне pipeline FastAPI: сырые payload'ы из
+  Redis, RabbitMQ, внешних API. Создаётся один раз на уровне модуля
+  (компиляция схемы — дорогая операция), никогда — в теле функции:
+
+```python
+# src/schemes/adapter.py
+from pydantic import TypeAdapter
+
+from .annotation import CreateEventSchemes, StashEventSchemes
+
+stash_events_adapter = TypeAdapter(list[StashEventSchemes])
+create_event_adapter = TypeAdapter(CreateEventSchemes)
+
+# использование — в воркере/сервисе:
+events = stash_events_adapter.validate_python(raw_from_redis)
+```
+
+- `Annotated` — два канонических применения:
+  1. **Микротипы** (§6): ограничения переносятся в тип и переиспользуются
+     всеми схемами — `NumberInv = Annotated[str, StringConstraints(...)]`.
+  2. **Discriminated union** (правила выше):
+     `Annotated[A | B | C, Field(discriminator="type")]` — собирается один
+     раз в `schemes/annotation.py`, импортируется роутерами и адаптерами.
+- Запрещено собирать union'ы и `TypeAdapter` заново в местах использования:
+  рассинхрон членов union (в эталоне — дубли в `annotation.py`) и повторная
+  компиляция адаптера на каждый вызов.
 
 ### 13.5 Сервисы
 
