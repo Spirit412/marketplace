@@ -934,6 +934,67 @@ def require_permission(permission: str) -> Callable:
     return checker
 ```
 
+**Доступ к роутеру.** Точечная привязка — параметром-dependency эндпоинта;
+одно действие — один код разрешения:
+
+```python
+# src/routers/orders.py
+router = APIRouter(prefix="/orders", tags=["orders"])
+
+
+@router.get("/{order_id}", summary="Карточка заказа")
+async def get_order(
+    order_id: UUID,
+    credentials: Annotated[Credentials, Depends(require_permission("orders:read"))],
+    service: Annotated[OrderService, Depends(Inject(OrderService))],
+) -> OrderResponse:
+    return await service.get_order(order_id, credentials)
+
+
+@router.post("", summary="Создать заказ")
+async def create_order(
+    data: CreateOrderRequest,
+    credentials: Annotated[Credentials, Depends(require_permission("orders:write"))],
+    service: Annotated[OrderService, Depends(Inject(OrderService))],
+) -> OrderResponse:
+    return await service.create_order(data, credentials)
+```
+
+Грубая область целиком (админка, внутренние API) — через `dependencies`
+роутера: проверка выполняется до вызова любого его эндпоинта, параметры
+эндпоинтов остаются чистыми:
+
+```python
+# src/routers/admin.py
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(require_permission("admin:access"))],
+)
+
+
+@router.get("/users", summary="Список пользователей")
+async def list_users(
+    service: Annotated[UserService, Depends(Inject(UserService))],
+) -> list[UserResponse]:
+    return await service.list_users()
+```
+
+Правила привязки:
+
+- Чтение и запись разделяются (`orders:read` / `orders:write`); общий код
+  «доступ к заказам» не заводится.
+- Грубая область — на роутере, точечные права — на эндпоинте. Роутерная
+  проверка не отменяет эндпоинтную, если у эндпоинта своё право.
+- Проверка не дублируется в теле эндпоинта и не переносится в сервис:
+  граница авторизации — dependency роутера.
+- Эндпоинт без `require_permission` в защищённой зоне — осознанное
+  исключение: аутентификация обязательна в любом случае, а причина
+  отсутствия авторизации фиксируется комментарием.
+- Код разрешения из `require_permission(...)` обязан существовать в БД:
+  новый код = seed-миграция в том же коммите, иначе эндпоинт навсегда
+  отвечает `403`.
+
 Поток проверки:
 
 ```mermaid
@@ -1022,6 +1083,68 @@ class Order(Base):
 - Модели не содержат бизнес-методов; `@property` для вычислимых
   производных (например, `event_type`) допустимы.
 - Изменение модели = миграция Alembic в том же коммите.
+
+**Первичные ключи: UUIDv7.** UUIDv7 (RFC 9562) — время-упорядоченный UUID:
+48 бит Unix-времени в миллисекундах + версия/вариант + случайные биты.
+Значения k-сортируемы: новые строки вставляются в правый край B-tree
+индекса, как у sequential-ключа, — нет разброса вставок и фрагментации,
+которые даёт случайный UUIDv4 (на больших таблицах — постоянные
+page splits и раздутый индекс). Побочный плюс: из ключа извлекается время
+создания записи.
+
+Использование в Python:
+
+```python
+# Python 3.14+ — стандартная библиотека
+import uuid
+
+new_id = uuid.uuid7()
+
+# Python 3.12–3.13 (наш стек) — сторонний пакет:
+# pip install uuid6          → from uuid6 import uuid7
+# pip install uuid-utils     → from uuid_utils import uuid7 (Rust, монотонный в пределах мс)
+from uuid6 import uuid7
+
+new_id = uuid7()  # обычный uuid.UUID, совместим с SQLAlchemy/psycopg
+```
+
+```python
+# src/core/database.py — генерация на стороне приложения
+class Base(DeclarativeBase):
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid7)
+```
+
+Использование в PostgreSQL: встроенная функция `uuidv7()` доступна **с
+PostgreSQL 18** (там же — алиас `uuidv4()`, `uuid_extract_timestamp()`,
+`uuid_extract_version()`). До версии 18 встроенной генерации v7 нет:
+`gen_random_uuid()` — это v4; варианты — генерация в приложении или
+самописная plpgsql-функция. Наш стек — PostgreSQL 16, поэтому канон —
+генерация на стороне приложения; при переходе на PostgreSQL 18+ генерацию
+можно делегировать БД:
+
+```python
+# вариант для PostgreSQL 18+ — генерация на стороне БД
+class Base(DeclarativeBase):
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True, server_default=text("uuidv7()")
+    )
+```
+
+Правила:
+
+- Один источник генерации на проект: приложение (`default=uuid7`) **или**
+  БД (`server_default=text("uuidv7()")`) — не оба сразу.
+- UUIDv4 и UUIDv7 не смешиваются в первичном ключе одной таблицы: часть
+  значений снова разбросает вставки по индексу. Существующие PK при внедрении
+  v7 не переписываются — меняется только генератор новых значений.
+- UUIDv7 раскрывает время создания записи — учитывать, если ключ
+  публикуется наружу.
+- Монотонность внутри одной миллисекунды: у `uuid-utils` и stdlib 3.14
+  реализована (счётчик), при самописной генерации о ней забывают — ещё
+  один аргумент за готовый пакет.
+- Для связки Python 3.12 + PostgreSQL 16 (наш стек) — `default=uuid7` из
+  пакета `uuid6`/`uuid-utils` в общем `Base`, зафиксированный в
+  `src/core/database.py`; отдельные модели генератор не переопределяют.
 
 ### 13.2 Репозитории
 
